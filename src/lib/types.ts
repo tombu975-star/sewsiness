@@ -23,6 +23,16 @@ export interface Organization {
   region: string | null;
   plan: string;
   status: "Active" | "Paused";
+  logo_url: string | null;
+  verification_status: "unverified" | "pending" | "verified" | "rejected";
+  ghana_card_number: string | null;
+  ghana_card_front_path: string | null;
+  ghana_card_back_path: string | null;
+  selfie_path: string | null;
+  verification_submitted_at: string | null;
+  verification_reviewed_at: string | null;
+  verification_reviewed_by: string | null;
+  verification_rejection_reason: string | null;
   created_at: string;
 }
 

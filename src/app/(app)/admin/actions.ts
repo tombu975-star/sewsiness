@@ -148,3 +148,68 @@ export async function sendAdvisoryNote(formData: FormData) {
 
   revalidatePath(`/admin/${orgId}`);
 }
+
+// Approves a self-signed-up business's Ghana Card + selfie review — this is
+// the only thing that flips organizations.verification_status to 'verified'
+// for a business that came through /signup (businesses Super Admin enrolls
+// directly via enrollBusiness() above are already 'verified' by default —
+// that enrollment path IS the verification).
+export async function approveBusinessVerification(formData: FormData) {
+  const reviewer = await requireSuperAdmin();
+  const orgId = String(formData.get("organization_id") ?? "");
+  if (!orgId) throw new Error("Missing business.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("organizations")
+    .update({
+      verification_status: "verified",
+      verification_reviewed_at: new Date().toISOString(),
+      verification_reviewed_by: reviewer.id,
+      verification_rejection_reason: null,
+    })
+    .eq("id", orgId);
+  if (error) throw new Error(error.message);
+
+  await admin.from("audit_logs").insert({
+    organization_id: orgId,
+    actor_id: reviewer.id,
+    action: "Business identity verified",
+    entity: "organization",
+    entity_id: orgId,
+  });
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/${orgId}`);
+}
+
+export async function rejectBusinessVerification(formData: FormData) {
+  const reviewer = await requireSuperAdmin();
+  const orgId = String(formData.get("organization_id") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!orgId) throw new Error("Missing business.");
+  if (!reason) throw new Error("Give a reason so the owner knows what to fix.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("organizations")
+    .update({
+      verification_status: "rejected",
+      verification_reviewed_at: new Date().toISOString(),
+      verification_reviewed_by: reviewer.id,
+      verification_rejection_reason: reason,
+    })
+    .eq("id", orgId);
+  if (error) throw new Error(error.message);
+
+  await admin.from("audit_logs").insert({
+    organization_id: orgId,
+    actor_id: reviewer.id,
+    action: "Business identity verification rejected",
+    entity: "organization",
+    entity_id: orgId,
+  });
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/${orgId}`);
+}

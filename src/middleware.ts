@@ -1,7 +1,17 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/accept-invite", "/auth", "/_next", "/favicon.ico", "/suspended"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/accept-invite",
+  "/auth",
+  "/_next",
+  "/favicon.ico",
+  "/suspended",
+  "/pending-verification",
+];
 
 // Super Admin is Sewsiness's own platform account (it enrolls businesses),
 // not a business Owner — it must never reach business-operational pages,
@@ -59,7 +69,7 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, suspended_at")
+      .select("role, suspended_at, organization_id, organizations(verification_status)")
       .eq("id", user.id)
       .single();
     const role = profile?.role;
@@ -79,6 +89,23 @@ export async function middleware(request: NextRequest) {
       // session cookie never actually clears in the browser.
       response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c));
       return redirectResponse;
+    }
+
+    // A self-signed-up business (see /signup) isn't usable until Super
+    // Admin has reviewed its Ghana Card + selfie. Unlike suspension this
+    // isn't punitive, so the session stays alive — they can just come
+    // back once it's approved. Super Admin/System Admin have no
+    // organization_id, so this never touches either of those accounts.
+    const orgVerification = (profile as any)?.organizations?.verification_status as string | undefined;
+    if (
+      orgVerification &&
+      orgVerification !== "verified" &&
+      request.nextUrl.pathname !== "/pending-verification"
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/pending-verification";
+      url.search = "";
+      return NextResponse.redirect(url);
     }
 
     if (request.nextUrl.pathname === "/login") {

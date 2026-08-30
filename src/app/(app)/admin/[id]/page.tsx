@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { AdvisoryNote, BusinessDirectoryRow } from "@/lib/types";
-import { pauseBusiness, sendAdvisoryNote } from "../actions";
+import { pauseBusiness, sendAdvisoryNote, approveBusinessVerification, rejectBusinessVerification } from "../actions";
 
 const STAGE_COLORS: Record<string, string> = {
   Cutting: "#FBBF24",
@@ -24,15 +25,23 @@ function healthTone(score: number) {
 export default async function BusinessDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
 
-  const [{ data: directory, error: dirErr }, { data: stages }, { data: notes }] = await Promise.all([
-    supabase.rpc("get_business_directory"),
-    supabase.rpc("get_business_stage_breakdown", { target_org: params.id }),
-    supabase
-      .from("advisory_notes")
-      .select("id, organization_id, author_id, message, created_at, seen_at")
-      .eq("organization_id", params.id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: directory, error: dirErr }, { data: stages }, { data: notes }, { data: verification }] =
+    await Promise.all([
+      supabase.rpc("get_business_directory"),
+      supabase.rpc("get_business_stage_breakdown", { target_org: params.id }),
+      supabase
+        .from("advisory_notes")
+        .select("id, organization_id, author_id, message, created_at, seen_at")
+        .eq("organization_id", params.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("organizations")
+        .select(
+          "verification_status, ghana_card_number, ghana_card_front_path, ghana_card_back_path, selfie_path, verification_submitted_at, verification_reviewed_at, verification_rejection_reason"
+        )
+        .eq("id", params.id)
+        .single(),
+    ]);
 
   if (dirErr) {
     return (
@@ -51,6 +60,31 @@ export default async function BusinessDetailPage({ params }: { params: { id: str
 
   const stageBreakdown = (stages ?? []) as { stage: string; order_count: number }[];
   const maxStageCount = Math.max(1, ...stageBreakdown.map((s) => s.order_count));
+
+  // Ghana Card / selfie live in a private storage bucket — sign short-lived
+  // URLs here, server-side, with the service-role client. Never exposed as
+  // a public/anon-readable link.
+  let kycImages: { front: string | null; back: string | null; selfie: string | null } | null = null;
+  const needsKycReview = verification && (verification.ghana_card_front_path || verification.selfie_path);
+  if (needsKycReview) {
+    const admin = createAdminClient();
+    const [front, back, selfie] = await Promise.all([
+      verification.ghana_card_front_path
+        ? admin.storage.from("kyc-documents").createSignedUrl(verification.ghana_card_front_path, 600)
+        : Promise.resolve({ data: null }),
+      verification.ghana_card_back_path
+        ? admin.storage.from("kyc-documents").createSignedUrl(verification.ghana_card_back_path, 600)
+        : Promise.resolve({ data: null }),
+      verification.selfie_path
+        ? admin.storage.from("kyc-documents").createSignedUrl(verification.selfie_path, 600)
+        : Promise.resolve({ data: null }),
+    ]);
+    kycImages = {
+      front: front.data?.signedUrl ?? null,
+      back: back.data?.signedUrl ?? null,
+      selfie: selfie.data?.signedUrl ?? null,
+    };
+  }
 
   return (
     <div>
@@ -120,6 +154,91 @@ export default async function BusinessDetailPage({ params }: { params: { id: str
               ))}
             </div>
           </div>
+
+          {needsKycReview && verification && (
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-display text-[15px] font-semibold text-ink">Identity verification</h3>
+                <span
+                  className={`badge ${
+                    verification.verification_status === "verified"
+                      ? "bg-success-soft text-success"
+                      : verification.verification_status === "rejected"
+                      ? "bg-danger-soft text-danger"
+                      : "bg-warning-soft text-warning"
+                  }`}
+                >
+                  {verification.verification_status}
+                </span>
+              </div>
+              <p className="text-xs text-ink-muted mb-4">
+                Ghana Card{" "}
+                <span className="font-mono font-semibold text-ink">{verification.ghana_card_number}</span> ·
+                Submitted{" "}
+                {verification.verification_submitted_at
+                  ? new Date(verification.verification_submitted_at).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </p>
+
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {[
+                  { label: "Ghana Card — front", url: kycImages?.front },
+                  { label: "Ghana Card — back", url: kycImages?.back },
+                  { label: "Live selfie", url: kycImages?.selfie },
+                ].map((img) => (
+                  <div key={img.label}>
+                    {img.url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={img.url}
+                        alt={img.label}
+                        className="w-full h-28 object-cover rounded-sm border border-border"
+                      />
+                    ) : (
+                      <div className="w-full h-28 rounded-sm border border-border bg-sunken flex items-center justify-center text-xs text-ink-faint">
+                        Not available
+                      </div>
+                    )}
+                    <div className="text-[11px] text-ink-muted mt-1 text-center">{img.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {verification.verification_status === "rejected" && verification.verification_rejection_reason && (
+                <div className="text-xs text-danger bg-danger-soft border border-danger/20 rounded-sm px-3 py-2 mb-4">
+                  Rejected: {verification.verification_rejection_reason}
+                </div>
+              )}
+
+              {verification.verification_status !== "verified" && (
+                <div className="flex flex-col gap-3 pt-3 border-t border-border">
+                  <form action={approveBusinessVerification}>
+                    <input type="hidden" name="organization_id" value={business.organization_id} />
+                    <SubmitButton pendingLabel="Approving…" className="w-full">
+                      Approve — selfie matches Ghana Card
+                    </SubmitButton>
+                  </form>
+                  <form action={rejectBusinessVerification} className="space-y-2">
+                    <input type="hidden" name="organization_id" value={business.organization_id} />
+                    <textarea
+                      name="reason"
+                      required
+                      rows={2}
+                      placeholder="Reason for rejection (shown to the owner)…"
+                      className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-xs text-ink outline-none focus:border-gold resize-none"
+                    />
+                    <SubmitButton variant="danger" pendingLabel="Rejecting…" className="w-full">
+                      Reject
+                    </SubmitButton>
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>

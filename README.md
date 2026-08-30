@@ -98,6 +98,23 @@ pages). It gets three things at `/system`:
 - **Email templates** — invites use Supabase's default email template;
   customize it in Supabase → Authentication → Email Templates for your
   brand voice.
+- **Redirect URLs (required, not optional)** — Business enrollment and every
+  Staff/Apprentice/Freelancer invite send people to `/accept-invite` to set
+  their password (`src/lib/site-url.ts` builds that URL from
+  `NEXT_PUBLIC_SITE_URL`). Supabase silently ignores that and falls back to
+  its own default Site URL unless the exact URL is allow-listed at
+  Supabase dashboard → Authentication → URL Configuration → Redirect URLs —
+  add `${NEXT_PUBLIC_SITE_URL}/accept-invite`, or a wildcard like
+  `https://your-app.onrender.com/**` to cover this and any future auth
+  redirect page. Skipping this step is exactly what makes invites look like
+  they silently do nothing.
+- **Password reset email template** — `/forgot-password` has the person type
+  a 6-digit code rather than click a link (`verifyOtp` under the hood, not
+  `resetPasswordForEmail`'s default magic link). For that code to actually
+  show up in the email, Supabase dashboard → Authentication → Email
+  Templates → Reset Password must include `{{ .Token }}` — Supabase's own
+  starter template already has this, but if it's been customized without
+  it, the email will only contain a link and there'll be no code to type.
 
 ## Local setup
 
@@ -116,8 +133,7 @@ npm run dev
    RLS policies. Starts with zero businesses on purpose — see "Supabase
    setup" step 4 for how the first ones get in.
 3. Run `supabase/migrations/002_platform_admin.sql` through
-   `007_business_verification_and_branding.sql`, in order, in the SQL
-   editor. Together these power:
+   `009_system_admin.sql`, in order, in the SQL editor. Together these power:
    - `002` — the Super Admin **Enrolled Businesses** screens (`/admin`): makes
      `profiles.organization_id` nullable (so a true platform-level Super
      Admin account isn't tied to any one business), adds `advisory_notes`,
