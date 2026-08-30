@@ -232,5 +232,3 @@ environment variables in the Vercel project settings (same values as your
 - Project-tracking tools (internal build trackers) should live in a separate
   shell outside this product, not in the sidebar — this app doesn't include
   any, by design.
-#   s e w s i n e s s  
- 
