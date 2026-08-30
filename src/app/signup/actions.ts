@@ -58,13 +58,25 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
 
   async function cleanup() {
     for (const path of uploadedPaths) {
-      await admin.storage.from("kyc-documents").remove([path]).catch(() => {});
+      try {
+        await admin.storage.from("kyc-documents").remove([path]);
+      } catch {
+        // best-effort — don't let cleanup itself throw
+      }
     }
     if (createdOrgId) {
-      await admin.from("organizations").delete().eq("id", createdOrgId).catch(() => {});
+      try {
+        await admin.from("organizations").delete().eq("id", createdOrgId);
+      } catch {
+        // best-effort
+      }
     }
     if (createdUserId) {
-      await admin.auth.admin.deleteUser(createdUserId).catch(() => {});
+      try {
+        await admin.auth.admin.deleteUser(createdUserId);
+      } catch {
+        // best-effort
+      }
     }
   }
 
