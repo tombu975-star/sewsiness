@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AuthCover } from "@/components/auth/AuthCover";
 import { submitBusinessSignup } from "./actions";
+import type { PlatformSettings } from "@/lib/platform-settings";
 
 type Step = "account" | "ghana-card" | "selfie" | "review";
 const STEPS: { key: Step; label: string }[] = [
@@ -79,7 +80,7 @@ function FilePreview({
   );
 }
 
-export function SignupForm() {
+export function SignupForm({ platform }: { platform?: PlatformSettings }) {
   const [step, setStep] = useState<Step>("account");
   const [businessName, setBusinessName] = useState("");
   const [region, setRegion] = useState("");
@@ -171,7 +172,13 @@ export function SignupForm() {
   }
 
   return (
-    <AuthCover mode="signup">
+    <AuthCover
+      mode="signup"
+      logoUrl={platform?.logoUrl}
+      coverImages={platform?.coverImages}
+      headline={platform?.coverHeadline}
+      subheadline={platform?.coverSubheadline}
+    >
       <div className="card p-6">
         <div className="text-center mb-1">
           <div className="font-display font-bold text-lg text-ink">Create your business account</div>

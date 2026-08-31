@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AuthCover } from "@/components/auth/AuthCover";
+import type { PlatformSettings } from "@/lib/platform-settings";
 
 // Two steps: (1) email -> Supabase emails a 6-digit code, (2) code + new
 // password -> verifyOtp signs them in with a recovery session, then
@@ -20,7 +21,7 @@ import { AuthCover } from "@/components/auth/AuthCover";
 // does this out of the box). Without that edit, this screen will still
 // work for anyone who has the token from Supabase's API/logs, but real
 // end users won't see a code to type.
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ platform }: { platform?: PlatformSettings }) {
   const router = useRouter();
   const [step, setStep] = useState<"request" | "confirm">("request");
   const [email, setEmail] = useState("");
@@ -87,7 +88,13 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <AuthCover mode="forgot">
+    <AuthCover
+      mode="forgot"
+      logoUrl={platform?.logoUrl}
+      coverImages={platform?.coverImages}
+      headline={platform?.coverHeadline}
+      subheadline={platform?.coverSubheadline}
+    >
       {step === "request" ? (
         <form onSubmit={requestCode} className="card p-6 space-y-4">
           <div className="text-center mb-1">

@@ -4,6 +4,7 @@ import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 import { AuthCover } from "@/components/auth/AuthCover";
 import { Button } from "@/components/Button";
+import { getPlatformSettings } from "@/lib/platform-settings";
 
 export default async function RootPage() {
   const supabase = createClient();
@@ -20,8 +21,16 @@ export default async function RootPage() {
     redirect(homePathForRole((profile?.role as Role) ?? "staff"));
   }
 
+  const platform = await getPlatformSettings();
+
   return (
-    <AuthCover mode="landing">
+    <AuthCover
+      mode="landing"
+      logoUrl={platform.logoUrl}
+      coverImages={platform.coverImages}
+      headline={platform.coverHeadline}
+      subheadline={platform.coverSubheadline}
+    >
       <div className="text-center md:text-left">
         <h2 className="font-display font-bold text-2xl text-ink mb-2">Welcome</h2>
         <p className="text-sm text-ink-muted mb-8">

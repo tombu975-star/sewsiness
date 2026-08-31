@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 import { AuthCover } from "@/components/auth/AuthCover";
+import type { PlatformSettings } from "@/lib/platform-settings";
 
-export function LoginForm() {
+export function LoginForm({ platform }: { platform?: PlatformSettings }) {
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
@@ -63,7 +64,13 @@ export function LoginForm() {
   }
 
   return (
-    <AuthCover mode="login">
+    <AuthCover
+      mode="login"
+      logoUrl={platform?.logoUrl}
+      coverImages={platform?.coverImages}
+      headline={platform?.coverHeadline}
+      subheadline={platform?.coverSubheadline}
+    >
       <form onSubmit={handleSubmit} className="card p-6 space-y-4">
         <div className="text-center mb-1">
           <div className="font-display font-bold text-lg text-ink">Welcome back</div>
