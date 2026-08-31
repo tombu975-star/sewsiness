@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function SystemOverviewPage() {
+  await requirePageRole(["system_admin"]);
   const supabase = createClient();
 
   const [{ data: flags }, { data: integrations }, { data: incidents }] = await Promise.all([

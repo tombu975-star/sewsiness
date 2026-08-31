@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { suspendUser, reactivateUser } from "../users-actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Role } from "@/lib/types";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 const ROLE_LABEL: Record<Role, string> = {
   super_admin: "Super Admin",
@@ -33,6 +34,7 @@ export default async function PlatformUsersPage({
 }: {
   searchParams: { role?: string; q?: string };
 }) {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
   const roleFilter = (searchParams.role as Role | undefined) ?? undefined;
   const q = searchParams.q?.trim() ?? "";

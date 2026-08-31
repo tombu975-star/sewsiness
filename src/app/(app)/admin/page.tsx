@@ -3,6 +3,7 @@ import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
+import { requirePageRole } from "@/lib/auth/require-role";
 import type { BusinessDirectoryRow } from "@/lib/types";
 
 function healthTone(score: number) {
@@ -12,6 +13,7 @@ function healthTone(score: number) {
 }
 
 export default async function PlatformAdminPage() {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
   const [{ data, error }, { data: pendingOrgs }] = await Promise.all([

@@ -3,6 +3,7 @@ import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { logIncident, setIncidentStatus } from "./actions";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 const SEVERITY_TONE: Record<string, string> = {
   low: "bg-sunken text-ink-muted",
@@ -18,6 +19,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default async function IncidentsPage() {
+  await requirePageRole(["system_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("system_incidents")

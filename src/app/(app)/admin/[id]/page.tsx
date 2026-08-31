@@ -5,6 +5,7 @@ import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
+import { requirePageRole } from "@/lib/auth/require-role";
 import type { AdvisoryNote, BusinessDirectoryRow } from "@/lib/types";
 import { pauseBusiness, sendAdvisoryNote, approveBusinessVerification, rejectBusinessVerification } from "../actions";
 
@@ -23,6 +24,7 @@ function healthTone(score: number) {
 }
 
 export default async function BusinessDetailPage({ params }: { params: { id: string } }) {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
   const [{ data: directory, error: dirErr }, { data: stages }, { data: notes }, { data: verification }] =

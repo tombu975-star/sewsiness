@@ -3,6 +3,7 @@ import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SCORED_DIMENSIONS } from "@/lib/onboarding/sections";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 type MetricRow = {
   organization_id: string;
@@ -54,6 +55,7 @@ function primarySupportArea(scores: Record<string, number> | null): string {
 }
 
 export default async function PlatformBusinessIntelligencePage() {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("platform_business_metrics")
