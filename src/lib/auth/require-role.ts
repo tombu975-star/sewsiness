@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Role } from "@/lib/types";
-import { homePathForRole } from "@/lib/nav";
 
 /**
  * Resolves the signed-in user's own profile (organization_id, branch_id,
@@ -44,33 +43,4 @@ export async function requireRole(allowed: Role[]) {
     );
   }
   return { user, profile };
-}
-
-/**
- * Same check as requireRole(), but for use at the top of a PAGE
- * component rather than a Server Action — redirects the wrong-role
- * person to their own home instead of throwing into an error boundary.
- *
- * This exists as its own explicit call at every /admin and /system
- * page (not just relying on middleware + RLS) on purpose: middleware
- * only walls Super Admin/System Admin OUT of business pages, it does
- * not wall other roles OUT of /admin or /system — that boundary is
- * this page-level check plus each table's RLS. Two independent layers
- * catch what either one alone might miss (see 019_security_fixes.sql
- * for a case where a gap in one layer — a view that turned out not to
- * inherit RLS — would have been caught immediately by this one).
- */
-export async function requirePageRole(allowed: Role[]) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase.from("profiles").select("organization_id, branch_id, role").eq("id", user.id).single();
-  const role = (profile?.role as Role) ?? null;
-  if (!role || !allowed.includes(role)) {
-    redirect(homePathForRole(role ?? "staff"));
-  }
-  return { user, profile: profile! };
 }

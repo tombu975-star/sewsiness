@@ -203,10 +203,14 @@ export function AuthCover({
   }
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-2 bg-canvas">
+    <div className="min-h-screen md:grid md:grid-cols-2 xl:grid-cols-[58%_42%] bg-canvas">
       {/* ---------------- Desktop / tablet — split screen, md (768px) up ---------------- */}
+      {/* Even 50/50 through tablet/laptop (md–lg); from xl (1280px) the photo
+          panel takes more of the frame and the form column holds steady at
+          max-w-sm, so wide monitors don't stretch the form into a sparse
+          half-empty column — a standard pattern on premium SaaS auth pages. */}
       <div
-        className="relative hidden md:flex flex-col justify-between px-10 lg:px-14 py-12 text-white overflow-hidden"
+        className="relative hidden md:flex flex-col justify-between px-10 lg:px-14 xl:px-16 py-12 text-white overflow-hidden"
         style={!hasImages ? { background: "linear-gradient(160deg, var(--indigo), var(--indigo2))" } : undefined}
       >
         {hasImages ? (
@@ -228,9 +232,9 @@ export function AuthCover({
         </Link>
 
         <div className="relative">
-          <h1 className="font-display font-extrabold text-3xl lg:text-4xl leading-tight mb-3 drop-shadow-sm">{tagline}</h1>
+          <h1 className="font-display font-extrabold text-3xl lg:text-4xl xl:text-[2.75rem] leading-tight mb-3 max-w-md drop-shadow-sm">{tagline}</h1>
           {!businessName && (
-            <p className="text-sm max-w-sm" style={{ color: "#E7DFF7" }}>
+            <p className="text-sm xl:text-[15px] max-w-sm xl:max-w-md" style={{ color: "#E7DFF7" }}>
               {desc}
             </p>
           )}
