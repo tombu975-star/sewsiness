@@ -33,6 +33,13 @@ export interface Organization {
   verification_reviewed_at: string | null;
   verification_reviewed_by: string | null;
   verification_rejection_reason: string | null;
+  legal_entity_type: string | null;
+  registration_number: string | null;
+  tax_id: string | null;
+  business_categories: string[];
+  business_age_years: number | null;
+  contact_phone: string | null;
+  contact_country: string;
   created_at: string;
 }
 

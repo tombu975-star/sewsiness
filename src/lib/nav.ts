@@ -122,7 +122,13 @@ export const SIDEBAR: NavItem[] = [
   { label: "My Portfolio", icon: "\u2698", href: "/portfolios", roles: ["apprentice"] },
   { label: "Branches", icon: "\u2302", href: "/branches", roles: ["owner", "manager"] },
   { label: "Reports", icon: "\u25A8", href: "/reports", roles: ["owner", "manager"] },
-  { label: "Business Health", icon: "\u2661", href: "/business-health", roles: ["owner", "manager"], isNew: true },
+  {
+    label: "Business Health", icon: "\u2661", roles: ["owner", "manager"], isNew: true,
+    children: [
+      { label: "Overview", href: "/business-health" },
+      { label: "Full Assessment", href: "/business-health/assessment" },
+    ],
+  },
   {
     label: "Projections", icon: "\u27F6", roles: ["owner", "manager"], isNew: true,
     children: [

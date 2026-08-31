@@ -155,6 +155,53 @@ export function AuthCover({
     </div>
   );
 
+  // ---------------- Login — standard full-bleed cover, single layout ----------------
+  // Not a split screen: the cover image (or gradient fallback) fills the
+  // entire viewport behind everything, and the login card floats centered
+  // on top — same layout at every breakpoint, no md:grid.
+  if (mode === "login") {
+    return (
+      <div
+        className="relative min-h-screen flex flex-col bg-canvas overflow-hidden"
+        style={!hasImages ? { background: "linear-gradient(160deg, var(--indigo), var(--indigo2))" } : undefined}
+      >
+        {hasImages ? (
+          <RotatingImages
+            images={images}
+            index={index}
+            overlay="linear-gradient(180deg, rgba(24,10,48,.55) 0%, rgba(24,10,48,.4) 40%, rgba(24,10,48,.75) 100%)"
+          />
+        ) : (
+          <>
+            <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full pointer-events-none" style={{ background: "rgba(251,191,36,.16)" }} />
+            <div className="absolute -bottom-24 -left-10 w-64 h-64 rounded-full pointer-events-none" style={{ background: "rgba(251,191,36,.10)" }} />
+          </>
+        )}
+
+        <div className="relative flex items-center justify-between px-6 md:px-10 py-6 text-white">
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoMark logoUrl={logoUrl} brandName={brandName} size={34} />
+            <span className="font-display font-extrabold text-lg tracking-wide drop-shadow-sm">{brandName}</span>
+          </Link>
+          {navButtons(true)}
+        </div>
+
+        <div className="relative flex-1 flex flex-col items-center justify-center px-4 py-8 gap-6">
+          {!businessName && (
+            <div className="text-center text-white max-w-md hidden sm:block">
+              <h1 className="font-display font-extrabold text-2xl md:text-3xl leading-tight mb-2 drop-shadow-sm">{tagline}</h1>
+              <p className="text-sm" style={{ color: "#E7DFF7" }}>
+                {desc}
+              </p>
+            </div>
+          )}
+          <div className="w-full max-w-sm">{children}</div>
+          {hasImages && <CoverDots count={images.length} index={index} />}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen md:grid md:grid-cols-2 bg-canvas">
       {/* ---------------- Desktop / tablet — split screen, md (768px) up ---------------- */}
