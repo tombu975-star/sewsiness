@@ -59,7 +59,13 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublic = PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+  // "/" is the landing chooser (rotating cover + "Log in" / "Create a
+  // business account") and must be reachable by a logged-out visitor —
+  // checked as an exact match (not .startsWith, since every path starts
+  // with "/") so it doesn't accidentally make the whole app public.
+  const isPublic =
+    request.nextUrl.pathname === "/" ||
+    PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

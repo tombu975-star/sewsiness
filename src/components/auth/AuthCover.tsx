@@ -27,10 +27,11 @@ import { useEffect, useState } from "react";
 // falls back to the original solid gradient, and with no logo it falls
 // back to the default SEWSINESS mark.
 //
-// The top bar (desktop) / hero (mobile) also doubles as navigation —
-// its two buttons are how "clicking the cover" gets you to /login or
-// /signup from anywhere in the auth flow, not just from the landing
-// chooser.
+// The top bar (desktop) / hero (mobile) just shows the brand mark and
+// links back to "/" — navigating between login/signup happens via each
+// form's own reciprocal link ("create an account here" / "Already have
+// an account? Log in"), so there's no second, duplicate pair of
+// "Log in" / "Create a business account" buttons floating on top.
 
 const ROTATE_MS = 6000;
 
@@ -146,27 +147,6 @@ export function AuthCover({
   const hasImages = images.length > 0;
   const index = useRotatingIndex(images.length);
 
-  const navButtons = (compact: boolean) => (
-    <div className="relative flex items-center gap-2">
-      <Link
-        href="/login"
-        className={`rounded-lg font-semibold transition-colors ${compact ? "text-xs px-3.5 py-2" : "text-sm px-4 py-2.5"} ${
-          mode === "login" ? "bg-gold text-[#3a2400]" : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-        }`}
-      >
-        Log in
-      </Link>
-      <Link
-        href="/signup"
-        className={`rounded-lg font-semibold transition-colors ${compact ? "text-xs px-3.5 py-2" : "text-sm px-4 py-2.5"} ${
-          mode === "signup" ? "bg-gold text-[#3a2400]" : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-        }`}
-      >
-        Create a business account
-      </Link>
-    </div>
-  );
-
   // ---------------- Every mode except landing — full-bleed cover, single layout ----------------
   // Not a split screen: the cover image (or gradient fallback) fills the
   // entire viewport behind everything, and the form card floats centered
@@ -192,12 +172,11 @@ export function AuthCover({
           </>
         )}
 
-        <div className="relative flex items-center justify-between px-6 md:px-10 py-6 text-white">
+        <div className="relative flex items-center px-6 md:px-10 py-6 text-white">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark logoUrl={logoUrl} brandName={brandName} size={34} />
             <span className="font-display font-extrabold text-lg tracking-wide drop-shadow-sm">{brandName}</span>
           </Link>
-          {navButtons(true)}
         </div>
 
         <div className="relative flex-1 flex flex-col items-center justify-center px-4 py-8 gap-6">
@@ -255,8 +234,6 @@ export function AuthCover({
           )}
           {hasImages && <div className="mt-5"><CoverDots count={images.length} index={index} /></div>}
         </div>
-
-        {navButtons(false)}
       </div>
 
       {/* ---------------- Mobile — photo hero, curved transition, floating form card ---------------- */}
@@ -314,8 +291,6 @@ export function AuthCover({
               <CoverDots count={images.length} index={index} />
             </div>
           )}
-
-          <div className="mt-6">{navButtons(true)}</div>
         </div>
       </div>
 

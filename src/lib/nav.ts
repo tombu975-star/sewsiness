@@ -235,3 +235,29 @@ export function bottomNavForRole(role: Role): BottomNavItem[] {
 export function homePathForRole(role: Role): string {
   return ROLES.find((r) => r.id === role)?.dashboardHref ?? "/dashboard";
 }
+
+// Path prefixes each platform account (Super Admin / System Admin) is
+// walled into — kept in sync with SUPER_ADMIN_ALLOWED_PATHS /
+// SYSTEM_ADMIN_ALLOWED_PATHS in middleware.ts.
+const PLATFORM_ALLOWED_PATHS: Partial<Record<Role, string[]>> = {
+  super_admin: ["/admin", "/notifications", "/settings"],
+  system_admin: ["/system", "/notifications", "/settings"],
+};
+
+// Resolves where a just-logged-in user should land, honoring a
+// "?next=" redirect target (e.g. from a bookmarked link) but never for
+// Super Admin / System Admin outside their own walled-off paths — those
+// two are platform accounts, not business accounts, so following an
+// arbitrary "next" straight into a business page (even just for an
+// instant before middleware bounces them back) would land them on the
+// wrong dashboard first. Every other role can use "next" freely.
+export function resolveLoginDestination(role: Role, next?: string | null): string {
+  const home = homePathForRole(role);
+  if (!next) return home;
+
+  const allowed = PLATFORM_ALLOWED_PATHS[role];
+  if (allowed && !allowed.some((p) => next.startsWith(p))) {
+    return home;
+  }
+  return next;
+}
