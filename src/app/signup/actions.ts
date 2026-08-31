@@ -137,6 +137,7 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
         tax_id: taxId || null,
         business_categories: businessCategories,
         business_age_years: businessAgeYears,
+        contact_email: ownerEmail,
       })
       .select("id")
       .single();

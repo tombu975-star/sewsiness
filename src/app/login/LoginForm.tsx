@@ -108,7 +108,10 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
             placeholder="Enter your password"
           />
         </div>
-        <div className="text-right -mt-2">
+        <div className="flex justify-between -mt-2">
+          <Link href="/forgot-account" className="text-xs font-semibold text-ink-muted hover:text-ink">
+            Forgot account number?
+          </Link>
           <Link href="/forgot-password" className="text-xs font-semibold text-indigo hover:underline">
             Forgot password?
           </Link>

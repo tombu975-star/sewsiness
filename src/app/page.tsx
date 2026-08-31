@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
@@ -44,6 +45,15 @@ export default async function RootPage() {
           <Button href="/login" variant="outline">
             Log in
           </Button>
+        </div>
+        <div className="flex items-center justify-center md:justify-start gap-3 mt-5 text-xs font-semibold">
+          <Link href="/open-account" className="text-indigo hover:underline">
+            Open an Account
+          </Link>
+          <span className="text-ink-faint">|</span>
+          <Link href="/forgot-account" className="text-indigo hover:underline">
+            Forgot account number?
+          </Link>
         </div>
       </div>
     </AuthCover>
