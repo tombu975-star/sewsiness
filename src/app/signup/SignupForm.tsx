@@ -5,10 +5,12 @@ import Link from "next/link";
 import { AuthCover } from "@/components/auth/AuthCover";
 import { submitBusinessSignup } from "./actions";
 import type { PlatformSettings } from "@/lib/platform-settings";
+import { BUSINESS_CATEGORIES, LEGAL_ENTITY_TYPES, TIN_PATTERN } from "@/lib/onboarding/identity";
 
-type Step = "account" | "ghana-card" | "selfie" | "review";
+type Step = "account" | "profile" | "ghana-card" | "selfie" | "review";
 const STEPS: { key: Step; label: string }[] = [
   { key: "account", label: "Business & Owner" },
+  { key: "profile", label: "Business Profile" },
   { key: "ghana-card", label: "Ghana Card" },
   { key: "selfie", label: "Facial Verification" },
   { key: "review", label: "Review & Submit" },
@@ -88,6 +90,11 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
   const [ownerEmail, setOwnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [legalEntityType, setLegalEntityType] = useState("");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [taxId, setTaxId] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [businessAgeYears, setBusinessAgeYears] = useState("");
   const [ghanaCardNumber, setGhanaCardNumber] = useState("");
   const [cardFront, setCardFront] = useState<File | null>(null);
   const [cardBack, setCardBack] = useState<File | null>(null);
@@ -113,6 +120,21 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
     return null;
   }
 
+  function toggleCategory(cat: string) {
+    setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
+  }
+
+  function validateProfileStep() {
+    if (!legalEntityType) return "Select the business's legal type.";
+    if (categories.length === 0) return "Select at least one business category.";
+    if (!businessAgeYears.trim() || Number(businessAgeYears) < 0) return "Enter how many years the business has been operating.";
+    if (Number(businessAgeYears) > 150) return "That doesn't look right — check the number of years.";
+    if (taxId.trim() && !TIN_PATTERN.test(taxId.trim())) {
+      return "Tax ID (TIN) should look like GHA-123456789-0, or leave it blank.";
+    }
+    return null;
+  }
+
   function validateGhanaCardStep() {
     if (!/^GHA-\d{9}-\d$/i.test(ghanaCardNumber.trim())) {
       return "Ghana Card number should look like GHA-123456789-0.";
@@ -127,6 +149,10 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
     if (step === "account") {
       const err = validateAccountStep();
       if (err) return setError(err);
+      setStep("profile");
+    } else if (step === "profile") {
+      const err = validateProfileStep();
+      if (err) return setError(err);
       setStep("ghana-card");
     } else if (step === "ghana-card") {
       const err = validateGhanaCardStep();
@@ -140,7 +166,8 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
 
   function goBack() {
     setError(null);
-    if (step === "ghana-card") setStep("account");
+    if (step === "profile") setStep("account");
+    else if (step === "ghana-card") setStep("profile");
     else if (step === "selfie") setStep("ghana-card");
     else if (step === "review") setStep("selfie");
   }
@@ -158,6 +185,11 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
     fd.set("owner_name", ownerName.trim());
     fd.set("owner_email", ownerEmail.trim());
     fd.set("password", password);
+    fd.set("legal_entity_type", legalEntityType);
+    fd.set("registration_number", registrationNumber.trim());
+    fd.set("tax_id", taxId.trim().toUpperCase());
+    fd.set("business_categories", JSON.stringify(categories));
+    fd.set("business_age_years", businessAgeYears.trim());
     fd.set("ghana_card_number", ghanaCardNumber.trim().toUpperCase());
     fd.set("ghana_card_front", cardFront);
     fd.set("ghana_card_back", cardBack);
@@ -255,6 +287,94 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
           </div>
         )}
 
+        {step === "profile" && (
+          <div className="space-y-4">
+            <div className="callout text-xs">
+              A quick profile of the business itself — this feeds your Business Health dashboard
+              once you&rsquo;re approved. Registration and Tax ID are optional if you don&rsquo;t
+              have them yet.
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Business type</label>
+              <select
+                value={legalEntityType}
+                onChange={(e) => setLegalEntityType(e.target.value)}
+                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              >
+                <option value="">Select…</option>
+                {LEGAL_ENTITY_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                  Registration number <span className="text-ink-faint font-normal">(optional)</span>
+                </label>
+                <input
+                  value={registrationNumber}
+                  onChange={(e) => setRegistrationNumber(e.target.value)}
+                  placeholder="RGD number"
+                  className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                  Tax ID / TIN <span className="text-ink-faint font-normal">(optional)</span>
+                </label>
+                <input
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  placeholder="GHA-123456789-0"
+                  className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold font-mono"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                Years in operation
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={150}
+                value={businessAgeYears}
+                onChange={(e) => setBusinessAgeYears(e.target.value)}
+                placeholder="e.g. 3"
+                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                Business category <span className="text-ink-faint font-normal">(select all that apply)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {BUSINESS_CATEGORIES.map((cat) => {
+                  const active = categories.includes(cat);
+                  return (
+                    <button
+                      type="button"
+                      key={cat}
+                      onClick={() => toggleCategory(cat)}
+                      aria-pressed={active}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        active
+                          ? "bg-gold border-gold text-[#3a2400]"
+                          : "border-border-strong text-ink-muted bg-surface hover:border-gold"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {step === "ghana-card" && (
           <div className="space-y-4">
             <div className="callout text-xs">
@@ -291,6 +411,14 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
               <div className="flex justify-between border-b border-border pb-2">
                 <span className="text-ink-muted">Email</span>
                 <span className="font-medium text-ink">{ownerEmail}</span>
+              </div>
+              <div className="flex justify-between border-b border-border pb-2">
+                <span className="text-ink-muted">Business type</span>
+                <span className="font-medium text-ink">{legalEntityType || "—"}</span>
+              </div>
+              <div className="flex justify-between border-b border-border pb-2">
+                <span className="text-ink-muted">Category</span>
+                <span className="font-medium text-ink text-right">{categories.join(", ") || "—"}</span>
               </div>
               <div className="flex justify-between border-b border-border pb-2">
                 <span className="text-ink-muted">Ghana Card</span>

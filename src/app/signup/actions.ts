@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { LEGAL_ENTITY_TYPES, TIN_PATTERN } from "@/lib/onboarding/identity";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -30,6 +31,19 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
   const cardBack = formData.get("ghana_card_back") as File | null;
   const selfie = formData.get("selfie") as File | null;
 
+  // Light business-identity/compliance fields (see src/lib/onboarding).
+  const legalEntityType = String(formData.get("legal_entity_type") || "").trim();
+  const registrationNumber = String(formData.get("registration_number") || "").trim();
+  const taxId = String(formData.get("tax_id") || "").trim();
+  const businessAgeYearsRaw = String(formData.get("business_age_years") || "").trim();
+  let businessCategories: string[] = [];
+  try {
+    const parsed = JSON.parse(String(formData.get("business_categories") || "[]"));
+    if (Array.isArray(parsed)) businessCategories = parsed.filter((c) => typeof c === "string");
+  } catch {
+    businessCategories = [];
+  }
+
   if (!businessName || !ownerName || !ownerEmail || !ghanaCardNumber) {
     return { error: "Please fill in every required field." };
   }
@@ -39,6 +53,19 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
   // Loose but real Ghana Card format check: GHA-XXXXXXXXX-X
   if (!/^GHA-\d{9}-\d$/i.test(ghanaCardNumber)) {
     return { error: "Ghana Card number should look like GHA-123456789-0." };
+  }
+  if (!(LEGAL_ENTITY_TYPES as readonly string[]).includes(legalEntityType)) {
+    return { error: "Select the business's legal type." };
+  }
+  if (businessCategories.length === 0) {
+    return { error: "Select at least one business category." };
+  }
+  const businessAgeYears = Number(businessAgeYearsRaw);
+  if (!businessAgeYearsRaw || Number.isNaN(businessAgeYears) || businessAgeYears < 0 || businessAgeYears > 150) {
+    return { error: "Enter how many years the business has been operating." };
+  }
+  if (taxId && !TIN_PATTERN.test(taxId)) {
+    return { error: "Tax ID (TIN) should look like GHA-123456789-0, or leave it blank." };
   }
   const cardFrontErr = validateImage(cardFront, "Ghana Card (front)");
   if (cardFrontErr) return { error: cardFrontErr };
@@ -105,6 +132,11 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
         verification_status: "pending",
         ghana_card_number: ghanaCardNumber,
         verification_submitted_at: new Date().toISOString(),
+        legal_entity_type: legalEntityType,
+        registration_number: registrationNumber || null,
+        tax_id: taxId || null,
+        business_categories: businessCategories,
+        business_age_years: businessAgeYears,
       })
       .select("id")
       .single();
