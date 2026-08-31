@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -19,6 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function IntegrationsPage() {
+  await requirePageRole(["system_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("integration_checks")

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -18,6 +19,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default async function IncidentsPage() {
+  await requirePageRole(["system_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("system_incidents")
