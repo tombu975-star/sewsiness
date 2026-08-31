@@ -328,3 +328,11 @@ body {
   font-size: 13px;
   color: var(--gold-ink);
 }
+
+@keyframes loginSplashProgress {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(210%); }
+}
+.animate-login-splash {
+  animation: loginSplashProgress 1.05s ease-in-out infinite;
+}
