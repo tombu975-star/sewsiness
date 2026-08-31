@@ -4,7 +4,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { Tabs } from "@/components/Tabs";
 import { StatusBadge } from "@/components/StatusBadge";
 import { markAccountRequestStatus, resolveAccountRecoveryRequest } from "../account-requests-actions";
-import { requirePageRole } from "@/lib/auth/require-role";
 
 type AccountRequest = {
   id: string;
@@ -162,7 +161,6 @@ function RecoveryRequestsTable({ rows }: { rows: RecoveryRequest[] }) {
 }
 
 export default async function AccountRequestsPage() {
-  await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
   const [{ data: requests, error: reqError }, { data: recoveries, error: recError }] = await Promise.all([

@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { PermissionToggle } from "./PermissionToggle";
 import type { Role } from "@/lib/types";
-import { requirePageRole } from "@/lib/auth/require-role";
 
 const ROLES: Role[] = ["super_admin", "system_admin", "owner", "manager", "staff", "trainer", "apprentice", "freelancer"];
 const ROLE_LABEL: Record<Role, string> = {
@@ -18,7 +17,6 @@ const ROLE_LABEL: Record<Role, string> = {
 const ACTIONS = ["VIEW", "CREATE", "EDIT", "DELETE", "APPROVE", "EXPORT", "MANAGE", "ADMINISTER"];
 
 export default async function RolesPermissionsPage({ searchParams }: { searchParams: { role?: string } }) {
-  await requirePageRole(["super_admin"]);
   const supabase = createClient();
   const activeRole = (searchParams.role as Role) && ROLES.includes(searchParams.role as Role) ? (searchParams.role as Role) : "super_admin";
 

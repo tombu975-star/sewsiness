@@ -5,10 +5,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { verifyFreelancer, unverifyFreelancer } from "../freelancers-actions";
 import { suspendUser, reactivateUser } from "../users-actions";
-import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function PlatformFreelancersPage() {
-  await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
   // RLS ("super admin can read all profiles / freelancer profiles / work
