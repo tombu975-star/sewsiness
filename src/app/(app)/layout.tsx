@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, organization_id, branch_id")
+    .select("id, full_name, role, organization_id, branch_id, avatar_url")
     .eq("id", user.id)
     .single();
 
@@ -42,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const branchName = isPlatformAccount ? null : branch?.name;
 
   return (
-    <AppShell role={role} fullName={fullName} orgName={orgName} branchName={branchName}>
+    <AppShell role={role} fullName={fullName} orgName={orgName} branchName={branchName} avatarUrl={profile?.avatar_url ?? null}>
       {children}
     </AppShell>
   );
