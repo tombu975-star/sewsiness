@@ -114,7 +114,7 @@ export function AuthCover({
   subheadline,
   children,
 }: {
-  mode: "login" | "signup" | "forgot" | "reset" | "landing";
+  mode: "login" | "signup" | "forgot" | "reset" | "landing" | "open-account" | "forgot-account";
   logoUrl?: string | null;
   businessName?: string | null;
   coverImages?: string[];

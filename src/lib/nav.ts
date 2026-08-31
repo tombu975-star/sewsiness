@@ -157,6 +157,8 @@ export const SIDEBAR: NavItem[] = [
 // wall rather than being bolted onto this one.
 export const SUPER_ADMIN_SIDEBAR: NavItem[] = [
   { label: "Platform Admin", icon: "\u25C6", href: "/admin", roles: ["super_admin"] },
+  { label: "Business Intelligence", icon: "\u2261", href: "/admin/intelligence", roles: ["super_admin"], isNew: true },
+  { label: "Account Requests", icon: "\u2709", href: "/admin/account-requests", roles: ["super_admin"], isNew: true },
   { label: "Users & Roles", icon: "\u263A", href: "/admin/users", roles: ["super_admin"] },
   { label: "Roles & Permissions", icon: "\u25CE", href: "/admin/roles", roles: ["super_admin"] },
   { label: "Apprentices & Trainers", icon: "\u2698", href: "/admin/apprentices", roles: ["super_admin"] },
