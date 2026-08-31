@@ -4,11 +4,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Shared cover for every auth page (login, signup, forgot/reset password,
-// and the landing chooser at "/"). Split-screen from the tablet breakpoint
-// up (md: 768px) through laptop/desktop; below that it becomes a photo
-// hero with a curved transition into a brand-color panel — the same
-// pattern used by mobile-banking apps (image → curve → colored panel with
-// logo badge + copy → a floating card for the actual form).
+// open-account, forgot-account) plus the landing chooser at "/".
+//
+// Only the landing chooser ("/") uses the split-screen layout — image
+// panel that changes/rotates on the left (md/tablet and up), photo hero
+// with curved transition on mobile, and its own content (headline +
+// "Log in" / "Create a business account" buttons) on the right/below.
+// That's the *chooser* — the moment before someone has picked an action.
+//
+// Every other mode (login, signup, forgot, reset, open-account,
+// forgot-account) is what happens *after* an action is picked: a single
+// full-bleed layout, same at every breakpoint, no split — the rotating
+// (or single, on /login) cover image fills the whole screen behind
+// everything, and only the form floats centered on top. On phones this
+// naturally shows just the form (the headline/subheadline are hidden
+// below the sm breakpoint) — there's no separate mobile-only treatment
+// to reconcile, it's the same markup everywhere.
 //
 // Both layouts can show a rolling set of images decided by Super Admin
 // (Settings → Platform Branding) and a platform logo in place of the
@@ -16,9 +27,10 @@ import { useEffect, useState } from "react";
 // falls back to the original solid gradient, and with no logo it falls
 // back to the default SEWSINESS mark.
 //
-// The left panel (desktop) / hero (mobile) also doubles as navigation —
+// The top bar (desktop) / hero (mobile) also doubles as navigation —
 // its two buttons are how "clicking the cover" gets you to /login or
-// /signup from anywhere in the auth flow, not just from a landing page.
+// /signup from anywhere in the auth flow, not just from the landing
+// chooser.
 
 const ROTATE_MS = 6000;
 
@@ -155,11 +167,13 @@ export function AuthCover({
     </div>
   );
 
-  // ---------------- Login — standard full-bleed cover, single layout ----------------
+  // ---------------- Every mode except landing — full-bleed cover, single layout ----------------
   // Not a split screen: the cover image (or gradient fallback) fills the
-  // entire viewport behind everything, and the login card floats centered
-  // on top — same layout at every breakpoint, no md:grid.
-  if (mode === "login") {
+  // entire viewport behind everything, and the form card floats centered
+  // on top — same layout at every breakpoint, no md:grid. This is what
+  // an "action" (Log in / Create a business account / Reset password /
+  // etc.) lands on — the split chooser is landing-only, below.
+  if (mode !== "landing") {
     return (
       <div
         className="relative min-h-screen flex flex-col bg-canvas overflow-hidden"
@@ -202,6 +216,7 @@ export function AuthCover({
     );
   }
 
+  // ---------------- Landing chooser only — split screen ----------------
   return (
     <div className="min-h-screen md:grid md:grid-cols-2 xl:grid-cols-[58%_42%] bg-canvas">
       {/* ---------------- Desktop / tablet — split screen, md (768px) up ---------------- */}
