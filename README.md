@@ -232,3 +232,6 @@ environment variables in the Vercel project settings (same values as your
 - Project-tracking tools (internal build trackers) should live in a separate
   shell outside this product, not in the sidebar — this app doesn't include
   any, by design.
+
+## Login splash
+The real `/login` route now uses `src/app/login/LoginSplash.tsx`. The splash displays the configured platform logo/cover imagery, rotates configured images during the splash, then reveals the existing Supabase login form. It is independent from the landing-page carousel and does not change the authentication logic.
