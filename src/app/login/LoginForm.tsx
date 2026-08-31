@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { homePathForRole } from "@/lib/nav";
+import { resolveLoginDestination } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 import { AuthCover } from "@/components/auth/AuthCover";
 import type { PlatformSettings } from "@/lib/platform-settings";
@@ -30,7 +30,7 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
       return;
     }
 
-    let destination = params.get("next");
+    const nextParam = params.get("next");
     const { data: profile } = await supabase
       .from("profiles")
       .select("role, suspended_at, organization_id, organizations(verification_status, verification_rejection_reason)")
@@ -54,9 +54,7 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
       return;
     }
 
-    if (!destination) {
-      destination = homePathForRole((profile?.role as Role) ?? "staff");
-    }
+    const destination = resolveLoginDestination((profile?.role as Role) ?? "staff", nextParam);
 
     setLoading(false);
     router.push(destination);
