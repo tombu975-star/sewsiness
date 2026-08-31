@@ -3,10 +3,8 @@ import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createFeatureFlag, toggleFeatureFlag, deleteFeatureFlag } from "./actions";
-import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function FeatureFlagsPage() {
-  await requirePageRole(["system_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("feature_flags")

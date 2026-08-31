@@ -3,7 +3,6 @@ import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { runIntegrationCheck, addIntegration, removeIntegration } from "./actions";
-import { requirePageRole } from "@/lib/auth/require-role";
 
 const STATUS_TONE: Record<string, string> = {
   connected: "bg-success-soft text-success",
@@ -20,7 +19,6 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function IntegrationsPage() {
-  await requirePageRole(["system_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("integration_checks")
