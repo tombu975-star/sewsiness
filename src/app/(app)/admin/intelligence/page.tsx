@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -54,6 +55,7 @@ function primarySupportArea(scores: Record<string, number> | null): string {
 }
 
 export default async function PlatformBusinessIntelligencePage() {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("platform_business_metrics")

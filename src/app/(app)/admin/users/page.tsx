@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { suspendUser, reactivateUser } from "../users-actions";
@@ -33,6 +34,7 @@ export default async function PlatformUsersPage({
 }: {
   searchParams: { role?: string; q?: string };
 }) {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
   const roleFilter = (searchParams.role as Role | undefined) ?? undefined;
   const q = searchParams.q?.trim() ?? "";
