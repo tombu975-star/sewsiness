@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PlatformSettings } from "@/lib/platform-settings";
 
-const SPLASH_MS = 1800;
+const SPLASH_MS = 1400;
 const IMAGE_ROTATE_MS = 1200;
 
 function DefaultMark() {
@@ -35,13 +36,14 @@ export function LoginSplash({
   platform: PlatformSettings;
   children: React.ReactNode;
 }) {
-  const [showSplash, setShowSplash] = useState(true);
+  const router = useRouter();
+  const [stage, setStage] = useState<"loading" | "choose" | "form">("loading");
   const [imageIndex, setImageIndex] = useState(0);
   const images = (platform.coverImages ?? []).filter(Boolean);
   const brandName = "SEWSINESS";
 
   useEffect(() => {
-    const splashTimer = window.setTimeout(() => setShowSplash(false), SPLASH_MS);
+    const splashTimer = window.setTimeout(() => setStage("choose"), SPLASH_MS);
     return () => window.clearTimeout(splashTimer);
   }, []);
 
@@ -53,12 +55,12 @@ export function LoginSplash({
     return () => window.clearInterval(timer);
   }, [images.length]);
 
-  if (!showSplash) return <>{children}</>;
+  if (stage === "form") return <>{children}</>;
 
   return (
     <main
       className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-hidden bg-indigo"
-      aria-label="SEWSINESS loading"
+      aria-label={stage === "loading" ? "SEWSINESS loading" : "Log in or create a business account"}
     >
       {images.map((src, index) => (
         // eslint-disable-next-line @next/next/no-img-element
@@ -100,12 +102,31 @@ export function LoginSplash({
         <div className="font-display text-3xl font-extrabold tracking-wide">{brandName}</div>
         <div className="mt-2 text-sm text-white/75">Fashion Business Operating System</div>
 
-        <div className="mt-12 w-full">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-            <div className="h-full w-1/2 rounded-full bg-gold animate-login-splash" />
+        {stage === "loading" ? (
+          <div className="mt-12 w-full">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
+              <div className="h-full w-1/2 rounded-full bg-gold animate-login-splash" />
+            </div>
+            <p className="mt-4 text-xs font-medium text-white/70">Preparing your secure login…</p>
           </div>
-          <p className="mt-4 text-xs font-medium text-white/70">Preparing your secure login…</p>
-        </div>
+        ) : (
+          <div className="mt-10 w-full flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => setStage("form")}
+              className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-3 hover:brightness-105 transition"
+            >
+              Log in
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/signup")}
+              className="w-full rounded-sm border border-white/30 bg-white/10 text-white font-semibold text-sm py-3 hover:bg-white/20 transition"
+            >
+              Create a business account
+            </button>
+          </div>
+        )}
 
         {images.length > 1 && (
           <div className="mt-6 flex items-center gap-1.5" aria-hidden="true">
