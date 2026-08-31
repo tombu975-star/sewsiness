@@ -85,8 +85,8 @@ export function LoginSplash({
       <div className="absolute -right-28 -top-28 h-80 w-80 rounded-full bg-gold/10" />
       <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-white/10" />
 
-      <div className="relative z-10 flex w-full max-w-sm flex-col items-center px-8 text-center text-white">
-        <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-sm">
+      <div className="relative z-10 flex w-full max-w-sm lg:max-w-md flex-col items-center px-8 text-center text-white">
+        <div className="mb-6 flex h-24 w-24 lg:h-28 lg:w-28 items-center justify-center rounded-[28px] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-sm">
           {platform.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -99,8 +99,8 @@ export function LoginSplash({
           )}
         </div>
 
-        <div className="font-display text-3xl font-extrabold tracking-wide">{brandName}</div>
-        <div className="mt-2 text-sm text-white/75">Fashion Business Operating System</div>
+        <div className="font-display text-3xl lg:text-4xl font-extrabold tracking-wide">{brandName}</div>
+        <div className="mt-2 text-sm lg:text-base text-white/75">Fashion Business Operating System</div>
 
         {stage === "loading" ? (
           <div className="mt-12 w-full">
