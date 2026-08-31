@@ -13,12 +13,14 @@ export function AppShell({
   fullName,
   orgName,
   branchName,
+  avatarUrl,
   children,
 }: {
   role: Role;
   fullName: string;
   orgName: string;
   branchName?: string | null;
+  avatarUrl?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -155,9 +157,15 @@ export function AppShell({
             <div className="relative">
               <button
                 onClick={() => setDrawerOpen((v) => !v)}
-                className="w-9 h-9 rounded-full bg-gold text-[#3a2400] flex items-center justify-center text-[12px] font-bold"
+                className="w-9 h-9 rounded-full bg-gold text-[#3a2400] flex items-center justify-center text-[12px] font-bold overflow-hidden ring-2 ring-transparent hover:ring-gold-soft transition-shadow"
+                aria-label="Account menu"
               >
-                {initials || "?"}
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  initials || "?"
+                )}
               </button>
               {drawerOpen && (
                 <div className="absolute right-0 mt-2 w-52 card p-2 shadow-lg z-50">

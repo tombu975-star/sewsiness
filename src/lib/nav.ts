@@ -132,7 +132,14 @@ export const SIDEBAR: NavItem[] = [
   },
   { label: "Notifications", icon: "\u25CD", href: "/notifications", roles: ["owner", "manager", "staff", "trainer", "apprentice", "freelancer"] },
   { label: "Audit Logs", icon: "\u25A3", href: "/audit", roles: ["owner"] },
-  { label: "Settings", icon: "\u2699", href: "/settings", roles: ["owner", "manager", "staff", "trainer", "apprentice", "freelancer"] },
+  // Settings is deliberately narrower than most items here — it holds
+  // account security plus organization/branch/platform configuration,
+  // not day-to-day operational work, so only the roles that actually
+  // manage a business (or the platform itself) see it in the sidebar.
+  // Staff, Trainer, Apprentice and Freelancer never get an entry point
+  // to it; settings/page.tsx enforces the same boundary server-side so
+  // a direct link can't bypass this either.
+  { label: "Settings", icon: "\u2699", href: "/settings", roles: ["owner", "manager"] },
 ];
 
 // Super Admin's entire nav — platform business-operations oversight
