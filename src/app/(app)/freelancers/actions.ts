@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/require-role";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
+import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
 
 // Mirrors the RLS boundary already named on freelancer_profiles
@@ -38,7 +39,7 @@ export async function inviteFreelancer(_prevState: ActionState, formData: FormDa
       full_name,
       role: "freelancer",
     });
-    if (profileErr) return { error: profileErr.message };
+    if (profileErr) return { error: toSafeErrorMessage(profileErr, "Couldn't finish creating that account. Please try again.") };
 
     const { error: freelancerErr } = await admin.from("freelancer_profiles").insert({
       profile_id: newUserId,
@@ -49,7 +50,7 @@ export async function inviteFreelancer(_prevState: ActionState, formData: FormDa
       years_experience: formData.get("years_experience") ? Number(formData.get("years_experience")) : null,
       specialisation: formData.get("specialisation") || null,
     });
-    if (freelancerErr) return { error: freelancerErr.message };
+    if (freelancerErr) return { error: toSafeErrorMessage(freelancerErr, "Couldn't save the freelancer record. Please try again.") };
   } catch (err) {
     if (isFrameworkSignal(err)) throw err;
     return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };

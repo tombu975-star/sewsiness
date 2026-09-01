@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/require-role";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
+import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
 import type { Role } from "@/lib/types";
 
@@ -56,7 +57,7 @@ export async function inviteStaff(_prevState: ActionState, formData: FormData): 
       full_name,
       role,
     });
-    if (profileErr) return { error: profileErr.message };
+    if (profileErr) return { error: toSafeErrorMessage(profileErr, "Couldn't finish creating that account. Please try again.") };
   } catch (err) {
     if (isFrameworkSignal(err)) throw err;
     return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };
