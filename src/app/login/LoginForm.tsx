@@ -23,12 +23,24 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     setLoading(true);
     setError(null);
     const supabase = createClient();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const { data: retryAfterSeconds } = await supabase.rpc("is_login_rate_limited", { p_email: normalizedEmail });
+    if (retryAfterSeconds && retryAfterSeconds > 0) {
+      setLoading(false);
+      const minutes = Math.ceil(retryAfterSeconds / 60);
+      setError(`Too many failed sign-in attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      await supabase.rpc("record_login_attempt", { p_email: normalizedEmail, p_success: false });
       setLoading(false);
       setError(error.message);
       return;
     }
+    await supabase.rpc("record_login_attempt", { p_email: normalizedEmail, p_success: true });
 
     const nextParam = params.get("next");
     const { data: profile } = await supabase
@@ -82,6 +94,11 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
         {notice === "signup-submitted" && (
           <div className="text-xs text-success bg-success-soft border border-success/20 rounded-sm px-3 py-2">
             Application received. You can sign in now to check your verification status.
+          </div>
+        )}
+        {notice === "inactivity" && (
+          <div className="text-xs text-ink-muted bg-sunken border border-border rounded-sm px-3 py-2">
+            You were signed out because of inactivity.
           </div>
         )}
         <div>
