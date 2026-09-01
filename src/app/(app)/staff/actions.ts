@@ -30,7 +30,7 @@ const ROLES_INVITABLE_BY: Partial<Record<Role, Role[]>> = {
 // Returns { error } instead of throwing — see staff/new/InviteStaffForm.tsx.
 export async function inviteStaff(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const { profile } = await requireRole(["owner", "manager"]);
+    const { profile, user } = await requireRole(["owner", "manager"]);
 
     const full_name = String(formData.get("full_name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
@@ -58,6 +58,14 @@ export async function inviteStaff(_prevState: ActionState, formData: FormData): 
       role,
     });
     if (profileErr) return { error: toSafeErrorMessage(profileErr, "Couldn't finish creating that account. Please try again.") };
+
+    await admin.from("audit_logs").insert({
+      organization_id: profile.organization_id,
+      actor_id: user.id,
+      action: "user_invited",
+      entity: "profiles",
+      entity_id: invited.user.id,
+    });
   } catch (err) {
     if (isFrameworkSignal(err)) throw err;
     return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };
