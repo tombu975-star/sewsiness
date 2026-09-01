@@ -4,8 +4,10 @@ import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { assignTask } from "./actions";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function TrainingPlansPage() {
+  await requirePageRole(["owner", "manager", "trainer", "apprentice"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id, role").eq("id", user!.id).single();

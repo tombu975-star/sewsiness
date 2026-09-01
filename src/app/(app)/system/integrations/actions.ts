@@ -1,7 +1,22 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/require-role";
+
+// See src/app/(app)/system/flags/actions.ts for why this uses the admin
+// client rather than the session-bound one: System Admin has no
+// organization_id, and audit_logs' RLS insert policy requires one.
+async function logSystemAction(actorId: string, action: string, entity: string, entityId?: string) {
+  const admin = createAdminClient();
+  await admin.from("audit_logs").insert({
+    organization_id: null,
+    actor_id: actorId,
+    action,
+    entity,
+    entity_id: entityId ?? null,
+  });
+}
 
 /**
  * Presence-only health check: confirms the env vars a provider needs are
@@ -77,11 +92,12 @@ export async function addIntegration(formData: FormData) {
   });
   if (error) throw new Error(error.message);
 
+  await logSystemAction(user.id, `integration_added: ${provider_key}`, "integration_checks");
   revalidatePath("/system/integrations");
 }
 
 export async function removeIntegration(formData: FormData) {
-  await requireRole(["system_admin"]);
+  const { user } = await requireRole(["system_admin"]);
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Missing integration.");
 
@@ -89,5 +105,6 @@ export async function removeIntegration(formData: FormData) {
   const { error } = await supabase.from("integration_checks").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
+  await logSystemAction(user.id, "integration_removed", "integration_checks", id);
   revalidatePath("/system/integrations");
 }

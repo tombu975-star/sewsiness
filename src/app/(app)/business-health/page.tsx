@@ -5,6 +5,7 @@ import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { DIMENSIONS } from "@/lib/onboarding/sections";
 import { completionPercent, type Answers, type DimensionScores } from "@/lib/onboarding/scoring";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 function scoreBadge(score: number) {
   if (score >= 80) return { label: "Healthy", cls: "text-success" };
@@ -19,6 +20,7 @@ function assessmentBandColor(level: string) {
 }
 
 export default async function BusinessHealthPage() {
+  await requirePageRole(["owner", "manager"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

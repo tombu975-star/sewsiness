@@ -17,7 +17,7 @@ import { siteUrl } from "@/lib/site-url";
 // Returns { error } instead of throwing — see apprentices/new/InviteApprenticeForm.tsx.
 export async function inviteApprentice(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const { profile } = await requireRole(["owner", "manager"]);
+    const { profile, user } = await requireRole(["owner", "manager"]);
 
     const full_name = String(formData.get("full_name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
@@ -54,6 +54,14 @@ export async function inviteApprentice(_prevState: ActionState, formData: FormDa
       training_goals: formData.get("training_goals") || null,
     });
     if (apprenticeErr) return { error: toSafeErrorMessage(apprenticeErr, "Couldn't save the apprentice record. Please try again.") };
+
+    await admin.from("audit_logs").insert({
+      organization_id: profile.organization_id,
+      actor_id: user.id,
+      action: "user_invited",
+      entity: "profiles",
+      entity_id: newUserId,
+    });
   } catch (err) {
     if (isFrameworkSignal(err)) throw err;
     return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };

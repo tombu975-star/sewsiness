@@ -44,5 +44,12 @@ export async function togglePermission(formData: FormData) {
   );
   if (error) throw new Error(error.message);
 
+  await admin.from("audit_logs").insert({
+    organization_id: null,
+    actor_id: actor.id,
+    action: `permission_matrix_updated: ${role}.${module_}.${action}=${allowed}`,
+    entity: "role_permissions",
+  });
+
   revalidatePath("/admin/roles");
 }

@@ -28,6 +28,15 @@ export async function markAccountRequestStatus(formData: FormData) {
     .update({ status, resolved_at: new Date().toISOString(), resolved_by: actor.id })
     .eq("id", id);
   if (error) throw new Error(error.message);
+
+  await admin.from("audit_logs").insert({
+    organization_id: null,
+    actor_id: actor.id,
+    action: `account_request_${status}`,
+    entity: "account_requests",
+    entity_id: id,
+  });
+
   revalidatePath("/admin/account-requests");
 }
 
@@ -41,5 +50,14 @@ export async function resolveAccountRecoveryRequest(formData: FormData) {
     .update({ resolved_at: new Date().toISOString(), resolved_by: actor.id })
     .eq("id", id);
   if (error) throw new Error(error.message);
+
+  await admin.from("audit_logs").insert({
+    organization_id: null,
+    actor_id: actor.id,
+    action: "account_recovery_resolved",
+    entity: "account_recovery_requests",
+    entity_id: id,
+  });
+
   revalidatePath("/admin/account-requests");
 }
