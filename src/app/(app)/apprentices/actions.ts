@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/require-role";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
+import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
 
 // Mirrors the RLS boundary already named on apprentice_profiles
@@ -41,7 +42,7 @@ export async function inviteApprentice(_prevState: ActionState, formData: FormDa
       full_name,
       role: "apprentice",
     });
-    if (profileErr) return { error: profileErr.message };
+    if (profileErr) return { error: toSafeErrorMessage(profileErr, "Couldn't finish creating that account. Please try again.") };
 
     const { error: apprenticeErr } = await admin.from("apprentice_profiles").insert({
       profile_id: newUserId,
@@ -52,7 +53,7 @@ export async function inviteApprentice(_prevState: ActionState, formData: FormDa
       specialisation: formData.get("specialisation") || null,
       training_goals: formData.get("training_goals") || null,
     });
-    if (apprenticeErr) return { error: apprenticeErr.message };
+    if (apprenticeErr) return { error: toSafeErrorMessage(apprenticeErr, "Couldn't save the apprentice record. Please try again.") };
   } catch (err) {
     if (isFrameworkSignal(err)) throw err;
     return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };

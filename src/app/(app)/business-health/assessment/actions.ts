@@ -6,6 +6,7 @@ import { DIMENSIONS } from "@/lib/onboarding/sections";
 import { scoreAllDimensions, weightedHealthScore, healthBand, recommendations, completionPercent, type Answers } from "@/lib/onboarding/scoring";
 import { assessmentAnswersSchema } from "@/lib/onboarding/validation";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
+import { toSafeErrorMessage } from "@/lib/db-error";
 
 async function requireOwnerOrManager() {
   const supabase = createClient();
@@ -74,7 +75,7 @@ export async function saveAssessmentSection(_prevState: ActionState, formData: F
           recommendations: recommendations(dimensionScores),
         })
         .eq("id", draft.id);
-      if (error) return { error: error.message };
+      if (error) return { error: toSafeErrorMessage(error, "Couldn't save that section. Please try again.") };
     } else {
       const { data: latest } = await supabase
         .from("onboarding_assessments")
@@ -94,7 +95,7 @@ export async function saveAssessmentSection(_prevState: ActionState, formData: F
         recommendations: recommendations(dimensionScores),
         submitted_by: user.id,
       });
-      if (error) return { error: error.message };
+      if (error) return { error: toSafeErrorMessage(error, "Couldn't save that section. Please try again.") };
     }
 
     revalidatePath("/business-health/assessment");
@@ -130,7 +131,7 @@ export async function submitAssessment(_prevState: ActionState, _formData: FormD
       .from("onboarding_assessments")
       .update({ status: "submitted", submitted_at: new Date().toISOString(), submitted_by: user.id })
       .eq("id", draft.id);
-    if (error) return { error: error.message };
+    if (error) return { error: toSafeErrorMessage(error, "Couldn't submit the assessment. Please try again.") };
 
     await supabase.from("audit_logs").insert({
       organization_id: organizationId,
@@ -169,7 +170,7 @@ export async function startNewAssessmentVersion(_prevState: ActionState, _formDa
       version: (latest?.version ?? 0) + 1,
       submitted_by: user.id,
     });
-    if (error) return { error: error.message };
+    if (error) return { error: toSafeErrorMessage(error, "Couldn't start a new assessment. Please try again.") };
 
     revalidatePath("/business-health/assessment");
     return {};
