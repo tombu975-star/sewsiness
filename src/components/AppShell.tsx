@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { logSignOut } from "@/app/(app)/audit/actions";
 import { Spinner } from "@/components/Spinner";
+import { InactivityGuard } from "@/components/InactivityGuard";
 import { ROLES, sidebarForRole, bottomNavForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 
@@ -40,6 +42,7 @@ export function AppShell({
 
   async function handleSignOut() {
     setSigningOut(true);
+    await logSignOut("manual");
     const supabase = createClient();
     await supabase.auth.signOut();
     // Full browser navigation, not router.push — this guarantees the
@@ -111,6 +114,7 @@ export function AppShell({
 
   return (
     <div className="flex h-screen overflow-hidden bg-canvas">
+      <InactivityGuard />
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-[240px] flex-shrink-0 bg-sidebar text-white">
         <Brand orgName={orgName} />
