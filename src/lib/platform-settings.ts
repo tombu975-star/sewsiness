@@ -1,5 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
+export interface PlatformAd {
+  id: string;
+  imageUrl: string;
+  headline: string;
+  caption?: string | null;
+  linkUrl?: string | null;
+}
+
 export interface PlatformSettings {
   logoUrl: string | null;
   coverImages: string[];
@@ -7,6 +15,8 @@ export interface PlatformSettings {
   loginCoverImage: string | null;
   coverHeadline: string;
   coverSubheadline: string;
+  /** Promotional slides mixed into the /login splash's rotation — see LoginSplash.tsx. */
+  ads: PlatformAd[];
 }
 
 // Bundled default cover set — ships with the app so the auth screens look
@@ -31,7 +41,46 @@ const FALLBACK: PlatformSettings = {
   coverHeadline: "The Fashion Business OS for Ghanaian tailoring ateliers.",
   coverSubheadline:
     "Customers, orders, production, payments, and your whole team — Owner down to Apprentice — in one place, built around how an atelier actually runs.",
+  // Ships with a couple of self-referential sample slides — same
+  // reasoning as DEFAULT_COVER_IMAGES above: without these, the /login
+  // splash's ad rotation (see LoginSplash.tsx) has nothing to show and
+  // looks identical to plain image rotation until a Super Admin visits
+  // Settings → Platform Branding and adds a real one. These use fixed
+  // ids so a Super Admin who later edits/removes them via that screen
+  // overwrites this fallback outright (any row in `platform_settings`
+  // — even one with `advertisements: []` on purpose — always wins over
+  // this file; see the `!data` check below).
+  ads: [
+    {
+      id: "sample-referral",
+      imageUrl: DEFAULT_COVER_IMAGES[2],
+      headline: "Refer a fellow atelier, earn a month free.",
+      caption: "Ask your Sewsiness rep for your referral link.",
+      linkUrl: null,
+    },
+    {
+      id: "sample-collections",
+      imageUrl: DEFAULT_COVER_IMAGES[4],
+      headline: "New: organize custom orders into seasonal Collections.",
+      caption: "Look for the NEW tag under Dressmaking in your sidebar.",
+      linkUrl: null,
+    },
+  ],
 };
+
+function parseAds(raw: unknown): PlatformAd[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((v): v is Record<string, unknown> => typeof v === "object" && v !== null)
+    .map((v) => ({
+      id: typeof v.id === "string" ? v.id : "",
+      imageUrl: typeof v.image_url === "string" ? v.image_url : "",
+      headline: typeof v.headline === "string" ? v.headline : "",
+      caption: typeof v.caption === "string" ? v.caption : null,
+      linkUrl: typeof v.link_url === "string" ? v.link_url : null,
+    }))
+    .filter((ad) => ad.id && ad.imageUrl && ad.headline);
+}
 
 // Reads the single, platform-wide branding row (016_platform_branding.sql).
 // Publicly readable by RLS, so this is safe to call from pre-auth pages
@@ -40,18 +89,19 @@ const FALLBACK: PlatformSettings = {
 // migration or empty table just falls back to the built-in cover, so a
 // DB hiccup never breaks the sign-in screen itself.
 //
-// Landing ("/") shows the full rotating `coverImages` set; the login
-// screen (LoginSplash + LoginForm) uses only `loginCoverImage` — a
-// single, static photo rather than a rotating carousel, so the sign-in
-// moment feels calm and deliberate rather than promotional. It's always
-// the first image of whichever set is active (bundled default, or
-// Super Admin's configured set once they've uploaded their own).
+// Landing ("/") shows the full rotating `coverImages` set; the actual
+// login FORM (LoginForm's AuthCover, once the splash is dismissed) uses
+// only `loginCoverImage` — a single, static photo rather than a
+// rotating carousel, so the sign-in moment itself feels calm and
+// deliberate. The /login SPLASH screen shown first (LoginSplash.tsx),
+// by contrast, rolls through the full `coverImages` set plus `ads` —
+// it's the one screen on this app explicitly meant to be promotional.
 export async function getPlatformSettings(): Promise<PlatformSettings> {
   try {
     const supabase = createClient();
     const { data } = await supabase
       .from("platform_settings")
-      .select("logo_url, cover_images, cover_headline, cover_subheadline")
+      .select("logo_url, cover_images, cover_headline, cover_subheadline, advertisements")
       .eq("id", 1)
       .single();
 
@@ -68,6 +118,7 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
       loginCoverImage: images[0],
       coverHeadline: (data as any).cover_headline || FALLBACK.coverHeadline,
       coverSubheadline: (data as any).cover_subheadline || FALLBACK.coverSubheadline,
+      ads: parseAds((data as any).advertisements),
     };
   } catch {
     return FALLBACK;
