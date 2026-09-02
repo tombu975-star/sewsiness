@@ -71,8 +71,8 @@ export default async function FreelancersPage() {
                 invite: invite ? (
                   <div>
                     <InviteStatusBadge status={invite.status} expiresAt={invite.expires_at} />
-                    {invite.status === "pending" && (
-                      <ResendInviteButton inviteId={invite.id} revalidatePath="/freelancers" />
+                    {invite.status !== "revoked" && (
+                      <ResendInviteButton inviteId={invite.id} revalidatePath="/freelancers" status={invite.status} />
                     )}
                   </div>
                 ) : (
