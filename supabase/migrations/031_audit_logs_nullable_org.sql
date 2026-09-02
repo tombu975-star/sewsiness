@@ -1,0 +1,21 @@
+-- ============================================================
+-- 031_audit_logs_nullable_org.sql
+--
+-- audit_logs.organization_id has been `not null` since it was created
+-- (003_super_admin_platform.sql). That's correct for every action taken
+-- against a specific business — which is all the table was used for
+-- until now. But Super Admin and System Admin have no organization_id
+-- at all (by design — see 009_system_admin.sql), and some of their
+-- actions are genuinely platform-level, not tied to any one business:
+-- editing the platform-wide role/permission matrix
+-- (src/app/(app)/admin/roles-actions.ts) being the case that surfaced
+-- this. Previously that action wasn't audit-logged at all; making it
+-- log correctly needs organization_id to be able to be null.
+--
+-- Safe to run against the live database: relaxing NOT NULL to nullable
+-- never fails on existing data (existing rows already satisfy "not
+-- null", which trivially satisfies "nullable" too), and every existing
+-- policy/query keeps working unchanged.
+-- ============================================================
+
+alter table audit_logs alter column organization_id drop not null;

@@ -96,7 +96,7 @@ const nextConfig = {
       },
       {
         // HSTS only makes sense once you're actually being served over
-        // HTTPS in production (Render terminates TLS in front of this
+        // HTTPS in production (Vercel terminates TLS in front of this
         // app) — sending it in local dev over http:// would be wrong,
         // so it's split out and only added outside development.
         source: "/:path*",

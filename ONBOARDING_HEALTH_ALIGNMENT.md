@@ -86,4 +86,4 @@ owner tells you about the business itself.
 Full TypeScript project (`npx tsc --noEmit`) passes clean with these
 changes. `next build` itself couldn't be verified in this sandbox (no
 network access to Google Fonts here), so do a normal `npm run build`
-before pushing to Render.
+before pushing to Vercel.

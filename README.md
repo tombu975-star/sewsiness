@@ -83,7 +83,8 @@ pages). It gets three things at `/system`:
 - **Integrations** (`/system/integrations`) — a registry of third-party
   providers and whether the env vars each one needs are actually set on
   this deployment. It never stores or displays secret values, only
-  presence/absence of the env var — real keys stay in Render.
+  presence/absence of the env var — real keys stay in Vercel's
+  environment variable settings.
 - **Incidents** (`/system/incidents`) — a lightweight log for tracking
   something broken from the moment you notice it to the moment it's
   fixed, ideally before a business ever has to report it.
@@ -105,7 +106,7 @@ pages). It gets three things at `/system`:
   its own default Site URL unless the exact URL is allow-listed at
   Supabase dashboard → Authentication → URL Configuration → Redirect URLs —
   add `${NEXT_PUBLIC_SITE_URL}/accept-invite`, or a wildcard like
-  `https://your-app.onrender.com/**` to cover this and any future auth
+  `https://your-app.vercel.app/**` to cover this and any future auth
   redirect page. Skipping this step is exactly what makes invites look like
   they silently do nothing.
 - **Password reset email template** — `/forgot-password` has the person type
@@ -178,44 +179,42 @@ npm run dev
 
 ## Deploying
 
-### Render
-
-This repo includes `render.yaml` and `.node-version`, so Render will pick up
-the correct build/start commands automatically once you connect the repo.
-
-1. Push this project to a GitHub repo (Render deploys from git).
-2. Render dashboard → **New → Web Service** → connect the repo. It should
-   detect `render.yaml` and pre-fill:
-   - Runtime: Node
-   - Build command: `npm install && npm run build`
-   - Start command: `npm start`
-3. Set the two env vars it prompts for (marked `sync: false` in
-   `render.yaml` so they're not committed):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Deploy. You'll get a `https://sewiness-app.onrender.com`-style URL.
-5. In Supabase → **Authentication → URL Configuration**, add that Render
-   URL to the allow-list, or auth redirects will fail.
-
-Notes:
-- The free plan spins down after inactivity — first request after idle
-  takes 30–60s. Fine for testing; move to a paid instance before showing
-  this to clients.
-- `healthCheckPath` is set to `/login` since `/` and `/dashboard` require
-  auth and would otherwise redirect on Render's health check pings.
-
 ### Vercel
 
-Also deploys with zero config:
+Deploys with zero config — Vercel auto-detects Next.js, no `vercel.json` needed.
 
 ```bash
 npm i -g vercel
 vercel
 ```
 
-Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as
-environment variables in the Vercel project settings (same values as your
-`.env.local`).
+Or connect the GitHub repo at vercel.com/new for automatic deploys on every push.
+
+Set these in the Vercel project's **Settings → Environment Variables**
+(same values as your `.env.local`) — all four, not just the two public
+ones:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only; required for signup, invites,
+  and every admin action that uses `createAdminClient()`. Never marked
+  `NEXT_PUBLIC_*`, so Vercel keeps it out of the browser bundle.
+- `NEXT_PUBLIC_SITE_URL` — your real deployed URL (e.g.
+  `https://your-app.vercel.app`, or your custom domain once attached).
+  Without this, invite/recovery emails link back to `localhost`.
+
+Then, in Supabase → **Authentication → URL Configuration → Redirect
+URLs**, add `${NEXT_PUBLIC_SITE_URL}/accept-invite` (or a wildcard like
+`https://your-app.vercel.app/**` to cover this and any future auth
+redirect page). Supabase silently falls back to its own default Site URL
+if the exact URL isn't allow-listed here — this is the single most common
+reason invites/recovery links look like they silently do nothing.
+
+Client IP extraction for rate limiting (signup, password recovery — see
+`src/app/signup/actions.ts` and `src/app/forgot-account/actions.ts`) reads
+Vercel's `x-vercel-forwarded-for` header, which Vercel guarantees can't be
+spoofed by an external client. No extra configuration needed; this only
+matters if you ever move off Vercel, in which case that header won't be
+present and both files fall back to plain `x-forwarded-for`.
 
 ## Notes carried over from the product blueprint
 
