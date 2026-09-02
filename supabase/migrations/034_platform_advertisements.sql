@@ -1,0 +1,26 @@
+-- ============================================================
+-- 034_platform_advertisements.sql
+--
+-- Adds a rolling set of "advertisement" slides — an image plus a
+-- headline, optional caption, and optional link — to the same
+-- `platform_settings` singleton row that already holds the plain
+-- rolling cover images (016_platform_branding.sql). Managed the same
+-- way (Settings → Platform Branding, Super Admin only) and shown on
+-- the /login splash screen (src/app/login/LoginSplash.tsx), mixed in
+-- with the plain cover photos.
+--
+-- Stored as a jsonb array of `{ id, image_url, headline, caption,
+-- link_url }` objects rather than a new table — same reasoning as
+-- `cover_images`: this is a short, admin-curated, ordered list, not
+-- something ever queried or filtered independently, so a dedicated
+-- table would just add join overhead for no benefit. Each object
+-- carries its own `id` (a client-generated uuid) rather than being
+-- identified by `image_url`, since — unlike a cover photo — its
+-- headline/caption/link can be edited after the fact without touching
+-- the image, and matching by URL would break the moment two ads
+-- shared an image.
+--
+-- Additive and safe to run against the live database as-is.
+-- ============================================================
+
+alter table platform_settings add column if not exists advertisements jsonb not null default '[]'::jsonb;

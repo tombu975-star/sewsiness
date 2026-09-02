@@ -176,6 +176,28 @@ npm run dev
    link and there's no code for the recipient to type.
 6. Once your schema is stable, regenerate real types:
    `npx supabase gen types typescript --project-id <ref> > src/lib/database.types.ts`
+7. Run `supabase/migrations/032_invite_expiry_and_resend.sql` through
+   `035_seed_sample_advertisements.sql`, in order. `032` adds an
+   `invites` table so Staff/Freelancer/Apprentice invite links expire
+   after 30 minutes (enforced by this app, independent of whatever
+   Supabase's own **Authentication → Auth → Email OTP Expiration**
+   setting allows) and can be resent from a "Resend invite" button once
+   they do. `033` lets the login screen accept a phone number in
+   addition to email. `034`/`035` add the rolling advertisement slides
+   on the `/login` splash screen (Settings → Platform Branding, Super
+   Admin only, manages these — `035` just seeds two starter samples so
+   the rotation is visible immediately instead of looking identical to
+   plain image rotation until someone adds one). All are additive, no
+   manual dashboard step required — resend deliberately uses the
+   **Magic Link** email (not Reset Password, which step 5 above already
+   repurposed for a typed code) so the invitee still gets a clickable
+   link.
+8. Run `supabase/migrations/034_platform_advertisements.sql`. Adds an
+   `advertisements` column to `platform_settings` so Super Admin can
+   configure rolling ad slides (image + headline + optional caption/
+   link) from Settings → Platform Branding — these roll into the
+   /login splash screen's rotation alongside the plain cover images
+   (see LoginSplash.tsx). Additive, no manual dashboard step required.
 
 ## Deploying
 
