@@ -21,10 +21,21 @@ export function InviteStatusBadge({
     return () => clearInterval(id);
   }, [status, expiresAt]);
 
-  // Accepted → they're just a normal team member now; an established
-  // Owner account (created before this feature existed) has no invite
-  // row at all. Either way, nothing to show.
-  if (!status || status === "accepted") return null;
+  // No invite row at all (an established account created before this
+  // feature existed) → nothing to show. An *accepted* invite, on the
+  // other hand, is shown below rather than hidden — an Owner/Super
+  // Admin scanning the table needs to be able to tell who's actually
+  // signed in versus who's still sitting on a pending link.
+  if (!status) return null;
+
+  if (status === "accepted") {
+    return (
+      <span className="badge bg-success-soft text-success whitespace-nowrap">
+        <Dot color="var(--success)" />
+        Accepted
+      </span>
+    );
+  }
 
   if (status === "pending" && expiresAt) {
     const msLeft = new Date(expiresAt).getTime() - now;
