@@ -1,8 +1,26 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LEGAL_ENTITY_TYPES, TIN_PATTERN } from "@/lib/onboarding/identity";
+
+const MAX_SIGNUPS_PER_IP = 5;
+const SIGNUP_WINDOW_MINUTES = 60;
+
+// Vercel overwrites x-forwarded-for itself and does not forward
+// externally-supplied values, so it's not spoofable the way it can be on
+// some other hosts. This reads x-vercel-forwarded-for specifically
+// because Vercel's own docs note it's the one guaranteed not to be
+// affected even if a customer puts their own proxy in front of Vercel,
+// whereas plain x-forwarded-for carries that one edge-case caveat:
+// https://vercel.com/docs/headers/request-headers
+// Falls back to x-forwarded-for/x-real-ip for local dev, where neither
+// Vercel header is present.
+function clientIp(): string {
+  const h = headers();
+  return h.get("x-vercel-forwarded-for") || h.get("x-forwarded-for") || h.get("x-real-ip") || "unknown";
+}
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -21,6 +39,23 @@ function validateImage(file: File | null, label: string): string | null {
 }
 
 export async function submitBusinessSignup(formData: FormData): Promise<{ error: string } | void> {
+  const admin = createAdminClient();
+  const ip = clientIp();
+
+  // Checked before any validation or file upload — a blocked IP should
+  // never reach the point of uploading Ghana Card images, which is the
+  // actual cost/abuse surface this protects.
+  const windowStart = new Date(Date.now() - SIGNUP_WINDOW_MINUTES * 60 * 1000).toISOString();
+  const { count: recentAttempts } = await admin
+    .from("signup_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("ip", ip)
+    .gte("created_at", windowStart);
+  if ((recentAttempts ?? 0) >= MAX_SIGNUPS_PER_IP) {
+    return { error: "Too many signup attempts from this network. Please try again in an hour, or contact support." };
+  }
+  await admin.from("signup_attempts").insert({ ip });
+
   const businessName = String(formData.get("business_name") || "").trim();
   const region = String(formData.get("region") || "").trim();
   const ownerName = String(formData.get("owner_name") || "").trim();
@@ -73,8 +108,6 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
   if (cardBackErr) return { error: cardBackErr };
   const selfieErr = validateImage(selfie, "Your selfie");
   if (selfieErr) return { error: selfieErr };
-
-  const admin = createAdminClient();
 
   // Track what we've created so we can unwind on any failure — an
   // auth user with no organization behind it would permanently block that

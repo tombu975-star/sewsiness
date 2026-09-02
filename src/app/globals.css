@@ -44,6 +44,15 @@
   --radius-lg: 14px;
   --radius: 0.75rem;
   --radius-sm: 0.5rem;
+
+  /* Elevation scale — used by .card, buttons, dropdowns. Kept subtle and
+     warm (indigo-tinted, not neutral gray) so depth reads as part of the
+     brand rather than a generic Bootstrap shadow. */
+  --shadow-xs: 0 1px 2px rgba(30, 15, 66, 0.05);
+  --shadow-sm: 0 1px 2px rgba(30, 15, 66, 0.04), 0 6px 16px -8px rgba(30, 15, 66, 0.10);
+  --shadow-md: 0 2px 6px -1px rgba(30, 15, 66, 0.08), 0 12px 28px -12px rgba(30, 15, 66, 0.16);
+  --shadow-lg: 0 8px 16px -4px rgba(30, 15, 66, 0.12), 0 24px 48px -16px rgba(30, 15, 66, 0.22);
+  --shadow-gold: 0 1px 2px rgba(122, 90, 30, 0.15), 0 6px 16px -6px rgba(251, 191, 36, 0.45);
 }
 
 * {
@@ -59,6 +68,24 @@ body {
 body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  /* A faint dual glow anchored to the corners a business dashboard is
+     actually read from, so the canvas has quiet depth instead of being a
+     single flat fill — visible mostly as ambience, never distracting. */
+  background-image:
+    radial-gradient(880px circle at 100% 0%, rgba(251, 191, 36, 0.06), transparent 55%),
+    radial-gradient(1000px circle at 0% 100%, rgba(75, 24, 120, 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo2);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ---------- signature woven "kente" strip — thin rule, used once per page ---------- */
@@ -72,6 +99,7 @@ body {
     var(--indigo) 26px 40px,
     var(--ink) 40px 48px
   );
+  box-shadow: 0 2px 6px -1px rgba(30, 15, 66, 0.18);
   flex-shrink: 0;
 }
 
@@ -79,6 +107,18 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+/* Opt-in lift for cards that represent something clickable/live — stat
+   tiles, list rows presented as cards, etc. Static content cards (forms,
+   long-form sections) stay on .card alone so the whole page doesn't
+   shimmer on every hover. */
+.card-hover:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .badge {
@@ -92,12 +132,24 @@ body {
 }
 
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-plex-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
   color: var(--gold-ink);
   text-transform: uppercase;
   font-weight: 600;
+}
+.eyebrow::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-right: 7px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--gold-soft);
 }
 
 .scrollbar-thin::-webkit-scrollbar {

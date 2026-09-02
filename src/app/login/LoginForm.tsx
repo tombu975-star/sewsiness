@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { resolveLoginDestination } from "@/lib/nav";
 import type { Role } from "@/lib/types";
@@ -10,7 +10,6 @@ import { AuthCover } from "@/components/auth/AuthCover";
 import type { PlatformSettings } from "@/lib/platform-settings";
 
 export function LoginForm({ platform }: { platform?: PlatformSettings }) {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,16 +60,22 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     const org = (profile as any)?.organizations;
     if (org && org.verification_status !== "verified") {
       setLoading(false);
-      router.push("/pending-verification");
-      router.refresh();
+      window.location.assign("/pending-verification");
       return;
     }
 
     const destination = resolveLoginDestination((profile?.role as Role) ?? "staff", nextParam);
 
-    setLoading(false);
-    router.push(destination);
-    router.refresh();
+    // Full browser navigation, not router.push — mirrors handleSignOut in
+    // AppShell.tsx. A client-side push can render off the Router Cache,
+    // which is keyed by URL only, not by session/role: if this tab ever
+    // rendered a page as a different signed-in account (e.g. someone
+    // switching accounts without closing the tab), a stale, wrong-role
+    // page — including another role's dashboard — could flash before the
+    // fresh server response replaces it. A hard navigation guarantees the
+    // cache is discarded and the very first paint is already correctly
+    // scoped to the just-authenticated user's real role.
+    window.location.assign(destination);
   }
 
   return (

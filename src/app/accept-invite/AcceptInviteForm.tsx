@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
+import { AuthCover } from "@/components/auth/AuthCover";
+import type { PlatformSettings } from "@/lib/platform-settings";
 
 // Lands here from the invite email link. Supabase puts the session tokens
 // in the URL fragment (#access_token=...&type=invite), which browsers never
@@ -13,8 +14,7 @@ import type { Role } from "@/lib/types";
 // wait for that to happen, then show a normal "set your password" form.
 type Status = "checking" | "ready" | "expired";
 
-export function AcceptInviteForm() {
-  const router = useRouter();
+export function AcceptInviteForm({ platform }: { platform?: PlatformSettings }) {
   const [status, setStatus] = useState<Status>("checking");
   const [fullName, setFullName] = useState<string | null>(null);
   const [password, setPassword] = useState("");
@@ -89,105 +89,80 @@ export function AcceptInviteForm() {
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user!.id).single();
 
     setSubmitting(false);
-    router.push(homePathForRole((profile?.role as Role) ?? "staff"));
-    router.refresh();
+    // Full browser navigation, not router.push — see LoginForm.tsx for why:
+    // this is another place a session is newly established client-side and
+    // then routed based on role, so it carries the same stale-cache risk.
+    window.location.assign(homePathForRole((profile?.role as Role) ?? "staff"));
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas px-4 py-10">
-      <div className="w-full max-w-sm">
-        <div
-          className="relative overflow-hidden rounded-[20px] px-6 py-10 text-center text-white mb-4"
-          style={{ background: "linear-gradient(160deg, var(--indigo), var(--indigo2))" }}
-        >
-          <div
-            className="absolute -top-10 -right-10 w-40 h-40 rounded-full"
-            style={{ background: "rgba(251,191,36,.18)" }}
-          />
-          <svg width="44" height="44" viewBox="-270 -10 520 500" className="mx-auto mb-3 relative">
-            <path
-              d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
-              fill="none"
-              stroke="#C9A6E8"
-              strokeWidth="78"
-              strokeLinecap="round"
-            />
-            <path
-              d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265"
-              fill="none"
-              stroke="#FBBF24"
-              strokeWidth="28"
-              strokeLinecap="round"
-            />
-            <path d="M-25 205 L145 20" stroke="#FBBF24" strokeWidth="14" strokeLinecap="round" />
-          </svg>
-          <div className="font-display font-semibold text-sm tracking-wide relative" style={{ color: "#D8CFEE" }}>
-            {fullName ? `WELCOME, ${fullName.split(" ")[0].toUpperCase()}` : "WELCOME TO"}
-          </div>
-          <div className="font-display font-extrabold text-2xl relative">SEWSINESS</div>
+    <AuthCover
+      mode="invite"
+      logoUrl={platform?.logoUrl}
+      coverImages={platform?.coverImages}
+      headline={fullName ? `Welcome, ${fullName.split(" ")[0]}` : "You've been invited"}
+      subheadline="Set a password to finish setting up your SEWSINESS account."
+    >
+      {status === "checking" && (
+        <div className="card p-6 text-center text-sm text-ink-muted">Confirming your invite…</div>
+      )}
+
+      {status === "expired" && (
+        <div className="card p-6 text-center space-y-2">
+          <div className="text-sm font-semibold text-ink">This invite link has expired or was already used.</div>
+          <p className="text-xs text-ink-muted">
+            Ask whoever invited you (your Owner, Manager, or Trainer) to send a fresh invite.
+          </p>
         </div>
+      )}
 
-        {status === "checking" && (
-          <div className="card p-6 text-center text-sm text-ink-muted">Confirming your invite…</div>
-        )}
-
-        {status === "expired" && (
-          <div className="card p-6 text-center space-y-2">
-            <div className="text-sm font-semibold text-ink">This invite link has expired or was already used.</div>
-            <p className="text-xs text-ink-muted">
-              Ask whoever invited you (your Owner, Manager, or Trainer) to send a fresh invite.
-            </p>
+      {status === "ready" && (
+        <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+          <div>
+            <div className="font-display font-semibold text-ink text-sm">Set your password</div>
+            <div className="text-xs text-ink-muted mt-1">
+              {fullName ? `${fullName}, choose` : "Choose"} a password to finish setting up your account.
+            </div>
           </div>
-        )}
-
-        {status === "ready" && (
-          <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-            <div>
-              <div className="font-display font-semibold text-ink text-sm">Set your password</div>
-              <div className="text-xs text-ink-muted mt-1">
-                {fullName ? `${fullName}, choose` : "Choose"} a password to finish setting up your account.
-              </div>
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Password</label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Confirm password</label>
+            <input
+              type="password"
+              required
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              placeholder="Re-type your password"
+            />
+          </div>
+          {error && (
+            <div className="text-xs text-danger bg-danger-soft border border-danger/20 rounded-sm px-3 py-2">
+              {error}
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Password</label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
-                placeholder="At least 8 characters"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Confirm password</label>
-              <input
-                type="password"
-                required
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
-                placeholder="Re-type your password"
-              />
-            </div>
-            {error && (
-              <div className="text-xs text-danger bg-danger-soft border border-danger/20 rounded-sm px-3 py-2">
-                {error}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
-            >
-              {submitting ? "Setting password…" : "Set password & continue"}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+          )}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
+          >
+            {submitting ? "Setting password…" : "Set password & continue"}
+          </button>
+        </form>
+      )}
+    </AuthCover>
   );
 }
