@@ -7,6 +7,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
 import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
+import { recordInvite } from "@/lib/invites";
 
 // Mirrors the RLS boundary already named on apprentice_profiles
 // ("manager+ can write apprentice profiles") — previously this action
@@ -54,6 +55,15 @@ export async function inviteApprentice(_prevState: ActionState, formData: FormDa
       training_goals: formData.get("training_goals") || null,
     });
     if (apprenticeErr) return { error: toSafeErrorMessage(apprenticeErr, "Couldn't save the apprentice record. Please try again.") };
+
+    await recordInvite(admin, {
+      organization_id: profile.organization_id,
+      user_id: newUserId,
+      email,
+      full_name,
+      role: "apprentice",
+      invited_by: user.id,
+    });
 
     await admin.from("audit_logs").insert({
       organization_id: profile.organization_id,
