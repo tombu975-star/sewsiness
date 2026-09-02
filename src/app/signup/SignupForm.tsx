@@ -31,14 +31,18 @@ function StepDots({ current }: { current: Step }) {
   );
 }
 
+const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024; // 1.2MB — mirrors MAX_FILE_BYTES in ./actions.ts; see that file for why
+
 function FilePreview({
   file,
   onPick,
   label,
+  onReject,
 }: {
   file: File | null;
   onPick: (f: File | null) => void;
   label: string;
+  onReject: (message: string) => void;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
   useEffect(() => {
@@ -74,7 +78,17 @@ function FilePreview({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="hidden"
-            onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              if (f && f.size > MAX_UPLOAD_BYTES) {
+                onReject(
+                  `${label} is too large (max 1.2MB — try your phone's "medium" photo quality, or crop tightly to the card).`
+                );
+                e.target.value = ""; // let them pick the same filename again after fixing it
+                return;
+              }
+              onPick(f);
+            }}
           />
         </label>
       )}
@@ -390,8 +404,8 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
                 className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold font-mono"
               />
             </div>
-            <FilePreview file={cardFront} onPick={setCardFront} label="Ghana Card — front" />
-            <FilePreview file={cardBack} onPick={setCardBack} label="Ghana Card — back" />
+            <FilePreview file={cardFront} onPick={setCardFront} label="Ghana Card — front" onReject={setError} />
+            <FilePreview file={cardBack} onPick={setCardBack} label="Ghana Card — back" onReject={setError} />
           </div>
         )}
 
@@ -531,8 +545,16 @@ function SelfieCapture({ selfie, onCapture }: { selfie: File | null; onCapture: 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Downscale to a max 720px edge — a live KYC selfie doesn't need the
+    // camera's native resolution (often 1080p+ on modern phones, which
+    // at quality 0.92 can easily exceed the 1.2MB per-file budget these
+    // three signup images share; see MAX_FILE_BYTES in ./actions.ts for
+    // why that budget exists). 720px is still more than enough detail
+    // for a human reviewer to compare against the Ghana Card photo.
+    const MAX_EDGE = 720;
+    const scale = Math.min(1, MAX_EDGE / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.translate(canvas.width, 0);
@@ -544,7 +566,7 @@ function SelfieCapture({ selfie, onCapture }: { selfie: File | null; onCapture: 
         onCapture(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
       },
       "image/jpeg",
-      0.92
+      0.85
     );
     streamRef.current?.getTracks().forEach((t) => t.stop());
   }

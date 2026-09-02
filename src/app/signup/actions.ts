@@ -22,7 +22,17 @@ function clientIp(): string {
   return h.get("x-vercel-forwarded-for") || h.get("x-forwarded-for") || h.get("x-real-ip") || "unknown";
 }
 
-const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6MB
+// Vercel Functions enforce a HARD 4.5MB request-body ceiling that no
+// Next.js config can raise (confirmed: https://vercel.com/docs/functions/limitations
+// — "The maximum payload size for the request body ... of a Vercel
+// Function is 4.5 MB"). This Server Action receives three files (Ghana
+// Card front, back, selfie) in one multipart FormData body, plus ~15
+// text fields and multipart boundary/header overhead. 1.2MB × 3 = 3.6MB,
+// leaving real headroom under 4.5MB — a 6MB-per-file limit (3 files =
+// up to 18MB) would have made every signup with genuine, un-shrunk phone
+// photos fail outright in production with an opaque
+// FUNCTION_PAYLOAD_TOO_LARGE error, not the friendly message below.
+const MAX_FILE_BYTES = 1.2 * 1024 * 1024; // 1.2MB per file — see comment above
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function extFor(file: File) {
@@ -33,7 +43,7 @@ function extFor(file: File) {
 
 function validateImage(file: File | null, label: string): string | null {
   if (!file || file.size === 0) return `${label} is required.`;
-  if (file.size > MAX_FILE_BYTES) return `${label} is too large (max 6MB).`;
+  if (file.size > MAX_FILE_BYTES) return `${label} is too large (max 1.2MB — try your phone's "medium" photo quality, or crop tightly to the card).`;
   if (!ALLOWED_TYPES.has(file.type)) return `${label} must be a JPG, PNG, or WEBP image.`;
   return null;
 }
