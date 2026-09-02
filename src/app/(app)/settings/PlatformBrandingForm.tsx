@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { SubmitButton } from "@/components/SubmitButton";
 import {
   addPlatformCoverImage,
@@ -20,6 +21,28 @@ export interface PlatformAdInput {
   headline: string;
   caption?: string | null;
   linkUrl?: string | null;
+}
+
+// Shared by every upload control below. 6MB (not signup's tighter
+// 1.2MB — see src/app/signup/actions.ts) because these genuinely are
+// meant to be high-resolution marketing photography for the login
+// screen, and uploading straight to Storage from the browser (rather
+// than through a Server Action's body) means Vercel's 4.5MB request
+// ceiling never enters into it at all — see
+// 039_platform_branding_direct_upload.sql.
+const MAX_BYTES = 6 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function extFor(file: File) {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
+}
+
+function validatePick(file: File): string | null {
+  if (!ALLOWED_TYPES.has(file.type)) return "Please choose a JPG, PNG, or WEBP image.";
+  if (file.size > MAX_BYTES) return "Image is too large (max 6MB).";
+  return null;
 }
 
 export function PlatformBrandingForm({
@@ -52,12 +75,36 @@ export function PlatformBrandingForm({
 
 function LogoCard({ logoUrl }: { logoUrl: string | null }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files?.[0]) {
-      startTransition(() => formRef.current?.requestSubmit());
+  async function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+
+    const invalid = validatePick(file);
+    if (invalid) return setError(invalid);
+
+    setPending(true);
+    try {
+      const supabase = createClient();
+      const path = `logo.${extFor(file)}`;
+      const { error: upErr } = await supabase.storage.from("platform-branding").upload(path, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: pub } = supabase.storage.from("platform-branding").getPublicUrl(path);
+      // Cache-bust so a re-upload of the same filename shows immediately
+      // instead of the browser serving a stale cached image.
+      await updatePlatformLogo(`${pub.publicUrl}?v=${Date.now()}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't upload the logo. Please try again.");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -78,9 +125,7 @@ function LogoCard({ logoUrl }: { logoUrl: string | null }) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <form ref={formRef} action={updatePlatformLogo}>
-            <input ref={inputRef} type="file" name="logo" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePick} />
-          </form>
+          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePick} />
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -98,6 +143,7 @@ function LogoCard({ logoUrl }: { logoUrl: string | null }) {
           )}
         </div>
       </div>
+      {error && <p className="text-[11px] text-danger mt-2">{error}</p>}
     </div>
   );
 }
@@ -132,12 +178,34 @@ function CoverCopyCard({ headline, subheadline }: { headline: string; subheadlin
 
 function CoverImagesCard({ images }: { images: string[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files?.[0]) {
-      startTransition(() => formRef.current?.requestSubmit());
+  async function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+
+    const invalid = validatePick(file);
+    if (invalid) return setError(invalid);
+
+    setPending(true);
+    try {
+      const supabase = createClient();
+      const path = `cover-${Date.now()}.${extFor(file)}`;
+      const { error: upErr } = await supabase.storage.from("platform-branding").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: pub } = supabase.storage.from("platform-branding").getPublicUrl(path);
+      await addPlatformCoverImage(pub.publicUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't upload the image. Please try again.");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -192,9 +260,7 @@ function CoverImagesCard({ images }: { images: string[] }) {
         </div>
       )}
 
-      <form ref={formRef} action={addPlatformCoverImage}>
-        <input ref={inputRef} type="file" name="image" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePick} />
-      </form>
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePick} />
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
@@ -203,11 +269,65 @@ function CoverImagesCard({ images }: { images: string[] }) {
       >
         {pending ? "Uploading…" : "+ Add image"}
       </button>
+      {error && <p className="text-[11px] text-danger mt-2">{error}</p>}
     </div>
   );
 }
 
 function AdvertisementsCard({ ads }: { ads: PlatformAdInput[] }) {
+  const [headline, setHeadline] = useState("");
+  const [caption, setCaption] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    setError(null);
+    if (f) {
+      const invalid = validatePick(f);
+      if (invalid) {
+        setError(invalid);
+        e.target.value = "";
+        return;
+      }
+    }
+    setFile(f);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!file) return setError("Choose an image for the advertisement.");
+    if (!headline.trim()) return setError("Headline is required.");
+
+    setPending(true);
+    try {
+      const supabase = createClient();
+      const path = `ads/ad-${Date.now()}.${extFor(file)}`;
+      const { error: upErr } = await supabase.storage.from("platform-branding").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: pub } = supabase.storage.from("platform-branding").getPublicUrl(path);
+      await addPlatformAdvertisement({ imageUrl: pub.publicUrl, headline, caption, linkUrl });
+
+      setHeadline("");
+      setCaption("");
+      setLinkUrl("");
+      setFile(null);
+      if (inputRef.current) inputRef.current.value = "";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't add the advertisement. Please try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-1">
@@ -267,40 +387,48 @@ function AdvertisementsCard({ ads }: { ads: PlatformAdInput[] }) {
       )}
 
       {ads.length < 6 && (
-        <form action={addPlatformAdvertisement} className="rounded-lg border border-border p-4 space-y-3">
+        <form onSubmit={handleSubmit} className="rounded-lg border border-border p-4 space-y-3">
           <div className="text-xs font-semibold text-ink-muted">Add an advertisement</div>
           <div>
             <input
+              ref={inputRef}
               type="file"
-              name="image"
               accept="image/jpeg,image/png,image/webp"
-              required
+              onChange={handlePick}
               className="text-xs text-ink-muted file:mr-3 file:rounded-lg file:border-0 file:bg-sunken file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink"
             />
           </div>
           <input
             type="text"
-            name="headline"
-            required
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
             placeholder='Headline (e.g. "Now accepting Mobile Money payments")'
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
           />
           <input
             type="text"
-            name="caption"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
             placeholder="Short caption (optional)"
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
           />
           <input
             type="url"
-            name="link_url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
             placeholder="Link — https://… (optional)"
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
           />
-          <SubmitButton pendingLabel="Adding…">+ Add advertisement</SubmitButton>
+          {error && <p className="text-[11px] text-danger">{error}</p>}
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-lg bg-indigo px-3.5 py-2 text-xs font-semibold text-white hover:brightness-105 disabled:opacity-60"
+          >
+            {pending ? "Adding…" : "+ Add advertisement"}
+          </button>
         </form>
       )}
     </div>
   );
 }
-

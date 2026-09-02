@@ -5,21 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/require-role";
 
-const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // 6MB
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-
-function extFor(file: File) {
-  if (file.type === "image/png") return "png";
-  if (file.type === "image/webp") return "webp";
-  return "jpg";
-}
-
-function validateImage(file: File | null, label: string): string | null {
-  if (!file || file.size === 0) return `${label} is required.`;
-  if (file.size > MAX_IMAGE_BYTES) return `${label} is too large (max 6MB).`;
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) return `${label} must be a JPG, PNG, or WEBP image.`;
-  return null;
-}
+// Logo/cover-image/advertisement uploads used to receive the raw file as
+// part of these Server Actions' own FormData body, uploaded server-side
+// via the service-role client. That hits the same wall
+// src/app/signup/actions.ts ran into: Vercel Functions enforce a hard
+// 4.5MB request-body ceiling no application config can raise, and these
+// are meant to be genuine high-resolution marketing photography for the
+// login screen, not something to compress down to fit. So instead the
+// browser now uploads directly to Storage (PlatformBrandingForm.tsx,
+// mirroring the pattern AvatarUpload.tsx already used for personal
+// photos) — these three functions below only ever receive the
+// resulting URL string afterward, never the file itself. Needs
+// 039_platform_branding_direct_upload.sql's storage RLS policies to
+// actually permit that direct browser write.
 
 export async function updateProfile(formData: FormData) {
   const supabase = createClient();
@@ -164,25 +162,9 @@ export async function updatePlatformCoverCopy(formData: FormData) {
   revalidatePath("/", "layout");
 }
 
-export async function updatePlatformLogo(formData: FormData) {
+export async function updatePlatformLogo(logoUrl: string) {
   const { user } = await requireRole(["super_admin"]);
-
-  const file = formData.get("logo") as File | null;
-  const err = validateImage(file, "Logo");
-  if (err) throw new Error(err);
-
-  const admin = createAdminClient();
-  const path = `logo.${extFor(file as File)}`;
-  const { error: upErr } = await admin.storage.from("platform-branding").upload(path, file as File, {
-    contentType: (file as File).type,
-    upsert: true,
-  });
-  if (upErr) throw new Error("Couldn't upload the logo. Please try again.");
-
-  const { data: pub } = admin.storage.from("platform-branding").getPublicUrl(path);
-  // Cache-bust so a re-upload of the same filename shows immediately
-  // instead of the browser serving a stale cached image.
-  const logoUrl = `${pub.publicUrl}?v=${Date.now()}`;
+  if (!logoUrl) throw new Error("Missing logo URL.");
 
   const supabase = createClient();
   const { error } = await supabase
@@ -209,26 +191,13 @@ export async function removePlatformLogo() {
   revalidatePath("/", "layout");
 }
 
-export async function addPlatformCoverImage(formData: FormData) {
+export async function addPlatformCoverImage(imageUrl: string) {
   const { user } = await requireRole(["super_admin"]);
-
-  const file = formData.get("image") as File | null;
-  const err = validateImage(file, "Cover image");
-  if (err) throw new Error(err);
+  if (!imageUrl) throw new Error("Missing image URL.");
 
   const { images } = await getPlatformSettingsRow();
   if (images.length >= 8) throw new Error("Up to 8 rolling cover images — remove one before adding another.");
-
-  const admin = createAdminClient();
-  const path = `cover-${Date.now()}.${extFor(file as File)}`;
-  const { error: upErr } = await admin.storage.from("platform-branding").upload(path, file as File, {
-    contentType: (file as File).type,
-    upsert: false,
-  });
-  if (upErr) throw new Error("Couldn't upload the image. Please try again.");
-
-  const { data: pub } = admin.storage.from("platform-branding").getPublicUrl(path);
-  const nextImages = [...images, pub.publicUrl];
+  const nextImages = [...images, imageUrl];
 
   const supabase = createClient();
   const { error } = await supabase
@@ -311,38 +280,31 @@ export async function movePlatformCoverImage(formData: FormData) {
 // See 034_platform_advertisements.sql and LoginSplash.tsx.
 // ============================================================
 
-export async function addPlatformAdvertisement(formData: FormData) {
+export async function addPlatformAdvertisement(input: {
+  imageUrl: string;
+  headline: string;
+  caption: string;
+  linkUrl: string;
+}) {
   const { user } = await requireRole(["super_admin"]);
 
-  const headline = String(formData.get("headline") ?? "").trim();
+  const headline = input.headline.trim();
   if (!headline) throw new Error("Headline is required.");
-  const caption = String(formData.get("caption") ?? "").trim();
-  const linkUrlRaw = String(formData.get("link_url") ?? "").trim();
+  const caption = input.caption.trim();
+  const linkUrlRaw = input.linkUrl.trim();
   if (linkUrlRaw && !/^https?:\/\//i.test(linkUrlRaw)) {
     throw new Error("Link must start with http:// or https://.");
   }
-
-  const file = formData.get("image") as File | null;
-  const err = validateImage(file, "Advertisement image");
-  if (err) throw new Error(err);
+  if (!input.imageUrl) throw new Error("Missing image URL.");
 
   const { ads } = await getPlatformSettingsRow();
   if (ads.length >= 6) throw new Error("Up to 6 advertisements — remove one before adding another.");
 
-  const admin = createAdminClient();
-  const path = `ads/ad-${Date.now()}.${extFor(file as File)}`;
-  const { error: upErr } = await admin.storage.from("platform-branding").upload(path, file as File, {
-    contentType: (file as File).type,
-    upsert: false,
-  });
-  if (upErr) throw new Error("Couldn't upload the image. Please try again.");
-
-  const { data: pub } = admin.storage.from("platform-branding").getPublicUrl(path);
   const nextAds = [
     ...ads,
     {
       id: randomUUID(),
-      image_url: pub.publicUrl,
+      image_url: input.imageUrl,
       headline,
       caption: caption || null,
       link_url: linkUrlRaw || null,
