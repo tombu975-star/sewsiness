@@ -51,10 +51,22 @@ export default async function SettingsPage() {
     : { data: null };
 
   const { data: platform } = isSuperAdmin
-    ? await supabase.from("platform_settings").select("logo_url, cover_images, cover_headline, cover_subheadline").eq("id", 1).single()
+    ? await supabase.from("platform_settings").select("logo_url, cover_images, cover_headline, cover_subheadline, advertisements").eq("id", 1).single()
     : { data: null };
   const platformCoverImages = Array.isArray((platform as any)?.cover_images)
     ? ((platform as any).cover_images as unknown[]).filter((v): v is string => typeof v === "string")
+    : [];
+  const platformAds = Array.isArray((platform as any)?.advertisements)
+    ? ((platform as any).advertisements as any[])
+        .filter((v): v is Record<string, unknown> => typeof v === "object" && v !== null)
+        .map((v) => ({
+          id: typeof v.id === "string" ? v.id : "",
+          imageUrl: typeof v.image_url === "string" ? v.image_url : "",
+          headline: typeof v.headline === "string" ? v.headline : "",
+          caption: typeof v.caption === "string" ? v.caption : null,
+          linkUrl: typeof v.link_url === "string" ? v.link_url : null,
+        }))
+        .filter((ad) => ad.id && ad.imageUrl && ad.headline)
     : [];
 
   let flagsOn = 0, flagsTotal = 0, integrationsTotal = 0, openIncidents = 0;
@@ -180,6 +192,7 @@ export default async function SettingsPage() {
           coverImages={platformCoverImages}
           coverHeadline={(platform as any)?.cover_headline ?? ""}
           coverSubheadline={(platform as any)?.cover_subheadline ?? ""}
+          ads={platformAds}
         />
       ),
     });

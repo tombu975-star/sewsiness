@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
 import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
+import { recordInvite } from "@/lib/invites";
 import type { Role } from "@/lib/types";
 
 // Previously this action had NO caller-role check AND trusted the
@@ -58,6 +59,17 @@ export async function inviteStaff(_prevState: ActionState, formData: FormData): 
       role,
     });
     if (profileErr) return { error: toSafeErrorMessage(profileErr, "Couldn't finish creating that account. Please try again.") };
+
+    // Tracks its own 30-minute expiry + lets /staff show a Resend
+    // button once the link goes stale — see src/lib/invites.ts.
+    await recordInvite(admin, {
+      organization_id: profile.organization_id,
+      user_id: invited.user.id,
+      email,
+      full_name,
+      role,
+      invited_by: user.id,
+    });
 
     await admin.from("audit_logs").insert({
       organization_id: profile.organization_id,

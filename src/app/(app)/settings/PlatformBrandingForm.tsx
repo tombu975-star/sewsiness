@@ -9,18 +9,31 @@ import {
   updatePlatformLogo,
   removePlatformLogo,
   updatePlatformCoverCopy,
+  addPlatformAdvertisement,
+  removePlatformAdvertisement,
+  movePlatformAdvertisement,
 } from "./actions";
+
+export interface PlatformAdInput {
+  id: string;
+  imageUrl: string;
+  headline: string;
+  caption?: string | null;
+  linkUrl?: string | null;
+}
 
 export function PlatformBrandingForm({
   logoUrl,
   coverImages,
   coverHeadline,
   coverSubheadline,
+  ads,
 }: {
   logoUrl: string | null;
   coverImages: string[];
   coverHeadline: string;
   coverSubheadline: string;
+  ads: PlatformAdInput[];
 }) {
   return (
     <div className="space-y-5">
@@ -32,6 +45,7 @@ export function PlatformBrandingForm({
       <LogoCard logoUrl={logoUrl} />
       <CoverCopyCard headline={coverHeadline} subheadline={coverSubheadline} />
       <CoverImagesCard images={coverImages} />
+      <AdvertisementsCard ads={ads} />
     </div>
   );
 }
@@ -192,3 +206,101 @@ function CoverImagesCard({ images }: { images: string[] }) {
     </div>
   );
 }
+
+function AdvertisementsCard({ ads }: { ads: PlatformAdInput[] }) {
+  return (
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-1">
+        <div className="font-display font-semibold text-ink">Advertisements</div>
+        <span className="text-xs text-ink-faint">{ads.length} / 6</span>
+      </div>
+      <p className="text-xs text-ink-muted mb-4">
+        Mixed into the rolling images on the /login splash screen — each slide gets a headline,
+        an optional short caption, and an optional link. Shown before anyone reaches the sign-in
+        form itself, which stays a single calm photo.
+      </p>
+
+      {ads.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border-strong px-4 py-8 text-center text-sm text-ink-muted mb-4">
+          No advertisements yet — the splash rolls through cover images only.
+        </div>
+      ) : (
+        <div className="space-y-3 mb-4">
+          {ads.map((ad, i) => (
+            <div key={ad.id} className="flex gap-3 rounded-lg border border-border p-3">
+              <div className="w-16 h-16 rounded-lg overflow-hidden border border-border bg-sunken flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ad.imageUrl} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-ink truncate">{ad.headline}</div>
+                {ad.caption && <div className="text-xs text-ink-muted truncate">{ad.caption}</div>}
+                {ad.linkUrl && <div className="text-[11px] text-indigo truncate">{ad.linkUrl}</div>}
+              </div>
+              <div className="flex flex-col items-end justify-between flex-shrink-0">
+                <div className="flex items-center gap-1">
+                  <form action={movePlatformAdvertisement}>
+                    <input type="hidden" name="id" value={ad.id} />
+                    <input type="hidden" name="direction" value="up" />
+                    <button type="submit" disabled={i === 0} title="Move earlier" className="w-6 h-6 rounded bg-sunken text-ink text-xs font-bold disabled:opacity-40">
+                      ↑
+                    </button>
+                  </form>
+                  <form action={movePlatformAdvertisement}>
+                    <input type="hidden" name="id" value={ad.id} />
+                    <input type="hidden" name="direction" value="down" />
+                    <button type="submit" disabled={i === ads.length - 1} title="Move later" className="w-6 h-6 rounded bg-sunken text-ink text-xs font-bold disabled:opacity-40">
+                      ↓
+                    </button>
+                  </form>
+                </div>
+                <form action={removePlatformAdvertisement}>
+                  <input type="hidden" name="id" value={ad.id} />
+                  <button type="submit" title="Remove" className="text-xs font-semibold text-danger hover:underline">
+                    Remove
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ads.length < 6 && (
+        <form action={addPlatformAdvertisement} className="rounded-lg border border-border p-4 space-y-3">
+          <div className="text-xs font-semibold text-ink-muted">Add an advertisement</div>
+          <div>
+            <input
+              type="file"
+              name="image"
+              accept="image/jpeg,image/png,image/webp"
+              required
+              className="text-xs text-ink-muted file:mr-3 file:rounded-lg file:border-0 file:bg-sunken file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink"
+            />
+          </div>
+          <input
+            type="text"
+            name="headline"
+            required
+            placeholder='Headline (e.g. "Now accepting Mobile Money payments")'
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+          />
+          <input
+            type="text"
+            name="caption"
+            placeholder="Short caption (optional)"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+          />
+          <input
+            type="url"
+            name="link_url"
+            placeholder="Link — https://… (optional)"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+          />
+          <SubmitButton pendingLabel="Adding…">+ Add advertisement</SubmitButton>
+        </form>
+      )}
+    </div>
+  );
+}
+

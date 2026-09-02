@@ -4,6 +4,8 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { requirePageRole } from "@/lib/auth/require-role";
+import { InviteStatusBadge } from "@/components/InviteStatusBadge";
+import { ResendInviteButton } from "@/components/ResendInviteButton";
 
 export default async function FreelancersPage() {
   await requirePageRole(["owner", "manager"]);
@@ -19,6 +21,12 @@ export default async function FreelancersPage() {
     .eq("organization_id", profile?.organization_id ?? "")
     .eq("role", "freelancer")
     .order("full_name");
+
+  const { data: invites } = await supabase
+    .from("invites")
+    .select("id, user_id, status, expires_at")
+    .eq("organization_id", profile?.organization_id ?? "");
+  const inviteByUser = new Map((invites ?? []).map((i: any) => [i.user_id, i]));
 
   const rows = (freelancers ?? []) as any[];
 
@@ -46,19 +54,33 @@ export default async function FreelancersPage() {
             { key: "specialisation", label: "Specialisation" },
             { key: "experience", label: "Experience" },
             { key: "location", label: "Location" },
+            { key: "invite", label: "Invite" },
           ]}
-          rows={rows.map((f) => ({
-            id: f.id,
-            cells: {
-              name: f.full_name,
-              skill: f.freelancer_profiles?.[0]?.primary_skill ?? "—",
-              specialisation: f.freelancer_profiles?.[0]?.specialisation ?? "—",
-              experience: f.freelancer_profiles?.[0]?.years_experience
-                ? `${f.freelancer_profiles[0].years_experience} yrs`
-                : "—",
-              location: f.freelancer_profiles?.[0]?.location ?? "—",
-            },
-          }))}
+          rows={rows.map((f) => {
+            const invite = inviteByUser.get(f.id);
+            return {
+              id: f.id,
+              cells: {
+                name: f.full_name,
+                skill: f.freelancer_profiles?.[0]?.primary_skill ?? "—",
+                specialisation: f.freelancer_profiles?.[0]?.specialisation ?? "—",
+                experience: f.freelancer_profiles?.[0]?.years_experience
+                  ? `${f.freelancer_profiles[0].years_experience} yrs`
+                  : "—",
+                location: f.freelancer_profiles?.[0]?.location ?? "—",
+                invite: invite ? (
+                  <div>
+                    <InviteStatusBadge status={invite.status} expiresAt={invite.expires_at} />
+                    {invite.status === "pending" && (
+                      <ResendInviteButton inviteId={invite.id} revalidatePath="/freelancers" />
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-ink-faint">—</span>
+                ),
+              },
+            };
+          })}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
 "use server";
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -131,11 +132,18 @@ export async function changePassword(
 
 async function getPlatformSettingsRow() {
   const supabase = createClient();
-  const { data } = await supabase.from("platform_settings").select("logo_url, cover_images").eq("id", 1).single();
+  const { data } = await supabase
+    .from("platform_settings")
+    .select("logo_url, cover_images, advertisements")
+    .eq("id", 1)
+    .single();
   const images = Array.isArray((data as any)?.cover_images)
     ? ((data as any).cover_images as unknown[]).filter((v): v is string => typeof v === "string")
     : [];
-  return { logoUrl: (data as any)?.logo_url ?? null, images };
+  const ads = Array.isArray((data as any)?.advertisements)
+    ? ((data as any).advertisements as any[]).filter((v) => v && typeof v === "object")
+    : [];
+  return { logoUrl: (data as any)?.logo_url ?? null, images, ads };
 }
 
 export async function updatePlatformCoverCopy(formData: FormData) {
@@ -294,6 +302,126 @@ export async function movePlatformCoverImage(formData: FormData) {
 
   revalidatePath("/settings");
   revalidatePath("/", "layout");
+}
+
+// ============================================================
+// Advertisements — Super Admin only. A rolling set of promotional
+// slides (image + headline + optional caption/link) mixed into the
+// /login splash's rotation, alongside the plain cover images above.
+// See 034_platform_advertisements.sql and LoginSplash.tsx.
+// ============================================================
+
+export async function addPlatformAdvertisement(formData: FormData) {
+  const { user } = await requireRole(["super_admin"]);
+
+  const headline = String(formData.get("headline") ?? "").trim();
+  if (!headline) throw new Error("Headline is required.");
+  const caption = String(formData.get("caption") ?? "").trim();
+  const linkUrlRaw = String(formData.get("link_url") ?? "").trim();
+  if (linkUrlRaw && !/^https?:\/\//i.test(linkUrlRaw)) {
+    throw new Error("Link must start with http:// or https://.");
+  }
+
+  const file = formData.get("image") as File | null;
+  const err = validateImage(file, "Advertisement image");
+  if (err) throw new Error(err);
+
+  const { ads } = await getPlatformSettingsRow();
+  if (ads.length >= 6) throw new Error("Up to 6 advertisements — remove one before adding another.");
+
+  const admin = createAdminClient();
+  const path = `ads/ad-${Date.now()}.${extFor(file as File)}`;
+  const { error: upErr } = await admin.storage.from("platform-branding").upload(path, file as File, {
+    contentType: (file as File).type,
+    upsert: false,
+  });
+  if (upErr) throw new Error("Couldn't upload the image. Please try again.");
+
+  const { data: pub } = admin.storage.from("platform-branding").getPublicUrl(path);
+  const nextAds = [
+    ...ads,
+    {
+      id: randomUUID(),
+      image_url: pub.publicUrl,
+      headline,
+      caption: caption || null,
+      link_url: linkUrlRaw || null,
+    },
+  ];
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("platform_settings")
+    .update({ advertisements: nextAds, updated_at: new Date().toISOString(), updated_by: user.id })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/settings");
+  revalidatePath("/login");
+}
+
+export async function removePlatformAdvertisement(formData: FormData) {
+  const { user } = await requireRole(["super_admin"]);
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing advertisement.");
+
+  const { ads } = await getPlatformSettingsRow();
+  const target = ads.find((a: any) => a.id === id);
+  const nextAds = ads.filter((a: any) => a.id !== id);
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("platform_settings")
+    .update({ advertisements: nextAds, updated_at: new Date().toISOString(), updated_by: user.id })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+
+  // Best-effort cleanup of the underlying file — see removePlatformCoverImage.
+  try {
+    if (target?.image_url) {
+      const admin = createAdminClient();
+      const marker = "/object/public/platform-branding/";
+      const idx = String(target.image_url).indexOf(marker);
+      if (idx !== -1) {
+        const path = String(target.image_url).slice(idx + marker.length);
+        await admin.storage.from("platform-branding").remove([path]);
+      }
+    }
+  } catch {
+    // non-fatal, see above
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/login");
+}
+
+export async function movePlatformAdvertisement(formData: FormData) {
+  const { user } = await requireRole(["super_admin"]);
+
+  const id = String(formData.get("id") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  if (!id || (direction !== "up" && direction !== "down")) throw new Error("Invalid request.");
+
+  const { ads } = await getPlatformSettingsRow();
+  const idx = ads.findIndex((a: any) => a.id === id);
+  if (idx === -1) throw new Error("Advertisement not found.");
+
+  const swapWith = direction === "up" ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= ads.length) return; // already at the edge, nothing to do
+
+  const nextAds = [...ads];
+  [nextAds[idx], nextAds[swapWith]] = [nextAds[swapWith], nextAds[idx]];
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("platform_settings")
+    .update({ advertisements: nextAds, updated_at: new Date().toISOString(), updated_by: user.id })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/settings");
+  revalidatePath("/login");
 }
 
 // ============================================================
