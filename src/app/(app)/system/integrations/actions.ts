@@ -22,8 +22,9 @@ async function logSystemAction(actorId: string, action: string, entity: string, 
  * Presence-only health check: confirms the env vars a provider needs are
  * actually set on this deployment. It never reads or stores the secret
  * values themselves — only whether each expected variable is present and
- * non-empty. Real credentials live in Render's environment settings; this
- * table only ever sees "is PAYSTACK_SECRET_KEY set?", never the key.
+ * non-empty. Real credentials live in Vercel's environment variable
+ * settings; this table only ever sees "is PAYSTACK_SECRET_KEY set?", never
+ * the key.
  */
 function checkEnvVars(requiredEnvVars: string[]): { ok: boolean; message: string } {
   if (requiredEnvVars.length === 0) return { ok: true, message: "No env vars required." };

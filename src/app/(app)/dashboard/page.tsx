@@ -5,8 +5,10 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import { markAdvisoryNoteSeen } from "../admin/actions";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function DashboardPage() {
+  await requirePageRole(["owner", "manager", "staff", "trainer", "freelancer", "apprentice"]);
   const supabase = createClient();
   const {
     data: { user },
@@ -93,27 +95,42 @@ export default async function DashboardPage() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <StatCard label="Customers" value={customerCount ?? 0} />
-        <StatCard label="Active Orders" value={orderCount ?? 0} />
-        <StatCard label="Revenue Today" value={`₵${revenueToday.toFixed(2)}`} accent />
-        <StatCard label="Outstanding Balance" value={`₵${totalOutstanding.toFixed(2)}`} accent />
+        <StatCard label="Customers" value={customerCount ?? 0} icon="☺" />
+        <StatCard label="Active Orders" value={orderCount ?? 0} icon="✂" />
+        <StatCard label="Revenue Today" value={`₵${revenueToday.toFixed(2)}`} accent icon="◈" />
+        <StatCard label="Outstanding Balance" value={`₵${totalOutstanding.toFixed(2)}`} accent icon="◉" />
       </div>
 
-      <div className="card p-5 mb-6">
+      <div className="card p-5 mb-6" style={{ boxShadow: "var(--shadow-sm)" }}>
         <h3 className="font-display text-[15px] font-semibold text-ink mb-4">Order status at a glance</h3>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="w-11 h-11 rounded-full bg-gold-soft text-gold-ink flex items-center justify-center mx-auto mb-2 text-lg">◔</div>
+            <div
+              className="w-11 h-11 rounded-full bg-gold-soft text-gold-ink flex items-center justify-center mx-auto mb-2 text-lg"
+              style={{ boxShadow: "0 0 0 4px var(--gold-soft), var(--shadow-xs)" }}
+            >
+              ◔
+            </div>
             <div className="font-mono font-semibold text-xl text-ink">{statusCounts.pending}</div>
             <div className="text-xs text-ink-muted mt-0.5">Pending</div>
           </div>
           <div>
-            <div className="w-11 h-11 rounded-full bg-info-soft text-info flex items-center justify-center mx-auto mb-2 text-lg">✂</div>
+            <div
+              className="w-11 h-11 rounded-full bg-info-soft text-info flex items-center justify-center mx-auto mb-2 text-lg"
+              style={{ boxShadow: "0 0 0 4px var(--info-soft), var(--shadow-xs)" }}
+            >
+              ✂
+            </div>
             <div className="font-mono font-semibold text-xl text-ink">{statusCounts.inProgress}</div>
             <div className="text-xs text-ink-muted mt-0.5">In Progress</div>
           </div>
           <div>
-            <div className="w-11 h-11 rounded-full bg-success-soft text-success flex items-center justify-center mx-auto mb-2 text-lg">✓</div>
+            <div
+              className="w-11 h-11 rounded-full bg-success-soft text-success flex items-center justify-center mx-auto mb-2 text-lg"
+              style={{ boxShadow: "0 0 0 4px var(--success-soft), var(--shadow-xs)" }}
+            >
+              ✓
+            </div>
             <div className="font-mono font-semibold text-xl text-ink">{statusCounts.completed}</div>
             <div className="text-xs text-ink-muted mt-0.5">Completed</div>
           </div>
@@ -124,8 +141,8 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold text-ink">Recent Orders</h2>
-            <a href="/orders" className="text-sm font-semibold text-indigo">
-              View all →
+            <a href="/orders" className="text-sm font-semibold text-indigo inline-flex items-center gap-1 hover:gap-1.5 transition-all">
+              View all <span aria-hidden="true">→</span>
             </a>
           </div>
           <DataTable
@@ -154,8 +171,8 @@ export default async function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold text-ink">Recent Payments</h2>
-            <a href="/payments" className="text-sm font-semibold text-indigo">
-              View all →
+            <a href="/payments" className="text-sm font-semibold text-indigo inline-flex items-center gap-1 hover:gap-1.5 transition-all">
+              View all <span aria-hidden="true">→</span>
             </a>
           </div>
           <div className="card divide-y divide-border">

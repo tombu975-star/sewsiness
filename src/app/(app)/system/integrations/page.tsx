@@ -34,7 +34,7 @@ export default async function IntegrationsPage() {
     <div>
       <PageHead
         title="Integrations"
-        subtitle="What Sewsiness connects to, and whether the env vars each one needs are actually set on this deployment. No secret values are ever stored or shown here — real keys stay in Render's environment settings."
+        subtitle="What Sewsiness connects to, and whether the env vars each one needs are actually set on this deployment. No secret values are ever stored or shown here — real keys stay in Vercel's environment variable settings."
         crumb="System Admin"
       />
 

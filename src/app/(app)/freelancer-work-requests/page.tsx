@@ -3,10 +3,12 @@ import { PageHead } from "@/components/PageHead";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusSelect } from "./StatusSelect";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 const STATUSES = ["Offered", "Accepted", "Completed", "Paid", "Declined"];
 
 export default async function WorkRequestsPage() {
+  await requirePageRole(["owner", "manager", "freelancer"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id, role").eq("id", user!.id).single();
