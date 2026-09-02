@@ -6,11 +6,21 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { ROLES, homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 import { updateProfile, updateOrganization } from "./actions";
-import { ChangePasswordForm } from "./ChangePasswordForm";
 import { AvatarUpload } from "./AvatarUpload";
+import { AccountCard } from "./AccountCard";
 import { PlatformBrandingForm } from "./PlatformBrandingForm";
 import { SystemOverviewCard } from "./SystemOverviewCard";
 import { BranchesQuickCard } from "./BranchesQuickCard";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 
 // Settings is deliberately narrower than the rest of the app — it holds
 // account security plus organization/branch/platform configuration, not
@@ -92,6 +102,54 @@ export default async function SettingsPage() {
       label: "My Account",
       content: (
         <div className="space-y-5">
+          {/* Identity card — same gradient hero + avatar pattern used on
+              the Customer profile page (see .idcard/.idavatar/.idfacts
+              in globals.css), applied here to the signed-in user's own
+              account instead of a customer's. */}
+          <div className="idcard max-w-lg">
+            <div className="idavatar overflow-hidden">
+              {profile?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                initials(profile?.full_name ?? "?")
+              )}
+            </div>
+            <h2 className="font-display text-xl font-semibold">{profile?.full_name ?? "—"}</h2>
+            <div className="idsub text-[12.5px] mb-4" style={{ color: "#D8CFEE" }}>
+              {roleLabel}
+              {org?.name ? ` · ${org.name}` : ""}
+            </div>
+            <div className="idfacts">
+              <div>
+                <b>{org?.name ?? "Platform"}</b>
+                <span>ORGANIZATION</span>
+              </div>
+              <div>
+                <b>{branch?.name ?? "—"}</b>
+                <span>BRANCH</span>
+              </div>
+              <div>
+                <b>{memberSince ?? "—"}</b>
+                <span>MEMBER SINCE</span>
+              </div>
+            </div>
+            {(profile as any)?.phone || user?.email ? (
+              <div className="quickrow flex justify-center gap-2.5 mt-4">
+                {(profile as any)?.phone && (
+                  <a href={`tel:${(profile as any).phone}`} className="qbtn" aria-label="Call">
+                    📞
+                  </a>
+                )}
+                {user?.email && (
+                  <a href={`mailto:${user.email}`} className="qbtn" aria-label="Email">
+                    ✉️
+                  </a>
+                )}
+              </div>
+            ) : null}
+          </div>
+
           <div className="card p-6 max-w-lg">
             <div className="flex items-center justify-between mb-4">
               <div className="font-display font-semibold text-ink">Profile photo</div>
@@ -118,33 +176,7 @@ export default async function SettingsPage() {
             <SubmitButton pendingLabel="Saving…">Save Changes</SubmitButton>
           </form>
 
-          {(org?.name || branch?.name) && (
-            <div className="card p-6 max-w-lg">
-              <div className="font-display font-semibold text-ink mb-3">Workspace</div>
-              <dl className="text-sm space-y-2.5">
-                {org?.name && (
-                  <div className="flex items-center justify-between">
-                    <dt className="text-ink-muted">Organization</dt>
-                    <dd className="font-medium text-ink">{org.name}</dd>
-                  </div>
-                )}
-                {branch?.name && (
-                  <div className="flex items-center justify-between">
-                    <dt className="text-ink-muted">Branch</dt>
-                    <dd className="font-medium text-ink">{branch.name}{branch.city ? ` · ${branch.city}` : ""}</dd>
-                  </div>
-                )}
-                {memberSince && (
-                  <div className="flex items-center justify-between">
-                    <dt className="text-ink-muted">Member since</dt>
-                    <dd className="font-medium text-ink">{memberSince}</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          )}
-
-          <ChangePasswordForm />
+          <AccountCard />
         </div>
       ),
     },

@@ -69,8 +69,8 @@ export default async function ApprenticesPage() {
                 invite: invite ? (
                   <div>
                     <InviteStatusBadge status={invite.status} expiresAt={invite.expires_at} />
-                    {invite.status === "pending" && (
-                      <ResendInviteButton inviteId={invite.id} revalidatePath="/apprentices" />
+                    {invite.status !== "revoked" && (
+                      <ResendInviteButton inviteId={invite.id} revalidatePath="/apprentices" status={invite.status} />
                     )}
                   </div>
                 ) : (

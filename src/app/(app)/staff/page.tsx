@@ -57,8 +57,8 @@ export default async function StaffPage() {
                 invite: invite ? (
                   <div>
                     <InviteStatusBadge status={invite.status} expiresAt={invite.expires_at} />
-                    {invite.status === "pending" && (
-                      <ResendInviteButton inviteId={invite.id} revalidatePath="/staff" />
+                    {invite.status !== "revoked" && (
+                      <ResendInviteButton inviteId={invite.id} revalidatePath="/staff" status={invite.status} />
                     )}
                   </div>
                 ) : (
