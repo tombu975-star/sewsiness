@@ -79,10 +79,10 @@ export function AppShell({
                   key={c.href}
                   href={c.href}
                   onClick={onNavigate}
-                  className={`flex items-center justify-between pl-9 pr-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors ${
+                  className={`flex items-center justify-between pl-9 pr-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-all duration-150 ${
                     pathname === c.href
-                      ? "bg-sidebar-active text-white shadow-[inset_3px_0_0_var(--gold)]"
-                      : "text-sidebar-ink hover:bg-sidebar-active/60 hover:text-white"
+                      ? "bg-sidebar-active text-white shadow-[inset_3px_0_0_var(--gold),0_1px_3px_rgba(0,0,0,0.15)]"
+                      : "text-sidebar-ink hover:bg-white/[0.06] hover:text-white hover:translate-x-0.5"
                   }`}
                 >
                   <span>{c.label}</span>
@@ -97,10 +97,10 @@ export function AppShell({
             key={item.label + item.href}
             href={item.href!}
             onClick={onNavigate}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-150 ${
               active
-                ? "bg-sidebar-active text-white shadow-[inset_3px_0_0_var(--gold)]"
-                : "text-sidebar-ink hover:bg-sidebar-active/60 hover:text-white"
+                ? "bg-sidebar-active text-white shadow-[inset_3px_0_0_var(--gold),0_1px_3px_rgba(0,0,0,0.15)]"
+                : "text-sidebar-ink hover:bg-white/[0.06] hover:text-white hover:translate-x-0.5"
             }`}
           >
             <span className="w-4 text-center text-[14px]">{item.icon}</span>
@@ -116,7 +116,13 @@ export function AppShell({
     <div className="flex h-screen overflow-hidden bg-canvas">
       <InactivityGuard />
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col w-[240px] flex-shrink-0 bg-sidebar text-white">
+      <aside
+        className="hidden md:flex md:flex-col w-[240px] flex-shrink-0 text-white relative z-10"
+        style={{
+          background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)",
+          boxShadow: "1px 0 0 var(--sidebar-border), 4px 0 24px -8px rgba(20, 8, 40, 0.35)",
+        }}
+      >
         <Brand orgName={orgName} />
         <NavList />
       </aside>
@@ -124,8 +130,11 @@ export function AppShell({
       {/* Mobile drawer */}
       {mobileNavOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileNavOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-[260px] bg-sidebar text-white flex flex-col shadow-2xl">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setMobileNavOpen(false)} />
+          <aside
+            className="absolute inset-y-0 left-0 w-[260px] text-white flex flex-col shadow-2xl"
+            style={{ background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)" }}
+          >
             <Brand orgName={orgName} />
             <NavList onNavigate={() => setMobileNavOpen(false)} />
           </aside>
@@ -134,17 +143,20 @@ export function AppShell({
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="h-16 flex-shrink-0 bg-surface border-b border-border flex items-center justify-between px-4 md:px-6 gap-3">
+        <header
+          className="h-16 flex-shrink-0 bg-surface border-b border-border flex items-center justify-between px-4 md:px-6 gap-3 relative z-20"
+          style={{ boxShadow: "0 1px 0 var(--border), 0 4px 12px -8px rgba(30, 15, 66, 0.08)" }}
+        >
           <div className="flex items-center gap-3 min-w-0">
             <button
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-border text-ink flex-shrink-0"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-border text-ink flex-shrink-0 hover:bg-sunken transition-colors"
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open navigation"
             >
               ☰
             </button>
             <div className="hidden md:block text-sm text-ink-muted truncate">
-              {orgName}
+              <span className="font-semibold text-ink">{orgName}</span>
               {branchName && (
                 <>
                   <span className="mx-1.5 text-border-strong">/</span>
@@ -154,14 +166,19 @@ export function AppShell({
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <Link href="/notifications" className="relative w-9 h-9 rounded-lg border border-border flex items-center justify-center text-ink-soft hover:bg-sunken" aria-label="Notifications">
+            <Link
+              href="/notifications"
+              className="relative w-9 h-9 rounded-lg border border-border flex items-center justify-center text-ink-soft hover:bg-sunken hover:border-border-strong transition-colors"
+              aria-label="Notifications"
+            >
               🔔
-              <span className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-burgundy" />
+              <span className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-burgundy ring-2 ring-surface" />
             </Link>
             <div className="relative">
               <button
                 onClick={() => setDrawerOpen((v) => !v)}
-                className="w-9 h-9 rounded-full bg-gold text-[#3a2400] flex items-center justify-center text-[12px] font-bold overflow-hidden ring-2 ring-transparent hover:ring-gold-soft transition-shadow"
+                className="w-9 h-9 rounded-full bg-gold text-[#3a2400] flex items-center justify-center text-[12px] font-bold overflow-hidden ring-2 ring-transparent hover:ring-gold-soft transition-all"
+                style={{ boxShadow: "var(--shadow-gold)" }}
                 aria-label="Account menu"
               >
                 {avatarUrl ? (
@@ -172,18 +189,18 @@ export function AppShell({
                 )}
               </button>
               {drawerOpen && (
-                <div className="absolute right-0 mt-2 w-52 card p-2 shadow-lg z-50">
-                  <div className="px-2 py-1.5">
+                <div className="absolute right-0 mt-2 w-52 card p-2 z-50" style={{ boxShadow: "var(--shadow-lg)" }}>
+                  <div className="px-2 py-1.5 mb-1 border-b border-border">
                     <div className="text-sm font-semibold text-ink truncate">{fullName}</div>
                     <div className="text-xs text-ink-muted">{roleLabel}</div>
                   </div>
-                  <Link href="/settings" className="block px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-ink">
+                  <Link href="/settings" className="block px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-ink transition-colors">
                     Settings
                   </Link>
                   <button
                     onClick={handleSignOut}
                     disabled={signingOut}
-                    className="w-full flex items-center gap-2 text-left px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-danger disabled:opacity-60 disabled:cursor-wait"
+                    className="w-full flex items-center gap-2 text-left px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-danger disabled:opacity-60 disabled:cursor-wait transition-colors"
                   >
                     {signingOut && <Spinner />}
                     {signingOut ? "Signing out…" : "Sign out"}
@@ -200,22 +217,32 @@ export function AppShell({
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-sidebar flex items-stretch z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.15)]">
-          {bottomItems.map((b) => (
-            <Link
-              key={b.href}
-              href={b.href}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold ${
-                pathname === b.href ? "text-white" : "text-sidebar-ink"
-              }`}
-            >
-              <span className={`text-lg ${pathname === b.href ? "text-gold" : ""}`}>{b.icon}</span>
-              {b.label}
-            </Link>
-          ))}
+        <nav
+          className="md:hidden fixed bottom-0 inset-x-0 h-16 flex items-stretch z-30"
+          style={{
+            background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)",
+            boxShadow: "0 -4px 16px -4px rgba(20, 8, 40, 0.35)",
+          }}
+        >
+          {bottomItems.map((b) => {
+            const isActive = pathname === b.href;
+            return (
+              <Link
+                key={b.href}
+                href={b.href}
+                className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold transition-colors ${
+                  isActive ? "text-white" : "text-sidebar-ink"
+                }`}
+              >
+                {isActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold" />}
+                <span className={`text-lg ${isActive ? "text-gold" : ""}`}>{b.icon}</span>
+                {b.label}
+              </Link>
+            );
+          })}
           <button
             onClick={() => setMobileNavOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold text-sidebar-ink"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold text-sidebar-ink hover:text-white transition-colors"
           >
             <span className="text-lg">☰</span>
             More
@@ -228,7 +255,10 @@ export function AppShell({
 
 function Brand({ orgName }: { orgName: string }) {
   return (
-    <div className="h-16 flex-shrink-0 flex items-center gap-2.5 px-5 border-b border-sidebar-border">
+    <div
+      className="h-16 flex-shrink-0 flex items-center gap-2.5 px-5"
+      style={{ borderBottom: "1px solid var(--sidebar-border)", boxShadow: "0 1px 0 rgba(255,255,255,0.03)" }}
+    >
       <svg width="28" height="28" viewBox="-270 -10 520 500" className="flex-shrink-0">
         <path
           d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
