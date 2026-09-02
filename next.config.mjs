@@ -4,6 +4,21 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
 
+  experimental: {
+    serverActions: {
+      // Deliberately BELOW Vercel Functions' hard 4.5MB request-body
+      // ceiling (https://vercel.com/docs/functions/limitations) — that
+      // limit is enforced by Vercel's platform itself and cannot be
+      // raised by this config, so setting this any higher would be
+      // meaningless in production. Set slightly under it instead, so
+      // that if a file ever slips past this app's own validation
+      // (src/app/signup/actions.ts), Next.js returns its own catchable
+      // error rather than the opaque platform-level
+      // FUNCTION_PAYLOAD_TOO_LARGE crash.
+      bodySizeLimit: "4mb",
+    },
+  },
+
   async headers() {
     // Applied to every response. Kept conservative — nothing here should
     // break Supabase auth (cookies, redirects), Server Actions, or
