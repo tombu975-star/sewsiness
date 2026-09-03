@@ -13,7 +13,7 @@ export default async function PortfoliosPage() {
 
   let query = supabase
     .from("portfolio_items")
-    .select("id, title, description, created_at, apprentice:apprentice_id(full_name)")
+    .select("id, title, description, image_url, created_at, apprentice:apprentice_id(full_name)")
     .eq("organization_id", profile?.organization_id ?? "")
     .order("created_at", { ascending: false });
   if (isApprentice) query = query.eq("apprentice_id", user!.id);
@@ -34,8 +34,13 @@ export default async function PortfoliosPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {rows.map((p) => (
             <div key={p.id} className="card p-4">
-              <div className="w-full aspect-[4/3] rounded-sm bg-sunken mb-3 flex items-center justify-center text-ink-faint text-xs">
-                No image yet
+              <div className="w-full aspect-[4/3] rounded-sm bg-sunken mb-3 overflow-hidden flex items-center justify-center text-ink-faint text-xs">
+                {p.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                ) : (
+                  "No image yet"
+                )}
               </div>
               <div className="font-semibold text-sm text-ink">{p.title}</div>
               {!isApprentice && <div className="text-xs text-ink-muted mt-0.5">{p.apprentice?.full_name}</div>}
