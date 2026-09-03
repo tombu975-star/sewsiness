@@ -205,6 +205,18 @@ export const BOTTOM_NAV_FREELANCER: BottomNavItem[] = [
   { label: "Payments", icon: "\u25C9", href: "/freelancer-payments" },
 ];
 
+// Trainer has no POS/Orders/Customers access at all (see roles on the
+// relevant SIDEBAR entries above), so the generic BOTTOM_NAV — Orders,
+// POS, Customers — would put three dead-end tabs in front of them on
+// mobile, each one bouncing straight back via requirePageRole. This
+// mirrors what a Trainer's own sidebar actually reaches instead.
+export const BOTTOM_NAV_TRAINER: BottomNavItem[] = [
+  { label: "Home", icon: "\u2302", href: "/dashboard" },
+  { label: "Console", icon: "\u25CE", href: "/trainer-console" },
+  { label: "Apprentices", icon: "\u2698", href: "/apprentices" },
+  { label: "Portfolios", icon: "\u25A4", href: "/portfolios" },
+];
+
 export const BOTTOM_NAV_SUPER_ADMIN: BottomNavItem[] = [
   { label: "Admin", icon: "\u25C6", href: "/admin" },
   { label: "Alerts", icon: "\u25CD", href: "/notifications" },
@@ -226,6 +238,7 @@ export function sidebarForRole(role: Role): NavItem[] {
 export function bottomNavForRole(role: Role): BottomNavItem[] {
   if (role === "apprentice") return BOTTOM_NAV_APPRENTICE;
   if (role === "freelancer") return BOTTOM_NAV_FREELANCER;
+  if (role === "trainer") return BOTTOM_NAV_TRAINER;
   if (role === "super_admin") return BOTTOM_NAV_SUPER_ADMIN;
   if (role === "system_admin") return BOTTOM_NAV_SYSTEM_ADMIN;
   return BOTTOM_NAV;
