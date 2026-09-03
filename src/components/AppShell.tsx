@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { logSignOut } from "@/app/(app)/audit/actions";
 import { Spinner } from "@/components/Spinner";
 import { InactivityGuard } from "@/components/InactivityGuard";
+import { MobileMoreMenu } from "@/components/MobileMoreMenu";
 import { ROLES, sidebarForRole, bottomNavForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 
@@ -31,7 +32,10 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // Controls the mobile "More" sheet — the phone-native replacement for a
+  // hamburger drawer. There is no persistent sidebar surface on mobile at
+  // all; every nav destination lives in the bottom tab bar or in here.
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   // Starts expanded on first paint (matches server render, avoids a
   // hydration mismatch) and only switches to the person's saved
@@ -45,22 +49,22 @@ export function AppShell({
     if (saved === "1") setCollapsed(true);
   }, []);
 
-  // Lock body scroll while the mobile drawer is open, and let Escape
+  // Lock body scroll while the mobile sheet is open, and let Escape
   // close it — small touches, but this is the kind of thing that makes
-  // a drawer feel like part of the OS instead of a bolted-on overlay.
+  // a sheet feel like part of the OS instead of a bolted-on overlay.
   useEffect(() => {
-    if (!mobileNavOpen) return;
+    if (!moreMenuOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileNavOpen(false);
+      if (e.key === "Escape") setMoreMenuOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [mobileNavOpen]);
+  }, [moreMenuOpen]);
 
   function toggleCollapsed() {
     setCollapsed((v) => {
@@ -98,6 +102,13 @@ export function AppShell({
     if (children) return children.some((c) => pathname === c.href);
     return false;
   };
+
+  // Highlights the "More" tab when the current page only lives inside the
+  // full nav (e.g. a Products sub-page) and isn't one of the bottom tabs —
+  // so the tab bar never looks like it's lying about where you are.
+  const bottomHrefs = bottomItems.map((b) => b.href);
+  const isMoreActive =
+    !bottomHrefs.includes(pathname) && items.some((i) => isItemActive(i.href, i.children));
 
   const NavList = ({ onNavigate, rail }: { onNavigate?: () => void; rail?: boolean }) => (
     <div className="p-nav flex-1 overflow-y-auto overflow-x-visible scrollbar-thin px-2 py-2 space-y-0.5">
@@ -233,26 +244,6 @@ export function AppShell({
         </button>
       </aside>
 
-      {/* Mobile drawer — slides in/out with a transform, not a mount/unmount,
-          so it animates smoothly both ways instead of just popping in. */}
-      <div
-        className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${
-          mobileNavOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-        aria-hidden={!mobileNavOpen}
-      >
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setMobileNavOpen(false)} />
-        <aside
-          className={`absolute inset-y-0 left-0 w-[270px] max-w-[80vw] text-white flex flex-col shadow-2xl transition-transform duration-300 ease-out ${
-            mobileNavOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-          style={{ background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)" }}
-        >
-          <Brand orgName={orgName} onClose={() => setMobileNavOpen(false)} />
-          <NavList onNavigate={() => setMobileNavOpen(false)} />
-        </aside>
-      </div>
-
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar — sticky with a soft glass blur so content scrolling
             beneath it reads as "under glass" rather than abruptly cut off */}
@@ -266,14 +257,7 @@ export function AppShell({
           }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <button
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-border text-ink flex-shrink-0 hover:bg-sunken active:scale-95 transition-all"
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open navigation"
-            >
-              ☰
-            </button>
-            <div className="hidden md:block text-sm text-ink-muted truncate">
+            <div className="text-sm text-ink-muted truncate">
               <span className="font-semibold text-ink">{orgName}</span>
               {branchName && (
                 <>
@@ -368,14 +352,32 @@ export function AppShell({
             );
           })}
           <button
-            onClick={() => setMobileNavOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold text-sidebar-ink hover:text-white active:scale-95 transition-all"
+            onClick={() => setMoreMenuOpen(true)}
+            className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold transition-colors active:scale-95 ${
+              isMoreActive ? "text-white" : "text-sidebar-ink hover:text-white"
+            }`}
+            aria-label="Open menu"
           >
-            <span className="text-lg">☰</span>
+            {isMoreActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold transition-all" />}
+            <span className={`text-lg transition-transform ${isMoreActive ? "text-gold scale-110" : ""}`}>☰</span>
             More
           </button>
         </nav>
       </div>
+
+      <MobileMoreMenu
+        open={moreMenuOpen}
+        onClose={() => setMoreMenuOpen(false)}
+        items={items}
+        pathname={pathname}
+        fullName={fullName}
+        roleLabel={roleLabel}
+        avatarUrl={avatarUrl}
+        orgName={orgName}
+        branchName={branchName}
+        onSignOut={handleSignOut}
+        signingOut={signingOut}
+      />
     </div>
   );
 }
