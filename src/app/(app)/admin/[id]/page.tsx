@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
+import { InviteStatusBadge } from "@/components/InviteStatusBadge";
+import { ResendInviteButton } from "@/components/ResendInviteButton";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { AdvisoryNote, BusinessDirectoryRow } from "@/lib/types";
@@ -27,7 +29,7 @@ export default async function BusinessDetailPage({ params }: { params: { id: str
   await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
-  const [{ data: directory, error: dirErr }, { data: stages }, { data: notes }, { data: verification }] =
+  const [{ data: directory, error: dirErr }, { data: stages }, { data: notes }, { data: verification }, { data: ownerInvite }] =
     await Promise.all([
       supabase.rpc("get_business_directory"),
       supabase.rpc("get_business_stage_breakdown", { target_org: params.id }),
@@ -43,6 +45,22 @@ export default async function BusinessDetailPage({ params }: { params: { id: str
         )
         .eq("id", params.id)
         .single(),
+      // The owner's invite — same row Resend already works from on
+      // /admin/users, surfaced here too since a Super Admin looking at
+      // one specific business (e.g. right after enrolling it) shouldn't
+      // have to leave this page and go filter the platform-wide Users
+      // list just to check whether the owner has activated their
+      // account yet. Ordered oldest-first + limited to 1 to match how
+      // 002_platform_admin.sql resolves owner_name, in the unlikely
+      // event an org ever has more than one 'owner'-role invite row.
+      supabase
+        .from("invites")
+        .select("id, status, expires_at")
+        .eq("organization_id", params.id)
+        .eq("role", "owner")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   if (dirErr) {
@@ -247,9 +265,23 @@ export default async function BusinessDetailPage({ params }: { params: { id: str
           <div className="card p-5 mb-4">
             <h3 className="font-display text-[15px] font-semibold text-ink mb-1">At a glance</h3>
             <dl className="text-sm space-y-2.5 mt-3">
-              <div className="flex justify-between">
-                <dt className="text-ink-muted">Owner</dt>
-                <dd className="font-medium text-ink">{business.owner_name ?? "Not set"}</dd>
+              <div className="flex justify-between items-start gap-3">
+                <dt className="text-ink-muted pt-0.5">Owner</dt>
+                <dd className="font-medium text-ink text-right">
+                  <div>{business.owner_name ?? "Not set"}</div>
+                  {ownerInvite && (
+                    <div className="mt-1 flex flex-col items-end">
+                      <InviteStatusBadge status={ownerInvite.status} expiresAt={ownerInvite.expires_at} />
+                      {ownerInvite.status !== "revoked" && (
+                        <ResendInviteButton
+                          inviteId={ownerInvite.id}
+                          revalidatePath={`/admin/${business.organization_id}`}
+                          status={ownerInvite.status}
+                        />
+                      )}
+                    </div>
+                  )}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-ink-muted">Users</dt>
