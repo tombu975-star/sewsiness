@@ -15,7 +15,7 @@ export default async function PaymentsPage() {
 
   const { data: payments } = await supabase
     .from("payments")
-    .select("id, amount, method, type, created_at, customers(full_name), custom_orders(order_number)")
+    .select("id, order_id, amount, method, type, created_at, customers(full_name), custom_orders(order_number)")
     .eq("organization_id", profile?.organization_id ?? "")
     .order("created_at", { ascending: false });
 
@@ -53,6 +53,7 @@ export default async function PaymentsPage() {
           ]}
           rows={rows.map((p) => ({
             id: p.id,
+            href: p.order_id ? `/orders/${p.order_id}` : undefined,
             cells: {
               customer: p.customers?.full_name ?? "Walk-in",
               ref: p.custom_orders?.order_number ?? "POS Sale",

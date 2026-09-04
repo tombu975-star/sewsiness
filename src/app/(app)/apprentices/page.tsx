@@ -60,6 +60,7 @@ export default async function ApprenticesPage() {
             const invite = inviteByUser.get(a.id);
             return {
               id: a.id,
+              href: `/apprentices/${a.id}`,
               cells: {
                 name: a.full_name,
                 level: a.apprentice_profiles?.[0]?.training_level ?? "—",

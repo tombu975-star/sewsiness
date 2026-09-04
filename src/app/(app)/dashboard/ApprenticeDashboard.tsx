@@ -16,7 +16,7 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
   const [{ data: apprenticeProfile }, { data: tasks }, { data: portfolio }] = await Promise.all([
     supabase
       .from("apprentice_profiles")
-      .select("training_level, specialisation, training_goals, start_date, trainer:trainer_id(full_name)")
+      .select("training_level, specialisation, training_goals, start_date, completed_at, certificate_number, trainer:trainer_id(full_name)")
       .eq("profile_id", userId)
       .maybeSingle(),
     supabase
@@ -47,11 +47,32 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
         title={`Good day, ${firstName}`}
         subtitle="Your training progress and assigned tasks."
         actions={
-          <Button href="/portfolios" variant="outline">
-            My Portfolio
-          </Button>
+          <>
+            {(apprenticeProfile as any)?.completed_at && (
+              <a
+                href={`/apprentices/${userId}/certificate`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold transition-all duration-150 active:scale-[0.98]"
+                style={{ boxShadow: "var(--shadow-gold)" }}
+              >
+                Download Certificate
+              </a>
+            )}
+            <Button href="/portfolios" variant="outline">
+              My Portfolio
+            </Button>
+          </>
         }
       />
+
+      {(apprenticeProfile as any)?.completed_at && (
+        <div className="callout mb-6">
+          <div className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">Training Completed 🎓</div>
+          <p>
+            Certificate No. {(apprenticeProfile as any).certificate_number ?? "—"} — you can download it any time from the button
+            above.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <div className="card p-4">

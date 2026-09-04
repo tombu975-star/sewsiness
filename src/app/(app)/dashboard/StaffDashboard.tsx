@@ -55,6 +55,8 @@ export async function StaffDashboard({ userId }: { userId: string }) {
   };
   const dueTodayCount = (dueSoon ?? []).filter((o: any) => o.due_date === todayIso).length;
 
+  const inProductionCount = (orders ?? []).filter((o: any) => o.status === "In Progress").length;
+
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
@@ -74,9 +76,39 @@ export async function StaffDashboard({ userId }: { userId: string }) {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-        <StatCard label="Active Orders" value={(orders ?? []).length} icon="✂" />
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-ink">What would you like to do?</h2>
+            <p className="text-xs text-ink-muted mt-0.5">Start common tasks without searching through menus.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { href: "/orders/new", icon: "+", label: "New Order", hint: "Create an order" },
+            { href: "/customers/new", icon: "\u2609", label: "Customer", hint: "Add a customer" },
+            { href: "/measurements/new", icon: "\u25AD", label: "Measurements", hint: "Take measurements" },
+            { href: "/production", icon: "\u2699", label: "Production", hint: "Update production stage" },
+          ].map((action) => (
+            <a
+              key={action.href}
+              href={action.href}
+              className="card p-4 hover:-translate-y-0.5 hover:border-gold/60 transition-all active:scale-[0.99]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-soft text-indigo2 flex items-center justify-center text-lg font-bold mb-3">
+                {action.icon}
+              </div>
+              <div className="font-semibold text-sm text-ink">{action.label}</div>
+              <div className="text-xs text-ink-muted mt-0.5">{action.hint}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <StatCard label="Orders" value={(orders ?? []).length} icon="✂" />
         <StatCard label="Due Today" value={dueTodayCount} accent icon="◔" />
+        <StatCard label="In Production" value={inProductionCount} icon="⚙" />
         <StatCard label="Low / Out of Stock" value={(lowStock ?? []).length} icon="⚠" />
       </div>
 
