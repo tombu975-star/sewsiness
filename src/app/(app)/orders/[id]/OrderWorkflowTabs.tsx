@@ -30,23 +30,24 @@ export function ProductionTab({ orderId, stages }: { orderId: string; stages: { 
   return (
     <div className="card p-5">
       <div className="font-display font-semibold text-ink mb-4">Production Stages</div>
-      <div className="space-y-2.5">
-        {STAGES.map((stage) => {
+      <div className="space-y-3">
+        {STAGES.map((stage, index) => {
           const found = stages.find((s) => s.stage === stage);
           const status = found?.status ?? "Pending";
+          const isDone = status === "Done";
+          const previousDone = index === 0 || stages.find((s) => s.stage === STAGES[index - 1])?.status === "Done";
+          const actionLabel = isDone ? "Completed" : status === "In Progress" ? `Complete ${stage}` : `Start ${stage}`;
+          const nextStatus = isDone ? "Done" : status === "In Progress" ? "Done" : "In Progress";
           return (
-            <div key={stage} className="flex items-center justify-between gap-3">
-              <span className="text-sm text-ink font-medium">{stage}</span>
-              <select
-                value={status}
-                disabled={isPending}
-                onChange={(e) => setStage(stage, e.target.value)}
-                className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-gold disabled:opacity-60"
-              >
-                <option>Pending</option>
-                <option>In Progress</option>
-                <option>Done</option>
-              </select>
+            <div key={stage} className={`flex items-center gap-3 rounded-xl border p-3.5 ${isDone ? "border-border bg-sunken" : "border-border bg-surface"}`}>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${isDone ? "bg-indigo text-white" : "bg-indigo-soft text-indigo2"}`}>{isDone ? "✓" : index + 1}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-ink">{stage}</div>
+                <div className="text-xs text-ink-muted mt-0.5">{isDone ? "Completed" : status === "In Progress" ? "Currently in progress" : previousDone ? "Ready to start" : "Waiting for the previous stage"}</div>
+              </div>
+              {!isDone && (
+                <button type="button" disabled={isPending || !previousDone} onClick={() => setStage(stage, nextStatus)} className="shrink-0 min-h-10 px-3.5 rounded-lg bg-indigo text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed">{actionLabel}</button>
+              )}
             </div>
           );
         })}

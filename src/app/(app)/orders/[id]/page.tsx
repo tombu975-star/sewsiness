@@ -7,14 +7,20 @@ import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Tabs } from "@/components/Tabs";
 import { TapeStepper } from "@/components/TapeStepper";
-import { recordOrderPayment } from "../actions";
+import { recordOrderPayment, startOrderProduction } from "../actions";
 import { OrderStatusSelect } from "./OrderStatusSelect";
 import { ProductionTab, FittingsTab, AlterationsTab, QualityControlTab, CostingTab } from "./OrderWorkflowTabs";
 
 const ORDER_STATUSES = ["Pending", "In Progress", "Review", "Completed", "Overdue", "Cancelled"];
 const PRODUCTION_STAGES = ["Cutting", "Sewing", "Finishing", "Pressing", "Ready"];
 
-export default async function OrderDetailPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { created?: string; tab?: string };
+}) {
   const supabase = createClient();
   const { data: order } = await supabase
     .from("custom_orders")
@@ -60,6 +66,29 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         }
       />
 
+      {searchParams.created === "1" && (
+        <div className="callout mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">✓ Order created</div>
+            <p>
+              {order.order_number} is saved for {order.customers?.full_name ?? "this customer"}, due{" "}
+              {order.due_date ? order.due_date : "whenever you set a date"}.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <form action={startOrderProduction}>
+              <input type="hidden" name="order_id" value={order.id} />
+              <SubmitButton pendingLabel="Starting…" className="!py-2 !px-3.5 text-xs">
+                Start Production
+              </SubmitButton>
+            </form>
+            <Button href="/dashboard" variant="outline">
+              Back to Home
+            </Button>
+          </div>
+        </div>
+      )}
+
       <TapeStepper
         steps={PRODUCTION_STAGES.map((s) => ({ label: s }))}
         activeIndex={(() => {
@@ -83,6 +112,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       </div>
 
       <Tabs
+        defaultLabel={searchParams.tab === "production" ? "Production" : undefined}
         tabs={[
           {
             label: "Payments",

@@ -26,7 +26,19 @@ export default async function PortfoliosPage() {
         title={isApprentice ? "My Portfolio" : "Portfolios"}
         subtitle={isApprentice ? "Showcase your completed work." : "Photo portfolio of work completed by each apprentice."}
         crumb="Apprentices / Portfolios"
-        actions={<Button href="/portfolios/new">+ Add Piece</Button>}
+        actions={
+          <>
+            {isApprentice && rows.length > 0 && (
+              <a
+                href="/portfolios/export"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 border border-border-strong text-ink hover:bg-sunken transition-all duration-150 active:scale-[0.98]"
+              >
+                Export as PDF
+              </a>
+            )}
+            <Button href="/portfolios/new">+ Add Piece</Button>
+          </>
+        }
       />
       {rows.length === 0 ? (
         <EmptyState icon="✦" title="No portfolio pieces yet." description="Add a completed piece to build your portfolio." actionLabel="Add Piece" actionHref="/portfolios/new" />
