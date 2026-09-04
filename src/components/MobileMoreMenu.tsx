@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { NavItem } from "@/lib/nav";
+import type { MoreMenuSection } from "@/lib/nav";
 
 // Mobile-only replacement for the old sidebar-in-a-drawer pattern. Instead
 // of cloning the desktop rail into an overlay, this is its own mobile-native
@@ -10,10 +10,19 @@ import type { NavItem } from "@/lib/nav";
 // account actions folded in — the same job a hamburger drawer did, but
 // built the way a phone app actually does "everything else" (see Notion,
 // Linear, Airbnb's More tab) rather than a repositioned desktop nav.
+//
+// Renders MORE_MENU's plain-language categories (Work, Money, Team, ...)
+// rather than the desktop sidebar's own SIDEBAR tree — see nav.ts's
+// comment on MORE_MENU for why those two are genuinely different
+// groupings, not the same list styled twice. Every row carries a
+// one-line description under its label (e.g. "Measurements — Saved
+// customer measurement profiles") so someone who's never used this
+// specific app before can tell what a destination does before tapping
+// it, not just what it's called.
 export function MobileMoreMenu({
   open,
   onClose,
-  items,
+  sections,
   pathname,
   fullName,
   roleLabel,
@@ -25,7 +34,7 @@ export function MobileMoreMenu({
 }: {
   open: boolean;
   onClose: () => void;
-  items: NavItem[];
+  sections: MoreMenuSection[];
   pathname: string;
   fullName: string;
   roleLabel: string;
@@ -52,25 +61,14 @@ export function MobileMoreMenu({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items
-      .map((item) => {
-        if (item.label.toLowerCase().includes(q)) return item;
-        if (item.children) {
-          const kids = item.children.filter((c) => c.label.toLowerCase().includes(q));
-          if (kids.length) return { ...item, children: kids };
-          return null;
-        }
-        return null;
-      })
-      .filter((i): i is NavItem => i !== null);
-  }, [items, query]);
-
-  const isActive = (href?: string, children?: { href: string }[]) => {
-    if (href && pathname === href) return true;
-    if (children) return children.some((c) => pathname === c.href);
-    return false;
-  };
+    if (!q) return sections;
+    return sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [sections, query]);
 
   return (
     <>
@@ -86,7 +84,7 @@ export function MobileMoreMenu({
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
-          maxHeight: "min(86vh, 640px)",
+          maxHeight: "min(88vh, 680px)",
           boxShadow: "0 -12px 32px -8px rgba(30, 15, 66, 0.28)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
@@ -136,55 +134,44 @@ export function MobileMoreMenu({
               Nothing matches &ldquo;{query}&rdquo;
             </div>
           ) : (
-            <div className="space-y-0.5">
-              {filtered.map((item) => {
-                const active = isActive(item.href, item.children);
-
-                if (item.children) {
-                  return (
-                    <div key={item.label} className="pt-2 pb-1">
-                      <div className="flex items-center gap-2 px-2.5 pb-1 text-[11px] font-semibold text-ink-faint">
-                        <span className="w-4 text-center text-[12px]">{item.icon}</span>
-                        {item.label}
-                      </div>
-                      <div className="space-y-0.5">
-                        {item.children.map((c) => (
-                          <Link
-                            key={c.href}
-                            href={c.href}
-                            onClick={onClose}
-                            className={`flex items-center justify-between gap-2 pl-9 pr-2.5 py-2.5 rounded-lg text-[13.5px] font-medium transition-colors active:scale-[0.99] ${
-                              pathname === c.href
-                                ? "bg-indigo-soft text-indigo2"
-                                : "text-ink hover:bg-sunken"
+            <div className="space-y-1">
+              {filtered.map((section) => (
+                <div key={section.title} className="pt-3 pb-1 first:pt-1">
+                  <div className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+                    {section.title}
+                  </div>
+                  <div className="space-y-1">
+                    {section.items.map((item) => {
+                      const active = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href + item.label}
+                          href={item.href}
+                          onClick={onClose}
+                          className={`flex items-center gap-3 px-2.5 py-2.5 rounded-xl transition-colors active:scale-[0.99] ${
+                            active ? "bg-indigo-soft" : "hover:bg-sunken"
+                          }`}
+                        >
+                          <span
+                            className={`w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-[16px] ${
+                              active ? "bg-indigo2 text-white" : "bg-sunken text-indigo2"
                             }`}
                           >
-                            <span className="truncate">{c.label}</span>
-                            {c.isNew && <NewTag />}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={item.label + item.href}
-                    href={item.href!}
-                    onClick={onClose}
-                    className={`flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg text-[13.5px] font-medium transition-colors active:scale-[0.99] ${
-                      active ? "bg-indigo-soft text-indigo2" : "text-ink hover:bg-sunken"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-5 text-center text-[14px] flex-shrink-0">{item.icon}</span>
-                      <span className="truncate">{item.label}</span>
-                    </span>
-                    {item.isNew && <NewTag />}
-                  </Link>
-                );
-              })}
+                            {item.icon}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className={`flex items-center gap-1.5 text-[14px] font-semibold ${active ? "text-indigo2" : "text-ink"}`}>
+                              <span className="truncate">{item.label}</span>
+                              {item.isNew && <NewTag />}
+                            </span>
+                            <span className="block text-[12px] text-ink-muted truncate">{item.description}</span>
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -232,3 +219,4 @@ function NewTag() {
     </span>
   );
 }
+

@@ -8,7 +8,7 @@ import { logSignOut } from "@/app/(app)/audit/actions";
 import { Spinner } from "@/components/Spinner";
 import { InactivityGuard } from "@/components/InactivityGuard";
 import { MobileMoreMenu } from "@/components/MobileMoreMenu";
-import { ROLES, sidebarForRole, bottomNavForRole } from "@/lib/nav";
+import { ROLES, sidebarForRole, bottomNavForRole, moreMenuForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 
 const SIDEBAR_COLLAPSED_KEY = "sewsiness_sidebar_collapsed";
@@ -341,26 +341,26 @@ export function AppShell({
               <Link
                 key={b.href}
                 href={b.href}
-                className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold transition-colors ${
+                className={`relative min-w-0 flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold transition-colors ${
                   isActive ? "text-white" : "text-sidebar-ink"
                 }`}
               >
                 {isActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold transition-all" />}
-                <span className={`text-lg transition-transform ${isActive ? "text-gold scale-110" : ""}`}>{b.icon}</span>
-                {b.label}
+                <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isActive ? "text-gold scale-110" : ""}`}>{b.icon}</span>
+                <span className="truncate max-w-full px-1">{b.label}</span>
               </Link>
             );
           })}
           <button
             onClick={() => setMoreMenuOpen(true)}
-            className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold transition-colors active:scale-95 ${
+            className={`relative min-w-0 flex-1 flex flex-col items-center justify-center gap-0.5 text-[10.5px] font-semibold transition-colors active:scale-95 ${
               isMoreActive ? "text-white" : "text-sidebar-ink hover:text-white"
             }`}
             aria-label="Open menu"
           >
             {isMoreActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold transition-all" />}
-            <span className={`text-lg transition-transform ${isMoreActive ? "text-gold scale-110" : ""}`}>☰</span>
-            More
+            <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isMoreActive ? "text-gold scale-110" : ""}`}>☰</span>
+            <span>More</span>
           </button>
         </nav>
       </div>
@@ -368,7 +368,7 @@ export function AppShell({
       <MobileMoreMenu
         open={moreMenuOpen}
         onClose={() => setMoreMenuOpen(false)}
-        items={items}
+        sections={moreMenuForRole(role)}
         pathname={pathname}
         fullName={fullName}
         roleLabel={roleLabel}

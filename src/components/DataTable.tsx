@@ -35,6 +35,20 @@ export function DataTable({
 }) {
   const router = useRouter();
 
+  // A row can be clickable (href) AND contain its own interactive cell
+  // content (a Resend/Mark Complete button, a status <select>, etc — see
+  // apprentices/page.tsx). Without this guard, clicking that nested
+  // control would bubble up to the row's own onClick and navigate away
+  // mid-click. Checking the actual click target's ancestry, rather than
+  // just not setting href on such rows, means callers don't have to
+  // choose between "this row links somewhere" and "this row has a
+  // working button in it" — both already need to coexist today.
+  function handleRowClick(e: React.MouseEvent, href?: string) {
+    if (!href) return;
+    if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
+    router.push(href);
+  }
+
   if (rows.length === 0) {
     return <div className="card p-10 text-center text-ink-muted text-sm">{emptyLabel}</div>;
   }
@@ -56,7 +70,7 @@ export function DataTable({
         {rows.map((row) => (
           <div
             key={row.id}
-            onClick={() => row.href && router.push(row.href)}
+            onClick={(e) => handleRowClick(e, row.href)}
             className={`card p-4 ${row.href ? "active:bg-sunken active:scale-[0.99] transition-all cursor-pointer" : ""}`}
           >
             <div className="flex items-start justify-between gap-3 mb-2.5">
@@ -109,7 +123,7 @@ export function DataTable({
             {rows.map((row) => (
               <tr
                 key={row.id}
-                onClick={() => row.href && router.push(row.href)}
+                onClick={(e) => handleRowClick(e, row.href)}
                 className={row.href ? "group hover:bg-sunken/50 cursor-pointer transition-colors" : ""}
               >
                 {columns.map((c) => (
