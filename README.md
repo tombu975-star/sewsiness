@@ -199,6 +199,52 @@ npm run dev
    /login splash screen's rotation alongside the plain cover images
    (see LoginSplash.tsx). Additive, no manual dashboard step required.
 
+## Before you go live
+
+A few things that only matter once real customers, not test accounts,
+depend on this working:
+
+1. **Configure a real SMTP provider in Supabase — do this before
+   inviting a single real user.** Every email this app sends (invites,
+   password reset, magic-link resend) goes through Supabase Auth's own
+   mailer, not this app's code — and Supabase's *default* mailer is a
+   shared, heavily rate-limited sender meant for testing only (a
+   handful of emails per hour), not real traffic. Past that limit,
+   invites and password resets don't error, they just silently stop
+   arriving. Fix: **Supabase dashboard → Authentication → Emails →
+   SMTP Settings**, pointed at a real provider (the app already expects
+   **Resend** specifically — see the seeded row in `integration_checks`
+   from `009_system_admin.sql`, and the System Admin → Integrations
+   screen, which will show it as "Not configured" until this is done).
+   This is a dashboard setting, not something any migration or env var
+   here can do for you.
+2. **Set `NEXT_PUBLIC_SITE_URL` and the Supabase Redirect URL
+   allow-list** to your real domain — see the Vercel section above.
+   Skipping this is the second most common reason invite/reset links
+   look broken.
+3. **Never run `supabase/seed_demo_users.sql` against this database.**
+   It creates 8 accounts with a shared, plaintext password printed at
+   the top of that file. If it's already been run against this project
+   while testing, delete those accounts first — deleting `auth.users`
+   rows matching `@demo.sewsiness.test` cascades to remove everything
+   else the script created (see that file's own cleanup block for the
+   exact query).
+4. **Error/uptime monitoring isn't set up.** Nothing in this codebase
+   reports exceptions anywhere (no Sentry or equivalent) — a failure in
+   production is currently only visible in Vercel's function logs. Not
+   a blocker for a first launch, but worth adding before relying on
+   this for real revenue.
+5. **Payments are recorded, not processed.** `payments.method` includes
+   "Mobile Money" and "Card" as labels on a manually-entered ledger
+   entry — there's no live payment gateway integration (Paystack is
+   seeded in `integration_checks` as a likely next step, but isn't
+   wired to anything yet). Nothing in the app currently touches real
+   money automatically.
+6. **Database backups.** Supabase's own automatic backup schedule
+   depends on your project's plan tier — worth confirming point-in-time
+   recovery is actually enabled at whatever tier you're on, since that's
+   a Supabase billing/plan setting, not something a migration controls.
+
 ## Deploying
 
 ### Vercel
