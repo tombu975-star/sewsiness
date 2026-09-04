@@ -365,6 +365,11 @@ body {
 }
 .mfield input:focus {
   outline: none;
+  /* Deliberately opts out of the global input-focus glow added further
+     below — a boxed glow around this borderless, inline-styled value
+     would fight the "value written directly on the tape" look this
+     component is going for. */
+  box-shadow: none;
 }
 .mfield .u {
   font-size: 11px;
@@ -379,6 +384,87 @@ body {
   border-radius: 0 9px 9px 0;
   font-size: 13px;
   color: var(--gold-ink);
+}
+
+/* ---------- global form-control polish ----------
+   The app has ~30 hand-written <select>/<input> elements across its
+   "new"/edit forms, each with its own className for border/radius/
+   padding — already consistent with each other, but every one still
+   renders with the browser's own native chrome for the parts a
+   className can't reach: the select's dropdown arrow, checkbox/radio
+   fill color, the number-input spinner, and focus feedback beyond a
+   border-color change. Those are exactly the details that make a form
+   read as "raw HTML" rather than "a considered product" — Stripe,
+   Linear, Mercury etc. all restyle precisely these. Fixing them once
+   here, as bare element selectors, applies to every existing and future
+   form with no per-file edits: an element selector's specificity is
+   lower than any Tailwind utility class, so nothing here can override
+   what a page's own className already sets (border, radius, colors,
+   sizing) — it only adds the handful of native-chrome properties no
+   className was setting in the first place. */
+
+/* Custom chevron on every <select>, replacing the OS-drawn one. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23786F97' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 6px;
+  /* !important is deliberate here, and only for this one property: a
+     page's own `px-3`-style class sets left+right padding together, at
+     higher specificity than this element selector, so without
+     !important the chevron would sit flush against (or under) the
+     select's own text. This only ever adds a little extra breathing
+     room on the right — never breaks a layout. */
+  padding-right: 34px !important;
+  cursor: pointer;
+}
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Brand-colored native checkboxes/radios everywhere, instead of each
+   browser's default blue — a few forms already opted into this by hand
+   with accent-gold; this guarantees it app-wide, including anything
+   written after this point. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+/* Every text-like input/textarea/select gets a soft focus glow on top
+   of whatever `focus:border-*` a page already sets — the combination
+   (border color change + glow) is the same focus treatment used across
+   most fintech-grade dashboards, and reads as considerably more
+   deliberate than a border-color change alone. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
+/* Textareas: allow vertical resize (useful), never horizontal (which
+   breaks a form's column layout and looks like a bug, not a feature). */
+textarea {
+  resize: vertical;
+}
+
+/* Hide the number-input spin buttons — their styling is wildly
+   inconsistent across browsers (thin grey slivers in Chrome, nothing in
+   Firefox by default) and every page already has its own +/- controls
+   or just expects a typed value, so the native ones only add visual
+   noise. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 @keyframes loginSplashProgress {
