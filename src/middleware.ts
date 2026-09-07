@@ -35,30 +35,10 @@ const SYSTEM_ADMIN_HOME = "/system";
 const DEFAULT_HOME = "/dashboard";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: "", ...options });
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  // Computed up front because it doesn't depend on Supabase at all — if
+  // everything below throws (missing/misconfigured env vars, Supabase
+  // outage, etc.), we still know whether this route is allowed to be
+  // reached by a logged-out visitor.
   // "/" is the landing chooser (rotating cover + "Log in" / "Create a
   // business account") and must be reachable by a logged-out visitor —
   // checked as an exact match (not .startsWith, since every path starts
@@ -67,94 +47,154 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname === "/" ||
     PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
 
-  if (!user && !isPublic) {
+  // A misconfigured or unreachable Supabase project must never take the
+  // *entire* app down (including pages that don't need auth). It's
+  // caught here — not left to bubble up as an uncaught exception — so a
+  // bad/missing env var degrades to "protected pages bounce to login"
+  // instead of a site-wide MIDDLEWARE_INVOCATION_FAILED 500 for every
+  // route, public or not.
+  try {
+    let response = NextResponse.next({ request: { headers: request.headers } });
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      // Loud in the server logs (this never reaches the client), so it's
+      // easy to tell "Supabase is down" apart from "someone forgot to
+      // set env vars in Vercel" when this shows up in Vercel's logs.
+      console.error(
+        "middleware: NEXT_PUBLIC_SUPABASE_URL and/or NEXT_PUBLIC_SUPABASE_ANON_KEY are not set — " +
+          "check Vercel Project Settings → Environment Variables for this environment."
+      );
+      throw new Error("Supabase environment variables are not configured.");
+    }
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            response.cookies.set({ name, value, ...options });
+          },
+          remove(name: string, options: CookieOptions) {
+            response.cookies.set({ name, value: "", ...options });
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user && !isPublic) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", request.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, suspended_at, organization_id, organizations(verification_status)")
+        .eq("id", user.id)
+        .single();
+      const role = profile?.role;
+      const homePath =
+        role === "super_admin" ? SUPER_ADMIN_HOME : role === "system_admin" ? SYSTEM_ADMIN_HOME : DEFAULT_HOME;
+
+      // A suspended account is signed out immediately, wherever it tries to
+      // go — no lingering session, no cached page keeps working.
+      if (profile?.suspended_at && request.nextUrl.pathname !== "/suspended") {
+        await supabase.auth.signOut();
+        const url = request.nextUrl.clone();
+        url.pathname = "/suspended";
+        url.search = "";
+        const redirectResponse = NextResponse.redirect(url);
+        // Carry over the Set-Cookie headers signOut() wrote onto `response`
+        // (via the cookies.set/remove callbacks above) — otherwise the
+        // session cookie never actually clears in the browser.
+        response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c));
+        return redirectResponse;
+      }
+
+      // A self-signed-up business (see /signup) isn't usable until Super
+      // Admin has reviewed its Ghana Card + selfie. Unlike suspension this
+      // isn't punitive, so the session stays alive — they can just come
+      // back once it's approved. Super Admin/System Admin have no
+      // organization_id, so this never touches either of those accounts.
+      const orgVerification = (profile as any)?.organizations?.verification_status as string | undefined;
+      if (
+        orgVerification &&
+        orgVerification !== "verified" &&
+        request.nextUrl.pathname !== "/pending-verification"
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/pending-verification";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+
+      if (request.nextUrl.pathname === "/login") {
+        const url = request.nextUrl.clone();
+        url.pathname = request.nextUrl.searchParams.get("next") || homePath;
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+
+      // Super Admin gets a hard, server-side wall around business pages —
+      // not just a nav that hides the links — so it can only ever see
+      // platform-level oversight, never a business's revenue, invoices or
+      // customer records.
+      if (
+        role === "super_admin" &&
+        !isPublic &&
+        !SUPER_ADMIN_ALLOWED_PATHS.some((p) => request.nextUrl.pathname.startsWith(p))
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = SUPER_ADMIN_HOME;
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+
+      // Same wall for System Admin, around its own (disjoint) set of
+      // pages — a developer account has no business reason to browse a
+      // business's orders/customers, and no reason to sit in Super
+      // Admin's business/user-management screens either.
+      if (
+        role === "system_admin" &&
+        !isPublic &&
+        !SYSTEM_ADMIN_ALLOWED_PATHS.some((p) => request.nextUrl.pathname.startsWith(p))
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = SYSTEM_ADMIN_HOME;
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    return response;
+  } catch (err) {
+    // Never let a Supabase/config failure take down pages that don't need
+    // auth (landing page, login, signup, etc.) — those still have to load
+    // so people can at least reach the site and, if they're a developer,
+    // see what's wrong via /login or the server logs.
+    console.error("middleware: failed to resolve auth state, failing safe", err);
+
+    if (isPublic) {
+      return NextResponse.next({ request: { headers: request.headers } });
+    }
+
+    // For protected pages we can't verify who the user is, so fail closed
+    // (send them to login) rather than letting a broken check through.
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, suspended_at, organization_id, organizations(verification_status)")
-      .eq("id", user.id)
-      .single();
-    const role = profile?.role;
-    const homePath =
-      role === "super_admin" ? SUPER_ADMIN_HOME : role === "system_admin" ? SYSTEM_ADMIN_HOME : DEFAULT_HOME;
-
-    // A suspended account is signed out immediately, wherever it tries to
-    // go — no lingering session, no cached page keeps working.
-    if (profile?.suspended_at && request.nextUrl.pathname !== "/suspended") {
-      await supabase.auth.signOut();
-      const url = request.nextUrl.clone();
-      url.pathname = "/suspended";
-      url.search = "";
-      const redirectResponse = NextResponse.redirect(url);
-      // Carry over the Set-Cookie headers signOut() wrote onto `response`
-      // (via the cookies.set/remove callbacks above) — otherwise the
-      // session cookie never actually clears in the browser.
-      response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c));
-      return redirectResponse;
-    }
-
-    // A self-signed-up business (see /signup) isn't usable until Super
-    // Admin has reviewed its Ghana Card + selfie. Unlike suspension this
-    // isn't punitive, so the session stays alive — they can just come
-    // back once it's approved. Super Admin/System Admin have no
-    // organization_id, so this never touches either of those accounts.
-    const orgVerification = (profile as any)?.organizations?.verification_status as string | undefined;
-    if (
-      orgVerification &&
-      orgVerification !== "verified" &&
-      request.nextUrl.pathname !== "/pending-verification"
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/pending-verification";
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-
-    if (request.nextUrl.pathname === "/login") {
-      const url = request.nextUrl.clone();
-      url.pathname = request.nextUrl.searchParams.get("next") || homePath;
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-
-    // Super Admin gets a hard, server-side wall around business pages —
-    // not just a nav that hides the links — so it can only ever see
-    // platform-level oversight, never a business's revenue, invoices or
-    // customer records.
-    if (
-      role === "super_admin" &&
-      !isPublic &&
-      !SUPER_ADMIN_ALLOWED_PATHS.some((p) => request.nextUrl.pathname.startsWith(p))
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = SUPER_ADMIN_HOME;
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-
-    // Same wall for System Admin, around its own (disjoint) set of
-    // pages — a developer account has no business reason to browse a
-    // business's orders/customers, and no reason to sit in Super
-    // Admin's business/user-management screens either.
-    if (
-      role === "system_admin" &&
-      !isPublic &&
-      !SYSTEM_ADMIN_ALLOWED_PATHS.some((p) => request.nextUrl.pathname.startsWith(p))
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = SYSTEM_ADMIN_HOME;
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-  }
-
-  return response;
 }
 
 export const config = {
