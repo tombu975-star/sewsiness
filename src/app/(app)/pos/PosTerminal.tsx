@@ -74,7 +74,7 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
         <div className="text-3xl font-display font-semibold text-indigo mb-6">₵{receipt.total.toFixed(2)}</div>
         <button
           onClick={() => setReceipt(null)}
-          className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:opacity-90"
+          className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:opacity-90"
         >
           New Sale
         </button>
@@ -182,7 +182,7 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
           <button
             onClick={checkout}
             disabled={lines.length === 0 || isPending}
-            className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:opacity-90 disabled:opacity-50"
           >
             {isPending ? "Processing…" : "Complete Sale"}
           </button>

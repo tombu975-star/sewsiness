@@ -25,9 +25,9 @@ const config: Config = {
         mono: ["var(--font-plex-mono)", "monospace"],
       },
       borderRadius: {
-        DEFAULT: "0.75rem",
-        sm: "0.625rem",
-        lg: "14px",
+        DEFAULT: "0.85rem",
+        sm: "0.7rem",
+        lg: "16px",
       },
     },
   },

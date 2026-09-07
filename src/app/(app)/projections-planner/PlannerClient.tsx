@@ -47,7 +47,7 @@ export function PlannerClient() {
           <input type="number" min="1" step="1" value={weeks} onChange={(e) => setWeeks(Number(e.target.value))} className="w-full sm:w-40 rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold" aria-describedby={error ? "planner-error" : undefined} />
         </div>
         {error && <p id="planner-error" className="text-sm text-burgundy" role="alert">{error}</p>}
-        <button type="submit" className="rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-[#3a2400] transition hover:brightness-[1.03]">Calculate plan</button>
+        <button type="submit" className="rounded-lg bg-indigo px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110">Calculate plan</button>
         <div className="border-t border-border pt-4">
           <div className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1">You need to earn</div>
           <div className="text-3xl font-display font-semibold text-indigo" aria-live="polite">₵{perWeek.toFixed(2)} <span className="text-base text-ink-muted font-sans font-normal">/ week</span></div>

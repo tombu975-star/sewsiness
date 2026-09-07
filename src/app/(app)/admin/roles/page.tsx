@@ -59,7 +59,7 @@ export default async function RolesPermissionsPage({ searchParams }: { searchPar
             key={r}
             href={`/admin/roles?role=${r}`}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-              activeRole === r ? "bg-gold text-[#3a2400] border-gold" : "bg-surface text-ink-muted border-border-strong hover:bg-sunken"
+              activeRole === r ? "bg-indigo text-white border-indigo" : "bg-surface text-ink-muted border-border-strong hover:bg-sunken"
             }`}
           >
             {ROLE_LABEL[r]}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const VARIANTS: Record<string, string> = {
-  primary: "bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold",
+  primary: "bg-indigo text-white hover:brightness-110 border border-indigo",
   outline: "border border-border-strong text-ink bg-surface hover:bg-sunken hover:border-ink-faint",
   ghost: "text-ink-muted hover:text-ink hover:bg-sunken",
 };
@@ -29,7 +29,7 @@ export function Button({
   disabled?: boolean;
   className?: string;
 }) {
-  const cls = `inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANTS[variant]} ${className}`;
+  const cls = `inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANTS[variant]} ${className}`;
   const style = { boxShadow: SHADOWS[variant] };
   if (href) {
     return (

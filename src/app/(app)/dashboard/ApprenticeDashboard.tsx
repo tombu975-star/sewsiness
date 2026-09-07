@@ -60,7 +60,7 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
             {completed && (
               <a
                 href={`/apprentices/${userId}/certificate`}
-                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold transition-all duration-150 active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-indigo text-white hover:brightness-110 border border-indigo transition-all duration-150 active:scale-[0.98]"
                 style={{ boxShadow: "var(--shadow-gold)" }}
               >
                 Download Certificate

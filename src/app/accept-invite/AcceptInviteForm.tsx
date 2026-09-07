@@ -203,7 +203,7 @@ export function AcceptInviteForm({ platform }: { platform?: PlatformSettings }) 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
+            className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110 disabled:opacity-60"
           >
             {submitting ? "Setting password…" : "Set password & continue"}
           </button>

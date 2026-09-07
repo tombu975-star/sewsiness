@@ -31,7 +31,7 @@ export function MarkTrainingCompleteButton({ apprenticeId }: { apprenticeId: str
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold transition-all duration-150 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait"
+        className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-indigo text-white hover:brightness-110 border border-indigo transition-all duration-150 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait"
         style={{ boxShadow: "var(--shadow-gold)" }}
       >
         {pending ? "Marking Complete…" : "Mark Training Complete — Issue Certificate"}

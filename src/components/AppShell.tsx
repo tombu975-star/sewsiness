@@ -159,7 +159,7 @@ export function AppShell({
                 <div
                   className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-all duration-150 absolute left-full top-0 ml-2 w-52 rounded-lg py-1.5 z-50"
                   style={{
-                    background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)",
+                    background: "linear-gradient(180deg, var(--sidebar) 0%, #0a1220 100%)",
                     boxShadow: "0 8px 24px -6px rgba(20,8,40,0.45), 0 0 0 1px var(--sidebar-border)",
                   }}
                 >
@@ -229,8 +229,8 @@ export function AppShell({
         className="hidden md:flex md:flex-col flex-shrink-0 text-white relative z-10 transition-[width] duration-300 ease-in-out overflow-visible"
         style={{
           width: isCollapsed ? COLLAPSED_W : EXPANDED_W,
-          background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)",
-          boxShadow: "1px 0 0 var(--sidebar-border), 4px 0 24px -8px rgba(20, 8, 40, 0.35)",
+          background: "linear-gradient(180deg, var(--sidebar) 0%, #0a1220 100%)",
+          boxShadow: "1px 0 0 var(--sidebar-border), 4px 0 24px -8px rgba(8, 12, 24, 0.45)",
         }}
       >
         <Brand orgName={orgName} collapsed={isCollapsed} />
@@ -255,7 +255,7 @@ export function AppShell({
             background: "color-mix(in srgb, var(--surface) 88%, transparent)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
-            boxShadow: "0 1px 0 var(--border), 0 4px 12px -8px rgba(30, 15, 66, 0.08)",
+            boxShadow: "0 1px 0 var(--border), 0 4px 12px -8px rgba(15, 23, 42, 0.08)",
           }}
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -333,8 +333,8 @@ export function AppShell({
           style={{
             height: "calc(4rem + env(safe-area-inset-bottom, 0px))",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
-            background: "linear-gradient(180deg, var(--sidebar) 0%, #34104f 100%)",
-            boxShadow: "0 -4px 16px -4px rgba(20, 8, 40, 0.35)",
+            background: "linear-gradient(180deg, var(--sidebar) 0%, #0a1220 100%)",
+            boxShadow: "0 -4px 16px -4px rgba(8, 12, 24, 0.45)",
           }}
         >
           {bottomItems.map((b) => {
@@ -347,8 +347,8 @@ export function AppShell({
                   isActive ? "text-white" : "text-sidebar-ink"
                 }`}
               >
-                {isActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold transition-all" />}
-                <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isActive ? "text-gold scale-110" : ""}`}>{b.icon}</span>
+                {isActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-white/70 transition-all" />}
+                <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isActive ? "text-white scale-110" : ""}`}>{b.icon}</span>
                 <span className="truncate max-w-full px-1">{b.label}{b.href === "/notifications" && unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ""}</span>
               </Link>
             );
@@ -360,8 +360,8 @@ export function AppShell({
             }`}
             aria-label="Open menu"
           >
-            {isMoreActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold transition-all" />}
-            <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isMoreActive ? "text-gold scale-110" : ""}`}>☰</span>
+            {isMoreActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-white/70 transition-all" />}
+            <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isMoreActive ? "text-white scale-110" : ""}`}>☰</span>
             <span>More</span>
           </button>
         </nav>

@@ -376,7 +376,7 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
                       aria-pressed={active}
                       className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                         active
-                          ? "bg-gold border-gold text-[#3a2400]"
+                          ? "bg-indigo border-indigo text-white"
                           : "border-border-strong text-ink-muted bg-surface hover:border-gold"
                       }`}
                     >
@@ -472,7 +472,7 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
             <button
               type="button"
               onClick={goNext}
-              className="flex-1 rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105"
+              className="flex-1 rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110"
             >
               Continue
             </button>
@@ -481,7 +481,7 @@ export function SignupForm({ platform }: { platform?: PlatformSettings }) {
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex-1 rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
+              className="flex-1 rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110 disabled:opacity-60"
             >
               {submitting ? "Submitting…" : "Submit for verification"}
             </button>
@@ -611,7 +611,7 @@ function SelfieCapture({ selfie, onCapture }: { selfie: File | null; onCapture: 
             type="button"
             onClick={capture}
             disabled={!ready}
-            className="rounded-full bg-gold text-[#3a2400] font-semibold w-16 h-16 disabled:opacity-50 border-4 border-white shadow-lg"
+            className="rounded-full bg-indigo text-white font-semibold w-16 h-16 disabled:opacity-50 border-4 border-white shadow-lg"
             aria-label="Capture selfie"
           >
             ●

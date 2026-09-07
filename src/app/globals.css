@@ -3,19 +3,21 @@
 @tailwind utilities;
 
 :root {
-  /* Sewsiness design system — violet/indigo structure, gold action,
-     woven-strip accent. See design/UI-UX redesign spec. */
-  --canvas: #f5f1fb;
+  /* Sewsiness design system — deep navy structure, warm gold accent,
+     woven-strip detail. Restyled toward a premium navy/white marketplace
+     look while keeping the same token names, so every screen that
+     already consumes these variables picks up the new palette for free. */
+  --canvas: #f3f5f9;
   --surface: #ffffff;
-  --sunken: #ede7f9;
-  --ink: #1e1b4b;
-  --ink-muted: #786f97;
-  --ink-faint: #a79fc6;
-  --ink-soft: #4b3f73;
+  --sunken: #eef2f6;
+  --ink: #111827;
+  --ink-muted: #64748b;
+  --ink-faint: #9aa5b4;
+  --ink-soft: #1e293b;
 
-  --indigo: #4b1878;
-  --indigo-soft: #ede4fb;
-  --indigo2: #5f2e96;
+  --indigo: #14213d;
+  --indigo-soft: #e7eaf3;
+  --indigo2: #24365f;
 
   --gold: #fbbf24;
   --gold-soft: #fef3c7;
@@ -24,35 +26,34 @@
   --burgundy: #b4433d;
   --burgundy-soft: #f4dede;
 
-  --success: #3f7a5d;
-  --success-soft: #dceee3;
+  --success: #2f855a;
+  --success-soft: #dcf3e6;
   --warning: #b5811c;
   --warning-soft: #fef3c7;
   --danger: #b4433d;
   --danger-soft: #f4dede;
-  --info: #7c1fc7;
-  --info-soft: #f1e4fd;
+  --info: #2563eb;
+  --info-soft: #dbeafe;
 
-  --border: #e3dcf2;
-  --border-strong: #cabbe8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
 
-  --sidebar: #4b1878;
-  --sidebar-border: #3a2c63;
-  --sidebar-ink: #cfc7ea;
-  --sidebar-active: #5f2e96;
+  --sidebar: #101a30;
+  --sidebar-border: #1e293b;
+  --sidebar-ink: #94a3c0;
+  --sidebar-active: #24365f;
 
-  --radius-lg: 14px;
-  --radius: 0.75rem;
-  --radius-sm: 0.5rem;
+  --radius-lg: 16px;
+  --radius: 0.85rem;
+  --radius-sm: 0.6rem;
 
-  /* Elevation scale — used by .card, buttons, dropdowns. Kept subtle and
-     warm (indigo-tinted, not neutral gray) so depth reads as part of the
-     brand rather than a generic Bootstrap shadow. */
-  --shadow-xs: 0 1px 2px rgba(30, 15, 66, 0.05);
-  --shadow-sm: 0 1px 2px rgba(30, 15, 66, 0.04), 0 6px 16px -8px rgba(30, 15, 66, 0.10);
-  --shadow-md: 0 2px 6px -1px rgba(30, 15, 66, 0.08), 0 12px 28px -12px rgba(30, 15, 66, 0.16);
-  --shadow-lg: 0 8px 16px -4px rgba(30, 15, 66, 0.12), 0 24px 48px -16px rgba(30, 15, 66, 0.22);
-  --shadow-gold: 0 1px 2px rgba(122, 90, 30, 0.15), 0 6px 16px -6px rgba(251, 191, 36, 0.45);
+  /* Elevation scale — used by .card, buttons, dropdowns. Navy-tinted
+     rather than neutral gray, so depth still reads as part of the brand. */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 16px -8px rgba(15, 23, 42, 0.10);
+  --shadow-md: 0 2px 6px -1px rgba(15, 23, 42, 0.08), 0 12px 28px -12px rgba(15, 23, 42, 0.16);
+  --shadow-lg: 0 8px 16px -4px rgba(15, 23, 42, 0.12), 0 24px 48px -16px rgba(15, 23, 42, 0.22);
+  --shadow-gold: 0 1px 2px rgba(20, 33, 61, 0.15), 0 6px 16px -6px rgba(20, 33, 61, 0.45);
 }
 
 * {
@@ -95,11 +96,11 @@ body {
   background: repeating-linear-gradient(
     90deg,
     var(--gold) 0 18px,
-    #a855f7 18px 26px,
+    #0d9488 18px 26px,
     var(--indigo) 26px 40px,
     var(--ink) 40px 48px
   );
-  box-shadow: 0 2px 6px -1px rgba(30, 15, 66, 0.18);
+  box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.18);
   flex-shrink: 0;
 }
 
@@ -282,7 +283,7 @@ body {
   border-radius: 10px;
   padding: 11px;
   margin-bottom: 9px;
-  box-shadow: 0 1px 2px rgba(27, 19, 48, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 .kcard .ord {
   font-family: var(--font-plex-mono), monospace;
@@ -343,7 +344,7 @@ body {
 }
 .idfacts div span {
   font-size: 11px;
-  color: #c9bee8;
+  color: #a8b4d1;
 }
 .qbtn {
   width: 42px;

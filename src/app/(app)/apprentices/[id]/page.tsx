@@ -86,7 +86,7 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
               <p className="text-xs text-ink-muted mb-4">Certificate No. {ap?.certificate_number ?? "—"}</p>
               <a
                 href={`/apprentices/${params.id}/certificate`}
-                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold transition-all duration-150 active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-indigo text-white hover:brightness-110 border border-indigo transition-all duration-150 active:scale-[0.98]"
                 style={{ boxShadow: "var(--shadow-gold)" }}
               >
                 Download Certificate

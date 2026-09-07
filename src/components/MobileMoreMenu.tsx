@@ -85,7 +85,7 @@ export function MobileMoreMenu({
         }`}
         style={{
           maxHeight: "min(88vh, 680px)",
-          boxShadow: "0 -12px 32px -8px rgba(30, 15, 66, 0.28)",
+          boxShadow: "0 -12px 32px -8px rgba(15, 23, 42, 0.28)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
         role="dialog"

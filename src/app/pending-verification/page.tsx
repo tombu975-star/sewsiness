@@ -56,7 +56,7 @@ export default async function PendingVerificationPage() {
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center justify-center rounded-lg bg-gold text-[#3a2400] font-semibold text-sm px-4 py-2.5 hover:brightness-105"
+          className="inline-flex items-center justify-center rounded-lg bg-indigo text-white font-semibold text-sm px-4 py-2.5 hover:brightness-110"
         >
           Back to sign in
         </Link>

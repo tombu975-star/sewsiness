@@ -104,22 +104,28 @@ const nextConfig = {
       { key: "Content-Security-Policy", value: csp },
     ];
 
+    const hstsHeaders =
+      process.env.NODE_ENV === "production"
+        ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]
+        : [];
+
     return [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
-      {
-        // HSTS only makes sense once you're actually being served over
-        // HTTPS in production (Vercel terminates TLS in front of this
-        // app) — sending it in local dev over http:// would be wrong,
-        // so it's split out and only added outside development.
-        source: "/:path*",
-        headers:
-          process.env.NODE_ENV === "production"
-            ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]
-            : [],
-      },
+      ...(hstsHeaders.length > 0
+        ? [
+            {
+              // HSTS only makes sense once you're actually being served over
+              // HTTPS in production (Vercel terminates TLS in front of this
+              // app) — sending it in local dev over http:// would be wrong,
+              // so it's split out and only added outside development.
+              source: "/:path*",
+              headers: hstsHeaders,
+            },
+          ]
+        : []),
     ];
   },
 };

@@ -178,7 +178,7 @@ export function LoginSplash({
             <button
               type="button"
               onClick={() => setStage("form")}
-              className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-3 hover:brightness-105 transition"
+              className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-3 hover:brightness-110 transition"
             >
               Log in
             </button>

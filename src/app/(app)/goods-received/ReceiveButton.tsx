@@ -11,7 +11,7 @@ export function ReceiveButton({ id }: { id: string }) {
     <button
       disabled={isPending}
       onClick={() => startTransition(async () => { await updatePurchaseOrderStatus(id, "Received"); router.refresh(); })}
-      className="inline-flex items-center gap-1.5 rounded-sm bg-gold text-[#3a2400] text-xs font-semibold px-3 py-1.5 hover:opacity-90 disabled:opacity-70 disabled:cursor-wait"
+      className="inline-flex items-center gap-1.5 rounded-sm bg-indigo text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90 disabled:opacity-70 disabled:cursor-wait"
     >
       {isPending && <Spinner className="w-3 h-3" />}
       {isPending ? "Marking…" : "Mark Received"}

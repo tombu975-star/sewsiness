@@ -9,7 +9,7 @@ import type { PlatformSettings } from "@/lib/platform-settings";
 const inputCls =
   "w-full rounded-sm border border-border bg-surface px-3.5 py-2.5 text-sm text-ink outline-none focus:border-gold";
 const primaryBtnCls =
-  "w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 transition-colors disabled:opacity-60";
+  "w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110 transition-colors disabled:opacity-60";
 
 // Recovers which business account someone belongs to -- distinct from
 // /forgot-password, which resets a known account's credentials. Always

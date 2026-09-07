@@ -26,7 +26,7 @@ export function EmptyState({
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className="mt-2 inline-flex items-center rounded-lg bg-gold text-[#3a2400] text-sm font-semibold px-4 py-2.5 hover:brightness-[1.03] transition-all active:scale-[0.98]"
+          className="mt-2 inline-flex items-center rounded-lg bg-indigo text-white text-sm font-semibold px-4 py-2.5 hover:brightness-110 transition-all active:scale-[0.98]"
           style={{ boxShadow: "var(--shadow-gold)" }}
         >
           {actionLabel}

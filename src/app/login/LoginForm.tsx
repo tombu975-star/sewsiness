@@ -216,7 +216,7 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
+          className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110 disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Log in"}
         </button>

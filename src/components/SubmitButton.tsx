@@ -4,7 +4,7 @@ import { useFormStatus } from "react-dom";
 import { Spinner } from "./Spinner";
 
 const VARIANTS: Record<string, string> = {
-  primary: "bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold shadow-[var(--shadow-gold)]",
+  primary: "bg-indigo text-white hover:brightness-110 border border-indigo shadow-[var(--shadow-gold)]",
   outline: "border border-border-strong text-ink bg-surface hover:bg-sunken hover:border-ink-faint",
   danger: "bg-burgundy text-white hover:opacity-90 border border-burgundy",
 };

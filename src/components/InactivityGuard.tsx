@@ -112,7 +112,7 @@ export function InactivityGuard() {
           <button
             type="button"
             onClick={staySignedIn}
-            className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 transition"
+            className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110 transition"
             autoFocus
           >
             Stay signed in
