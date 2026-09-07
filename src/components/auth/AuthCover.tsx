@@ -172,14 +172,14 @@ export function AuthCover({
           </>
         )}
 
-        <div className="relative flex items-center px-6 md:px-10 py-6 text-white">
+        <div className="relative flex items-center px-6 md:px-10 py-5 text-white">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark logoUrl={logoUrl} brandName={brandName} size={34} />
             <span className="font-display font-extrabold text-lg tracking-wide drop-shadow-sm">{brandName}</span>
           </Link>
         </div>
 
-        <div className="relative flex-1 flex flex-col items-center justify-center px-4 py-8 gap-6 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:justify-items-center lg:px-12 xl:px-16">
+        <div className="relative flex-1 flex flex-col items-center justify-center px-4 pt-2 pb-8 gap-6 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:justify-items-center lg:px-12 xl:px-16 lg:py-8">
           {!businessName && (
             <div className="text-center text-white max-w-md hidden lg:block lg:text-left lg:max-w-lg">
               <h1 className="font-display font-extrabold text-2xl md:text-3xl lg:text-4xl leading-tight mb-2 drop-shadow-sm">{tagline}</h1>

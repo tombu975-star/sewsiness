@@ -8,7 +8,7 @@ import { logSignOut } from "@/app/(app)/audit/actions";
 import { Spinner } from "@/components/Spinner";
 import { InactivityGuard } from "@/components/InactivityGuard";
 import { MobileMoreMenu } from "@/components/MobileMoreMenu";
-import { ROLES, sidebarForRole, bottomNavForRole, moreMenuForRole } from "@/lib/nav";
+import { ROLES, sidebarForRole, bottomNavForRole, moreMenuForRole, pageTitleForPath } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 
 const SIDEBAR_COLLAPSED_KEY = "sewsiness_sidebar_collapsed";
@@ -78,6 +78,7 @@ export function AppShell({
 
   const items = sidebarForRole(role);
   const bottomItems = bottomNavForRole(role);
+  const pageTitle = pageTitleForPath(pathname, role);
   const roleLabel = ROLES.find((r) => r.id === role)?.label ?? role;
   const initials = fullName
     .split(" ")
@@ -259,15 +260,7 @@ export function AppShell({
           }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="text-sm text-ink-muted truncate">
-              <span className="font-semibold text-ink">{orgName}</span>
-              {branchName && (
-                <>
-                  <span className="mx-1.5 text-border-strong">/</span>
-                  {branchName}
-                </>
-              )}
-            </div>
+            <div className="font-display text-[15px] font-semibold text-ink truncate">{pageTitle}</div>
           </div>
           <div className="flex items-center gap-2.5">
             <Link

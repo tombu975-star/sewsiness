@@ -134,10 +134,14 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
       headline={platform?.coverHeadline}
       subheadline={platform?.coverSubheadline}
     >
-      <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-        <div className="text-center mb-1">
-          <div className="font-display font-bold text-lg text-ink">Welcome back</div>
-          <div className="text-xs text-ink-muted">Sign in to your workspace</div>
+      <form
+        onSubmit={handleSubmit}
+        className="card p-6 space-y-3.5"
+        style={{ boxShadow: "var(--shadow-lg)", borderRadius: "20px" }}
+      >
+        <div className="text-center mb-1.5">
+          <div className="font-display font-bold text-xl text-ink">Welcome back</div>
+          <div className="text-xs text-ink-muted mt-0.5">Sign in to your workspace</div>
         </div>
         {notice === "password-changed" && (
           <div className="text-xs text-success bg-success-soft border border-success/20 rounded-sm px-3 py-2">
@@ -220,7 +224,7 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
         >
           {loading ? "Signing in…" : "Log in"}
         </button>
-        <p className="text-[11px] text-ink-faint text-center pt-1">
+        <p className="text-[11px] text-ink-faint text-center leading-relaxed pt-0.5">
           Everyone signs in here — Super Admin, Owner, Manager, Staff, Trainer, Apprentice and
           Freelancer. Staff-level accounts are invited by their business; new businesses{" "}
           <Link href="/signup" className="text-indigo font-semibold hover:underline">

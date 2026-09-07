@@ -397,3 +397,36 @@ export function resolveLoginDestination(role: Role, next?: string | null): strin
   }
   return next;
 }
+
+// Resolves the current route to a human page name for the topbar (e.g.
+// "Customers", "Custom Orders") — walks this role's own sidebar tree
+// (parents and children) for the longest href match, since some pages
+// (like "/dashboard") are shared across roles' menus. Falls back to
+// humanizing the last path segment ("/purchase-orders" -> "Purchase
+// Orders") for pages that intentionally aren't in any sidebar (e.g. a
+// detail view reached by drilling in from a list).
+export function pageTitleForPath(pathname: string, role: Role): string {
+  const items = sidebarForRole(role);
+  let best: { href: string; label: string } | null = null;
+
+  const consider = (href: string | undefined, label: string) => {
+    if (!href) return;
+    if (pathname === href || pathname.startsWith(`${href}/`)) {
+      if (!best || href.length > best.href.length) best = { href, label };
+    }
+  };
+
+  for (const item of items) {
+    consider(item.href, item.label);
+    item.children?.forEach((c) => consider(c.href, c.label));
+  }
+
+  if (best) return (best as { href: string; label: string }).label;
+
+  const lastSegment = pathname.split("/").filter(Boolean).pop();
+  if (!lastSegment) return "Dashboard";
+  return lastSegment
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
