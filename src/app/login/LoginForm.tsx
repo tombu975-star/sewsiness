@@ -19,6 +19,34 @@ import type { PlatformSettings } from "@/lib/platform-settings";
 // than anywhere this app controls.
 const REMEMBER_KEY = "sewsiness_remember_identifier";
 
+// Every step of sign-in is a network round trip to Supabase (rate-limit
+// check, password verify, profile lookup). None of Supabase's own client
+// calls have a built-in timeout, so if one of those requests is silently
+// dropped — a browser extension blocking third-party requests, a flaky
+// network, Supabase itself being briefly unreachable — `await` just hangs
+// and the "Signing in…" button spins forever with no error and no way
+// out except reloading the page. Racing each call against a timeout
+// guarantees the UI always lands on a real outcome.
+const REQUEST_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out. Check your connection and try again.`));
+    }, REQUEST_TIMEOUT_MS);
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 export function LoginForm({ platform }: { platform?: PlatformSettings }) {
   const params = useSearchParams();
   const [identifier, setIdentifier] = useState("");
@@ -52,9 +80,10 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     // since Supabase's password auth here only understands email.
     let loginEmail = trimmedIdentifier.toLowerCase();
     if (!trimmedIdentifier.includes("@")) {
-      const { data: resolvedEmail } = await supabase.rpc("resolve_login_email", {
-        p_identifier: trimmedIdentifier,
-      });
+      const { data: resolvedEmail } = await withTimeout(
+        supabase.rpc("resolve_login_email", { p_identifier: trimmedIdentifier }),
+        "Looking up your account"
+      );
       // Falls back to the raw input if nothing matched — signInWithPassword
       // then fails with Supabase's own generic "Invalid login credentials",
       // same as a typo'd email would, so this never reveals whether a
@@ -62,7 +91,10 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
       loginEmail = (resolvedEmail as string | null) ?? trimmedIdentifier;
     }
 
-    const { data: retryAfterSeconds } = await supabase.rpc("is_login_rate_limited", { p_email: loginEmail });
+    const { data: retryAfterSeconds } = await withTimeout(
+      supabase.rpc("is_login_rate_limited", { p_email: loginEmail }),
+      "Checking sign-in status"
+    );
     if (retryAfterSeconds && retryAfterSeconds > 0) {
       setLoading(false);
       const minutes = Math.ceil(retryAfterSeconds / 60);
@@ -70,14 +102,23 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+    const { data, error } = await withTimeout(
+      supabase.auth.signInWithPassword({ email: loginEmail, password }),
+      "Signing in"
+    );
     if (error) {
-      await supabase.rpc("record_login_attempt", { p_email: loginEmail, p_success: false });
+      // Best-effort: a slow/failed write here should never block showing
+      // the real sign-in error to the person waiting on the button.
+      withTimeout(supabase.rpc("record_login_attempt", { p_email: loginEmail, p_success: false }), "Recording attempt").catch(
+        () => {}
+      );
       setLoading(false);
       setError(error.message);
       return;
     }
-    await supabase.rpc("record_login_attempt", { p_email: loginEmail, p_success: true });
+    withTimeout(supabase.rpc("record_login_attempt", { p_email: loginEmail, p_success: true }), "Recording attempt").catch(
+      () => {}
+    );
 
     if (remember) {
       window.localStorage.setItem(REMEMBER_KEY, trimmedIdentifier);
@@ -86,11 +127,14 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     }
 
     const nextParam = params.get("next");
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, suspended_at, organization_id, organizations(verification_status, verification_rejection_reason)")
-      .eq("id", data.user.id)
-      .single();
+    const { data: profile } = await withTimeout(
+      supabase
+        .from("profiles")
+        .select("role, suspended_at, organization_id, organizations(verification_status, verification_rejection_reason)")
+        .eq("id", data.user.id)
+        .single(),
+      "Loading your profile"
+    );
 
     if (profile?.suspended_at) {
       await supabase.auth.signOut();
