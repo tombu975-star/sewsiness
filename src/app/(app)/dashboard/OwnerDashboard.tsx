@@ -24,7 +24,7 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
 
   const orgId = profile?.organization_id;
 
-  const [{ count: customerCount }, { count: orderCount }, { data: recentOrders }, { data: recentPayments }, { data: advisoryNotes }] =
+  const [{ count: customerCount }, { count: orderCount }, { data: recentOrders }, { data: recentPayments }, { data: advisoryNotes }, { data: trainingTasks }, { count: apprenticeCount }] =
     await Promise.all([
       supabase.from("customers").select("*", { count: "exact", head: true }).eq("organization_id", orgId ?? ""),
       supabase.from("custom_orders").select("*", { count: "exact", head: true }).eq("organization_id", orgId ?? ""),
@@ -46,6 +46,15 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
         .eq("organization_id", orgId ?? "")
         .is("seen_at", null)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("training_tasks")
+        .select("id, status")
+        .eq("organization_id", orgId ?? ""),
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId ?? "")
+        .eq("role", "apprentice"),
     ]);
 
   const totalOutstanding = (recentOrders ?? []).reduce(
@@ -61,6 +70,9 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
     inProduction: (recentOrders ?? []).filter((o: any) => o.status === "In Production").length,
     delivered: (recentOrders ?? []).filter((o: any) => o.status === "Delivered").length,
   };
+  const trainingRows = (trainingTasks ?? []) as { id: string; status: string }[];
+  const submittedTraining = trainingRows.filter((task) => task.status === "Submitted").length;
+  const approvedTraining = trainingRows.filter((task) => task.status === "Approved").length;
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -86,7 +98,7 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
       <PageHead
         crumb={`${roleLabel} · Today, ${today}`}
         title={`Good day, ${firstName}`}
-        subtitle="Here's what's moving across your atelier today."
+        subtitle="A clear operating view of orders, cash, customers, and workforce development."
         actions={
           <>
             <Button href="/pos" variant="outline">
@@ -120,16 +132,17 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <StatCard label="Customers" value={customerCount ?? 0} icon="☺" />
         <StatCard label="Active Orders" value={orderCount ?? 0} icon="✂" />
         <StatCard label="Revenue Today" value={`₵${revenueToday.toFixed(2)}`} accent icon="◈" />
         <StatCard label="Outstanding Balance" value={`₵${totalOutstanding.toFixed(2)}`} accent icon="◉" />
+        <StatCard label="Apprentices" value={apprenticeCount ?? 0} icon="◎" />
       </div>
 
       <OrderStatusGlance newOrders={statusCounts.newOrders} inProduction={statusCounts.inProduction} delivered={statusCounts.delivered} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold text-ink">Recent Orders</h2>
@@ -182,6 +195,24 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <a href="/training-plans" className="card card-hover p-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Training health</div>
+          <div className="mt-2 font-display text-2xl font-semibold text-ink">{approvedTraining} / {trainingRows.length}</div>
+          <p className="mt-1 text-xs text-ink-muted">Tasks approved across your apprentice programme</p>
+        </a>
+        <a href="/training-plans" className="card card-hover p-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Needs review</div>
+          <div className={`mt-2 font-display text-2xl font-semibold ${submittedTraining ? "text-warning" : "text-success"}`}>{submittedTraining}</div>
+          <p className="mt-1 text-xs text-ink-muted">Apprentice submissions waiting for marking</p>
+        </a>
+        <a href="/apprentices" className="card card-hover p-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">People operations</div>
+          <div className="mt-2 font-display text-lg font-semibold text-ink">Review your team</div>
+          <p className="mt-1 text-xs text-ink-muted">Open apprentices, trainers, and workforce records</p>
+        </a>
       </div>
     </div>
   );

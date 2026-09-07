@@ -8,6 +8,7 @@ import {
   removePlatformCoverImage,
   movePlatformCoverImage,
   updatePlatformLogo,
+  createPlatformLogoUpload,
   removePlatformLogo,
   updatePlatformCoverCopy,
   addPlatformAdvertisement,
@@ -61,8 +62,8 @@ export function PlatformBrandingForm({
   return (
     <div className="space-y-5">
       <div className="card p-4 bg-indigo-soft/40 border-indigo-soft text-[13px] text-ink-soft">
-        These control the split-screen cover shown on every sign-in, sign-up, and password-reset
-        screen — before anyone has an account. Changes apply everywhere, immediately.
+        These controls shape the public-facing experience before a user signs in: the mark, imagery,
+        messaging, and campaigns shown across authentication screens. Changes publish immediately.
       </div>
 
       <LogoCard logoUrl={logoUrl} />
@@ -90,17 +91,13 @@ function LogoCard({ logoUrl }: { logoUrl: string | null }) {
     setPending(true);
     try {
       const supabase = createClient();
-      const path = `logo.${extFor(file)}`;
-      const { error: upErr } = await supabase.storage.from("platform-branding").upload(path, file, {
-        contentType: file.type,
-        upsert: true,
-      });
+      const upload = await createPlatformLogoUpload(extFor(file));
+      const { error: upErr } = await supabase.storage.from("platform-branding").uploadToSignedUrl(upload.path, upload.token, file);
       if (upErr) throw new Error(upErr.message);
 
-      const { data: pub } = supabase.storage.from("platform-branding").getPublicUrl(path);
       // Cache-bust so a re-upload of the same filename shows immediately
       // instead of the browser serving a stale cached image.
-      await updatePlatformLogo(`${pub.publicUrl}?v=${Date.now()}`);
+      await updatePlatformLogo(`${upload.publicUrl}?v=${Date.now()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't upload the logo. Please try again.");
     } finally {
@@ -110,10 +107,10 @@ function LogoCard({ logoUrl }: { logoUrl: string | null }) {
 
   return (
     <div className="card p-6">
-      <div className="font-display font-semibold text-ink mb-1">Platform logo</div>
+      <div className="font-display font-semibold text-ink mb-1">Brand mark</div>
       <p className="text-xs text-ink-muted mb-4">
-        Shown in the top-left corner of the auth cover. Falls back to the default Sewsiness mark
-        when none is set.
+        Used in the authentication header and public entry points. Use a clear PNG, JPG, or WEBP
+        with a transparent or uncluttered background for the best result.
       </p>
       <div className="flex items-center gap-4">
         <div className="w-14 h-14 rounded-lg border border-border bg-sunken flex items-center justify-center overflow-hidden flex-shrink-0">

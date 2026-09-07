@@ -248,7 +248,7 @@ export default async function SettingsPage() {
     <div>
       <PageHead
         title="Settings"
-        subtitle="Account security, plus organization, branch and platform configuration for your role."
+        subtitle="Keep your identity, business profile, workspace structure, and platform presentation accurate."
         crumb="Settings"
       />
       <Tabs tabs={tabs} />

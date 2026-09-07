@@ -36,6 +36,7 @@ export async function TrainerDashboard({ userId }: { userId: string }) {
 
   const taskRows = (tasks ?? []) as any[];
   const doneCount = taskRows.filter((t) => t.status === "Approved").length;
+  const reviewCount = taskRows.filter((t) => t.status === "Submitted").length;
   const openTasks = taskRows
     .filter((t) => t.status !== "Approved")
     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))
@@ -50,7 +51,7 @@ export async function TrainerDashboard({ userId }: { userId: string }) {
       <PageHead
         crumb={`Trainer · Today, ${today}`}
         title={`Good day, ${firstName}`}
-        subtitle="Your apprentices' progress, at a glance."
+        subtitle="Prioritise marking, keep assignments moving, and track each apprentice's progress."
         actions={
           <Button href="/trainer-console" variant="outline">
             Open Trainer Console
@@ -58,10 +59,11 @@ export async function TrainerDashboard({ userId }: { userId: string }) {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <StatCard label="My Apprentices" value={rows.length} icon="◎" />
         <StatCard label="Tasks Completed" value={doneCount} accent icon="✓" />
         <StatCard label="Open Tasks" value={taskRows.length - doneCount} icon="◔" />
+        <StatCard label="Awaiting Review" value={reviewCount} accent={reviewCount > 0} icon="!" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

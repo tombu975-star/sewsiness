@@ -177,6 +177,20 @@ export async function updatePlatformLogo(logoUrl: string) {
   revalidatePath("/", "layout");
 }
 
+// Creates a one-time upload URL on the server. This avoids depending on
+// client-side Storage INSERT policies and keeps the image itself out of the
+// server action request body.
+export async function createPlatformLogoUpload(ext: "jpg" | "png" | "webp") {
+  await requireRole(["super_admin"]);
+  const path = `logo-${randomUUID()}.${ext}`;
+  const admin = createAdminClient();
+  const { data, error } = await admin.storage.from("platform-branding").createSignedUploadUrl(path);
+  if (error || !data?.token) throw new Error(error?.message ?? "Couldn't prepare the logo upload.");
+
+  const { data: publicUrl } = admin.storage.from("platform-branding").getPublicUrl(path);
+  return { path, token: data.token, publicUrl: publicUrl.publicUrl };
+}
+
 export async function removePlatformLogo() {
   const { user } = await requireRole(["super_admin"]);
   const supabase = createClient();
