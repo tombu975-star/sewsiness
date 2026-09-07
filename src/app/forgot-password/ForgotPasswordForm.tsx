@@ -99,7 +99,7 @@ export function ForgotPasswordForm({ platform }: { platform?: PlatformSettings }
         <form onSubmit={requestCode} className="card p-6 space-y-4">
           <div className="text-center mb-1">
             <div className="font-display font-bold text-lg text-ink">Reset your password</div>
-            <div className="text-xs text-ink-muted">We'll email you a 6-digit code</div>
+            <div className="text-xs text-ink-muted">We&apos;ll email you a 6-digit code</div>
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-muted mb-1.5">Email</label>
@@ -192,7 +192,7 @@ export function ForgotPasswordForm({ platform }: { platform?: PlatformSettings }
             onClick={() => setStep("request")}
             className="w-full text-[11px] text-ink-faint text-center hover:text-ink-muted"
           >
-            Didn't get a code? Send again
+            Didn&apos;t get a code? Send again
           </button>
         </form>
       )}

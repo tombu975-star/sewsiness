@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 export function EmptyState({
+  icon = "+",
+  title,
   description,
   actionLabel,
   actionHref,

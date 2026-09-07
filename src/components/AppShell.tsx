@@ -21,6 +21,7 @@ export function AppShell({
   orgName,
   branchName,
   avatarUrl,
+  unreadNotificationCount,
   children,
 }: {
   role: Role;
@@ -28,6 +29,7 @@ export function AppShell({
   orgName: string;
   branchName?: string | null;
   avatarUrl?: string | null;
+  unreadNotificationCount: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -271,10 +273,10 @@ export function AppShell({
             <Link
               href="/notifications"
               className="relative w-9 h-9 rounded-lg border border-border flex items-center justify-center text-ink-soft hover:bg-sunken hover:border-border-strong active:scale-95 transition-all"
-              aria-label="Notifications"
+              aria-label={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread notifications` : "Notifications"}
             >
               🔔
-              <span className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-burgundy ring-2 ring-surface" />
+              {unreadNotificationCount > 0 && <span className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-burgundy ring-2 ring-surface" />}
             </Link>
             <div className="relative">
               <button
@@ -347,7 +349,7 @@ export function AppShell({
               >
                 {isActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-gold transition-all" />}
                 <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isActive ? "text-gold scale-110" : ""}`}>{b.icon}</span>
-                <span className="truncate max-w-full px-1">{b.label}</span>
+                <span className="truncate max-w-full px-1">{b.label}{b.href === "/notifications" && unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ""}</span>
               </Link>
             );
           })}

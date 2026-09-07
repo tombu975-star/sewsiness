@@ -574,7 +574,7 @@ function SelfieCapture({ selfie, onCapture }: { selfie: File | null; onCapture: 
   return (
     <div className="space-y-3">
       <div className="callout text-xs">
-        Live capture only — this confirms a real person is signing up, not just a photo of one. It's
+        Live capture only — this confirms a real person is signing up, not just a photo of one. It&apos;s
         compared against your Ghana Card photo during review.
       </div>
       <div className="relative w-full aspect-square rounded-sm overflow-hidden bg-sunken border border-border">

@@ -36,7 +36,7 @@ export default async function FeatureFlagsPage() {
             <code className="font-mono">@/lib/feature-flags</code> and render nothing (or a &ldquo;coming
             soon&rdquo; state) when it returns <code className="font-mono">false</code>.
           </p>
-          <p>3. Flip it on here whenever you're ready — no redeploy needed, it takes effect immediately.</p>
+          <p>3. Flip it on here whenever you&apos;re ready — no redeploy needed, it takes effect immediately.</p>
         </div>
       </details>
 

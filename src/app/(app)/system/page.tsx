@@ -72,7 +72,7 @@ export default async function SystemOverviewPage() {
         <a href="/system/integrations" className="card p-5 hover:border-border-strong transition-colors block">
           <div className="text-xl mb-2">&#9881;</div>
           <div className="font-display font-semibold text-ink text-[15px] mb-1">Integrations</div>
-          <p className="text-xs text-ink-muted">Check whether each third-party provider's env vars are set.</p>
+          <p className="text-xs text-ink-muted">Check whether each third-party provider&apos;s env vars are set.</p>
         </a>
         <a href="/system/incidents" className="card p-5 hover:border-border-strong transition-colors block">
           <div className="text-xl mb-2">&#9888;</div>
@@ -85,7 +85,7 @@ export default async function SystemOverviewPage() {
         <div className="callout mt-5">
           Some System Admin data couldn&rsquo;t load. Make sure{" "}
           <code className="font-mono">supabase/migrations/009_system_admin.sql</code> has been run, and that this
-          account's <code className="font-mono">profiles.role</code> is <code className="font-mono">system_admin</code>.
+          account&apos;s <code className="font-mono">profiles.role</code> is <code className="font-mono">system_admin</code>.
         </div>
       )}
     </div>

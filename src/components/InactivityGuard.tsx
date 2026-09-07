@@ -102,7 +102,7 @@ export function InactivityGuard() {
           Your session is about to expire
         </div>
         <p className="text-sm text-ink-muted mb-4">
-          You've been inactive for a while. For your business's security, you'll be signed out in{" "}
+          You&apos;ve been inactive for a while. For your business&apos;s security, you&apos;ll be signed out in{" "}
           <span className="font-semibold text-ink">
             {mm}:{ss}
           </span>

@@ -25,6 +25,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ? await supabase.from("branches").select("name").eq("id", profile.branch_id).single()
     : { data: null };
 
+  const { count: unreadNotificationCount } = user
+    ? await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("is_read", false)
+        .or(`user_id.eq.${user.id},user_id.is.null`)
+    : { count: 0 };
+
   // Falls back gracefully if the profile row hasn't been provisioned yet —
   // still lets the person sign in and see a Settings/onboarding-style page
   // rather than a hard error.
@@ -42,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const branchName = isPlatformAccount ? null : branch?.name;
 
   return (
-    <AppShell role={role} fullName={fullName} orgName={orgName} branchName={branchName} avatarUrl={profile?.avatar_url ?? null}>
+    <AppShell role={role} fullName={fullName} orgName={orgName} branchName={branchName} avatarUrl={profile?.avatar_url ?? null} unreadNotificationCount={unreadNotificationCount ?? 0}>
       {children}
     </AppShell>
   );

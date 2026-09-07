@@ -169,7 +169,7 @@ export function NewOrderWizard({
           <div>
             <h2 className="font-display text-xl font-semibold text-ink">Measurements</h2>
             <p className="text-sm text-ink-muted mt-1">
-              {selectedCustomer?.full_name ?? "This customer"}'s measurement profile — use what's on file, take new ones, or skip for now.
+              {selectedCustomer?.full_name ?? "This customer"}&apos;s measurement profile — use what&apos;s on file, take new ones, or skip for now.
             </p>
           </div>
 
@@ -252,7 +252,7 @@ export function NewOrderWizard({
                   className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold"
                 />
               </div>
-              <p className="text-xs text-ink-faint">This will be saved to {selectedCustomer?.full_name ?? "the customer"}'s profile for next time too.</p>
+              <p className="text-xs text-ink-faint">This will be saved to {selectedCustomer?.full_name ?? "the customer"}&apos;s profile for next time too.</p>
             </div>
           )}
 

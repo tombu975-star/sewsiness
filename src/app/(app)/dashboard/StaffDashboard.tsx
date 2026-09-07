@@ -119,7 +119,7 @@ export async function StaffDashboard({ userId }: { userId: string }) {
           </div>
           <div className="card divide-y divide-border">
             {(lowStock ?? []).length === 0 && (
-              <div className="p-6 text-center text-sm text-ink-muted">Everything's well-stocked.</div>
+              <div className="p-6 text-center text-sm text-ink-muted">Everything&apos;s well-stocked.</div>
             )}
             {(lowStock ?? []).map((p: any) => (
               <div key={p.id} className="p-3.5 flex items-center justify-between text-sm">
