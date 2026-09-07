@@ -8,9 +8,8 @@ import { InviteStatusBadge } from "@/components/InviteStatusBadge";
 import { ResendInviteButton } from "@/components/ResendInviteButton";
 import type { Role } from "@/lib/types";
 
-const ROLE_LABEL: Record<Role, string> = {
+const ROLE_LABEL: Partial<Record<Role, string>> = {
   super_admin: "Super Admin",
-  system_admin: "System Admin",
   owner: "Business Owner",
   manager: "Manager",
   staff: "Staff",

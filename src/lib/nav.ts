@@ -11,7 +11,6 @@ export const SETTINGS_ROLES: Role[] = ["owner", "manager", "super_admin", "syste
 
 export const ROLES: { id: Role; label: string; dashboardHref: string }[] = [
   { id: "super_admin", label: "Super Admin", dashboardHref: "/admin" },
-  { id: "system_admin", label: "System Admin", dashboardHref: "/system" },
   { id: "owner", label: "Owner / Madam", dashboardHref: "/dashboard" },
   { id: "manager", label: "Manager", dashboardHref: "/dashboard" },
   { id: "staff", label: "Staff", dashboardHref: "/dashboard" },
