@@ -16,7 +16,7 @@ export default async function TrainingPlansPage() {
 
   let query = supabase
     .from("training_tasks")
-    .select("id, title, status, due_date, submission_text, score, feedback, module:module_id(title, sequence, program:program_id(name)), enrollment:enrollment_id(program_id), apprentice:apprentice_id(id, full_name)")
+    .select("id, title, status, due_date, submission_text, score, feedback, evidence_path, module:module_id(title, sequence, program:program_id(name)), enrollment:enrollment_id(program_id), apprentice:apprentice_id(id, full_name)")
     .eq("organization_id", profile?.organization_id ?? "")
     .order("created_at", { ascending: false });
   if (isApprentice) query = query.eq("apprentice_id", user!.id);
@@ -100,12 +100,14 @@ export default async function TrainingPlansPage() {
                 <div className="mt-3 border-t border-border pt-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Apprentice submission</div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{t.submission_text}</p>
+                  {t.evidence_path && <a href={`/training-plans/tasks/${t.id}/evidence`} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-semibold text-indigo hover:underline">View evidence photo</a>}
                   <TaskReviewForm taskId={t.id} />
                 </div>
               )}
               {isApprentice && t.feedback && (
                 <p className="mt-3 border-t border-border pt-3 text-xs text-ink-muted"><strong>Trainer feedback:</strong> {t.feedback}</p>
               )}
+              {isApprentice && t.evidence_path && <a href={`/training-plans/tasks/${t.id}/evidence`} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-semibold text-indigo hover:underline">View submitted evidence</a>}
             </div>
           ))}
         </div>
