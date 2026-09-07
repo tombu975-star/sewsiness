@@ -6,6 +6,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { InviteStatusBadge } from "@/components/InviteStatusBadge";
 import { ResendInviteButton } from "@/components/ResendInviteButton";
+import { deleteUser } from "../admin/users-actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function StaffPage() {
   await requirePageRole(["owner", "manager"]);
@@ -45,6 +47,7 @@ export default async function StaffPage() {
             { key: "role", label: "Role" },
             { key: "branch", label: "Branch" },
             { key: "invite", label: "Invite" },
+            { key: "action", label: "Actions", hideOnMobile: true },
           ]}
           rows={rows.map((s) => {
             const invite = inviteByUser.get(s.id);
@@ -63,6 +66,14 @@ export default async function StaffPage() {
                   </div>
                 ) : (
                   <span className="text-ink-faint">—</span>
+                ),
+                action: (
+                  <form action={deleteUser} className="inline-block">
+                    <input type="hidden" name="profile_id" value={s.id} />
+                    <SubmitButton variant="outline" pendingLabel="Deleting…" className="!px-2.5 !py-1 !text-[11px] border-danger/40 text-danger hover:bg-danger-soft">
+                      Delete
+                    </SubmitButton>
+                  </form>
                 ),
               },
             };

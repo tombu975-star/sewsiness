@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
-import { suspendUser, reactivateUser } from "../users-actions";
+import { suspendUser, reactivateUser, deleteUser } from "../users-actions";
 import { SubmitButton } from "@/components/SubmitButton";
 import { InviteStatusBadge } from "@/components/InviteStatusBadge";
 import { ResendInviteButton } from "@/components/ResendInviteButton";
@@ -140,20 +140,30 @@ export default async function PlatformUsersPage({
                   </td>
                   <td className="px-4 py-3 text-ink-muted">{new Date(u.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right">
-                    {u.role === "super_admin" || u.role === "system_admin" ? null : u.suspended_at ? (
-                      <form action={reactivateUser}>
-                        <input type="hidden" name="profile_id" value={u.id} />
-                        <SubmitButton variant="outline" pendingLabel="Reactivating…" className="!px-3 !py-1.5 !text-xs">
-                          Reactivate
-                        </SubmitButton>
-                      </form>
-                    ) : (
-                      <form action={suspendUser}>
-                        <input type="hidden" name="profile_id" value={u.id} />
-                        <SubmitButton variant="danger" pendingLabel="Suspending…" className="!px-3 !py-1.5 !text-xs">
-                          Suspend
-                        </SubmitButton>
-                      </form>
+                    {u.role === "super_admin" || u.role === "system_admin" ? null : (
+                      <div className="flex items-center justify-end gap-2">
+                        {u.suspended_at ? (
+                          <form action={reactivateUser}>
+                            <input type="hidden" name="profile_id" value={u.id} />
+                            <SubmitButton variant="outline" pendingLabel="Reactivating…" className="!px-3 !py-1.5 !text-xs">
+                              Reactivate
+                            </SubmitButton>
+                          </form>
+                        ) : (
+                          <form action={suspendUser}>
+                            <input type="hidden" name="profile_id" value={u.id} />
+                            <SubmitButton variant="danger" pendingLabel="Suspending…" className="!px-3 !py-1.5 !text-xs">
+                              Suspend
+                            </SubmitButton>
+                          </form>
+                        )}
+                        <form action={deleteUser}>
+                          <input type="hidden" name="profile_id" value={u.id} />
+                          <SubmitButton variant="outline" pendingLabel="Deleting…" className="!px-3 !py-1.5 !text-xs border-danger/40 text-danger hover:bg-danger-soft">
+                            Delete
+                          </SubmitButton>
+                        </form>
+                      </div>
                     )}
                   </td>
                 </tr>

@@ -133,6 +133,27 @@ export async function pauseBusiness(formData: FormData) {
   revalidatePath(`/admin/${orgId}`);
 }
 
+export async function deleteBusiness(formData: FormData) {
+  const actor = await requireSuperAdmin();
+  const orgId = String(formData.get("organization_id") ?? "");
+  if (!orgId) throw new Error("Missing business.");
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("organizations").delete().eq("id", orgId);
+  if (error) throw new Error(error.message);
+
+  await admin.from("audit_logs").insert({
+    organization_id: orgId,
+    actor_id: actor.id,
+    action: "Business deleted",
+    entity: "organization",
+    entity_id: orgId,
+  });
+
+  revalidatePath("/admin");
+  redirect("/admin");
+}
+
 export async function markAdvisoryNoteSeen(formData: FormData) {
   const supabase = createClient();
   const {

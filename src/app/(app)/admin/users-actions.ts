@@ -15,6 +15,26 @@ async function requireSuperAdmin() {
   return user;
 }
 
+async function requireOrgAdminForUserDelete() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, organization_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) throw new Error("Your account profile could not be found.");
+  if (profile.role === "super_admin") return { user, profile };
+  if (profile.role === "owner" || profile.role === "manager") return { user, profile };
+
+  throw new Error("Only Super Admin or an Owner/Manager can delete users.");
+}
+
 // Suspends a business member. This does not delete anything they created —
 // it flags the profile so middleware blocks their session and future
 // sign-ins until Super Admin reactivates them.
@@ -78,4 +98,45 @@ export async function reactivateUser(formData: FormData) {
   }
 
   revalidatePath("/admin/users");
+}
+
+export async function deleteUser(formData: FormData) {
+  const { user, profile } = await requireOrgAdminForUserDelete();
+  const targetId = String(formData.get("profile_id") ?? "");
+  if (!targetId) throw new Error("Missing user.");
+  if (targetId === user.id) throw new Error("You can't delete your own account.");
+
+  const admin = createAdminClient();
+  const { data: target, error: fetchErr } = await admin
+    .from("profiles")
+    .select("organization_id, role, full_name")
+    .eq("id", targetId)
+    .single();
+  if (fetchErr) throw new Error(fetchErr.message);
+
+  if (target.role === "super_admin" || target.role === "system_admin") {
+    throw new Error("Platform accounts can't be deleted here.");
+  }
+
+  if (profile.role !== "super_admin" && target.organization_id !== profile.organization_id) {
+    throw new Error("You can only delete users from your own business.");
+  }
+
+  const { error: deleteErr } = await admin.auth.admin.deleteUser(targetId);
+  if (deleteErr) throw new Error(deleteErr.message);
+
+  if (target.organization_id) {
+    await admin.from("audit_logs").insert({
+      organization_id: target.organization_id,
+      actor_id: user.id,
+      action: "User deleted",
+      entity: "profile",
+      entity_id: targetId,
+    });
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/staff");
+  revalidatePath("/freelancers");
+  revalidatePath("/apprentices");
 }

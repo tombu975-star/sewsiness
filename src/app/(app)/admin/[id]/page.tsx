@@ -9,7 +9,7 @@ import { ResendInviteButton } from "@/components/ResendInviteButton";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { AdvisoryNote, BusinessDirectoryRow } from "@/lib/types";
-import { pauseBusiness, sendAdvisoryNote, approveBusinessVerification, rejectBusinessVerification } from "../actions";
+import { pauseBusiness, sendAdvisoryNote, approveBusinessVerification, rejectBusinessVerification, deleteBusiness } from "../actions";
 
 const STAGE_COLORS: Record<string, string> = {
   Cutting: "#FBBF24",
@@ -122,6 +122,12 @@ export default async function BusinessDetailPage({ params }: { params: { id: str
               <input type="hidden" name="next_status" value={business.status === "Active" ? "Paused" : "Active"} />
               <SubmitButton variant={business.status === "Active" ? "danger" : "primary"} pendingLabel="Updating…">
                 {business.status === "Active" ? "Pause Business" : "Reactivate Business"}
+              </SubmitButton>
+            </form>
+            <form action={deleteBusiness}>
+              <input type="hidden" name="organization_id" value={business.organization_id} />
+              <SubmitButton variant="outline" pendingLabel="Deleting…" className="border-danger/40 text-danger hover:bg-danger-soft">
+                Delete Business
               </SubmitButton>
             </form>
           </>
