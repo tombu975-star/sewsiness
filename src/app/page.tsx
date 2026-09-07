@@ -26,89 +26,66 @@ export default async function RootPage() {
   const heroImage = platform.coverImages[0] ?? "/images/marketing/cover-1-atelier-review.jpg";
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#f7f3f0_0%,_#efe9e4_30%,_#d8d0cc_100%)] px-4 py-6 text-[#171a2d] sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-8 flex items-center justify-between rounded-full border border-white/30 bg-white/45 px-4 py-3 shadow-[0_12px_30px_rgba(22,19,29,0.06)] backdrop-blur-md sm:px-6">
+    <main className="min-h-screen bg-[#f4efe8] text-[#171a2d]">
+      <div className="mx-auto flex min-h-screen max-w-[1500px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+        <header className="mb-4 flex items-center justify-between rounded-full border border-white/40 bg-white/55 px-4 py-3 shadow-[0_8px_24px_rgba(22,19,29,0.06)] backdrop-blur-md sm:px-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1e2340] text-sm font-bold text-[#f7d879] shadow-sm">S</div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1d213c] text-sm font-bold text-[#f0c34d]">S</div>
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5b6177]">Sewsiness</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5b6177]">Sewsiness</div>
               <div className="text-sm font-semibold text-[#171a2d]">Fashion Business OS</div>
             </div>
           </div>
 
-          <nav className="hidden items-center gap-6 text-sm font-medium text-[#2a2d3d] md:flex">
-            <Link href="/login" className="transition hover:text-[#1e2340]">Log in</Link>
-            <Link href="/signup" className="transition hover:text-[#1e2340]">Create account</Link>
-          </nav>
+          <div className="flex items-center gap-3 text-sm font-medium text-[#2a2d3d]">
+            <Link href="/login" className="hover:text-[#171a2d]">Log in</Link>
+            <Link href="/signup" className="rounded-full border border-[#dfe1e8] bg-white/80 px-3 py-2 transition hover:bg-white">Create account</Link>
+          </div>
         </header>
 
-        <section className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="max-w-xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#e7ddcf] bg-[#fffaf5]/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#5f4c32] shadow-sm">
-              <span className="inline-block h-2 w-2 rounded-full bg-[#d5ab4d]" />
-              Built for tailored businesses
-            </div>
-
-            <h1 className="text-4xl font-black leading-[1.02] tracking-[-0.06em] text-[#151a2f] sm:text-5xl lg:text-[4rem]">
-              Run your atelier with clarity and confidence.
-            </h1>
-
-            <p className="mt-5 max-w-lg text-base leading-7 text-[#4f586f] sm:text-lg">
-              Manage your production, customer orders, staff workflow, and tailoring operations from one polished platform designed for modern fashion businesses.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button href="/signup" variant="primary" className="rounded-full bg-[#f0c34d] px-6 py-3 text-sm font-semibold text-[#171a2d] shadow-[0_12px_24px_rgba(240,195,77,0.28)] hover:bg-[#f4cd66]">
-                Get started
-              </Button>
-              <Button href="/login" variant="outline" className="rounded-full border border-[#dfe1e8] bg-white/75 px-6 py-3 text-sm font-semibold text-[#1b1e2f] hover:bg-white">
-                Log in
-              </Button>
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-[#5b6177]">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#e8e0d7] bg-white/55 px-3 py-1.5">
-                <span className="text-[#1d2d64]">✓</span> Business operations
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#e8e0d7] bg-white/55 px-3 py-1.5">
-                <span className="text-[#1d2d64]">✓</span> Tailor workflows
-              </span>
-            </div>
+        <section className="relative flex-1 overflow-hidden rounded-[30px] border border-white/30 bg-[#d8d0ca] shadow-[0_30px_60px_rgba(22,19,29,0.18)]">
+          <div className="absolute inset-0">
+            <Image src={heroImage} alt="Tailor and client reviewing fabric options" fill className="object-cover" sizes="100vw" priority />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#17151b]/80 via-[#17151b]/35 to-[#17151b]/20" />
           </div>
 
-          <div className="flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-[420px]">
-              <div className="absolute -left-8 top-10 h-24 w-24 rounded-full bg-[#f0c34d]/25 blur-2xl" />
-              <div className="absolute -right-4 bottom-8 h-28 w-28 rounded-full bg-[#8fa4ff]/20 blur-2xl" />
+          <div className="relative z-10 flex min-h-[620px] items-end p-4 sm:p-6 lg:p-10">
+            <div className="max-w-xl rounded-[28px] border border-white/10 bg-[#f5f1ed]/10 p-5 shadow-[0_20px_40px_rgba(17,14,19,0.18)] backdrop-blur-[2px] sm:p-7">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#f0d9a6] bg-[#f7ebd2]/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6b4d21]">
+                <span className="inline-block h-2 w-2 rounded-full bg-[#d4a94d]" />
+                Tailor-made clothing
+              </div>
 
-              <div className="relative overflow-hidden rounded-[32px] border border-white/40 bg-[#f4f0ed] shadow-[0_22px_44px_rgba(20,18,22,0.12)]">
-                <div className="relative h-[520px] overflow-hidden">
-                  <Image src={heroImage} alt="Tailor working at a sewing machine" fill className="object-cover" sizes="420px" priority />
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/10 via-[#000000]/10 to-[#000000]/55" />
-                </div>
+              <h1 className="max-w-md text-4xl font-black leading-[0.98] tracking-[-0.06em] text-white sm:text-5xl lg:text-[4rem]">
+                Build a modern atelier business.
+              </h1>
 
-                <div className="absolute inset-x-0 bottom-0 p-[18px]">
-                  <div className="rounded-[26px] border border-white/15 bg-[#f4f1f0]/15 p-[16px] backdrop-blur-[2px]">
-                    <div className="mb-[10px] flex items-center justify-between text-[10px] font-medium text-white/85">
-                      <span>Tailor-made clothing</span>
-                      <span className="rounded-full border border-white/25 bg-white/10 px-[8px] py-[3px] leading-none">New</span>
-                    </div>
-                    <h2 className="mb-[8px] text-[18px] font-bold leading-[1.1] text-white">Tailor-made clothing</h2>
-                    <p className="mb-[14px] text-[12px] leading-[1.5] text-white/85">
-                      Tailor-made clothing offers unmatched comfort, style, and precision.
-                    </p>
-                    <Button href="/signup" variant="primary" className="w-full rounded-full bg-[#f0c34d] px-3 py-[10px] text-[12px] font-semibold text-[#1b1c2a] hover:bg-[#f4ca62]">
-                      Get started
-                    </Button>
-                  </div>
-                </div>
+              <p className="mt-4 max-w-md text-base leading-7 text-white/80 sm:text-lg">
+                Manage production, orders, staff, customer fitting, quality control, and business growth from one polished platform built for tailoring brands.
+              </p>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Button href="/signup" variant="primary" className="rounded-full bg-[#f0c34d] px-6 py-3 text-sm font-semibold text-[#171a2d] shadow-[0_12px_24px_rgba(240,195,77,0.3)] hover:bg-[#f4cd66]">
+                  Get started
+                </Button>
+                <Button href="/login" variant="outline" className="rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/15">
+                  Log in
+                </Button>
+              </div>
+
+              <div className="mt-7 flex flex-wrap items-center gap-3 text-sm text-white/80">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/15 px-3 py-1.5">
+                  <span className="text-[#f0c34d]">✓</span> Business operations
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/15 px-3 py-1.5">
+                  <span className="text-[#f0c34d]">✓</span> Tailor workflows
+                </span>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="mx-auto mt-10 flex max-w-[820px] flex-col items-center justify-center gap-[8px] text-center text-[#1d1f2c]">
+        <div className="mx-auto mt-6 flex max-w-[820px] flex-col items-center justify-center gap-[8px] text-center text-[#1d1f2c]">
           <div className="flex items-center gap-[14px] text-[15px] font-medium text-[#2e3559]">
             <Link href="/login" className="hover:underline underline-offset-4">
               Log in
