@@ -134,7 +134,7 @@ export function AvatarUpload({ userId, fullName, avatarUrl }: { userId: string; 
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="w-full h-full object-cover" />
+          <img src={preview} alt={`${fullName || "Your"} profile photo`} className="w-full h-full object-cover" />
         ) : (
           <span className="font-display text-lg font-bold text-indigo">{initials || "?"}</span>
         )}

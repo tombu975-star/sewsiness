@@ -5,9 +5,10 @@ import { Tabs } from "@/components/Tabs";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ROLES, homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
-import { updateProfile, updateOrganization } from "./actions";
+import { updateOrganization } from "./actions";
 import { AvatarUpload } from "./AvatarUpload";
 import { AccountCard } from "./AccountCard";
+import { ProfileDetailsForm } from "./ProfileDetailsForm";
 import { PlatformBrandingForm } from "./PlatformBrandingForm";
 import { SystemOverviewCard } from "./SystemOverviewCard";
 import { BranchesQuickCard } from "./BranchesQuickCard";
@@ -110,7 +111,7 @@ export default async function SettingsPage() {
             <div className="idavatar overflow-hidden">
               {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                <img src={profile.avatar_url} alt={`${profile?.full_name ?? "Your"} profile photo`} className="w-full h-full object-cover" />
               ) : (
                 initials(profile?.full_name ?? "?")
               )}
@@ -158,23 +159,7 @@ export default async function SettingsPage() {
             <AvatarUpload userId={user!.id} fullName={profile?.full_name ?? ""} avatarUrl={profile?.avatar_url ?? null} />
           </div>
 
-          <form action={updateProfile} className="card p-6 max-w-lg space-y-4">
-            <div className="font-display font-semibold text-ink">Personal details</div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Full name</label>
-              <input name="full_name" defaultValue={profile?.full_name ?? ""} required className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Phone</label>
-              <input name="phone" type="tel" defaultValue={(profile as any)?.phone ?? ""} placeholder="e.g. 024 000 0000" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Email</label>
-              <input value={user?.email ?? ""} disabled className="w-full rounded-lg border border-border bg-sunken px-3 py-2 text-sm text-ink-muted" />
-              <p className="text-[11px] text-ink-faint mt-1">Contact support to change the email on your account.</p>
-            </div>
-            <SubmitButton pendingLabel="Saving…">Save Changes</SubmitButton>
-          </form>
+          <ProfileDetailsForm fullName={profile?.full_name ?? ""} phone={(profile as any)?.phone ?? ""} email={user?.email ?? ""} />
 
           <AccountCard />
         </div>
