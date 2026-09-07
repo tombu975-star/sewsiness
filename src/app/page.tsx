@@ -70,6 +70,21 @@ export default async function RootPage() {
                   <span className="text-[#f0c34d]">✓</span> Tailor workflows
                 </span>
               </div>
+
+              {/* Everything above is the Owner/staff pitch — signup + login
+                  for the operations dashboard. This is the separate entry
+                  point into the customer-facing storefront (browse tailors,
+                  customize a garment, place an order), which needs no login
+                  at all — see PUBLIC_PATHS's "/shop" allowlist in
+                  middleware.ts. Kept visually secondary (a plain link, not
+                  a button) so it doesn't compete with the primary Owner CTA
+                  above it. */}
+              <p className="mt-5 text-sm text-white/70">
+                Looking to order tailor-made clothing instead?{" "}
+                <a href="/shop/welcome" className="font-semibold text-white underline decoration-white/40 underline-offset-2 hover:decoration-white">
+                  Browse as a customer →
+                </a>
+              </p>
             </div>
           </div>
         </section>

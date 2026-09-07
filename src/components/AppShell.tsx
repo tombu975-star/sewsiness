@@ -8,7 +8,7 @@ import { logSignOut } from "@/app/(app)/audit/actions";
 import { Spinner } from "@/components/Spinner";
 import { InactivityGuard } from "@/components/InactivityGuard";
 import { MobileMoreMenu } from "@/components/MobileMoreMenu";
-import { ROLES, sidebarForRole, bottomNavForRole, moreMenuForRole, pageTitleForPath } from "@/lib/nav";
+import { ROLES, SETTINGS_ROLES, sidebarForRole, bottomNavForRole, moreMenuForRole, pageTitleForPath } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 
 const SIDEBAR_COLLAPSED_KEY = "sewsiness_sidebar_collapsed";
@@ -87,6 +87,7 @@ export function AppShell({
     .join("")
     .toUpperCase();
   const isCollapsed = mounted && collapsed;
+  const canAccessSettings = SETTINGS_ROLES.includes(role);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -96,8 +97,11 @@ export function AppShell({
     // Full browser navigation, not router.push — this guarantees the
     // client's Router Cache is discarded and every subsequent request hits
     // the server fresh, so no stale authenticated page can flash back in
-    // without a manual reload.
-    window.location.assign("/login");
+    // without a manual reload. Lands on the public landing page (not
+    // /login) — that's the default destination for anyone without a
+    // session, and it still surfaces a "Log in" button for a quick way
+    // back in.
+    window.location.assign("/");
   }
 
   const isItemActive = (href?: string, children?: { href: string }[]) => {
@@ -296,9 +300,14 @@ export function AppShell({
                       <div className="text-sm font-semibold text-ink truncate">{fullName}</div>
                       <div className="text-xs text-ink-muted">{roleLabel}</div>
                     </div>
-                    <Link href="/settings" className="block px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-ink transition-colors">
-                      Settings
+                    <Link href="/account" className="block px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-ink transition-colors">
+                      My Account
                     </Link>
+                    {canAccessSettings && (
+                      <Link href="/settings" className="block px-2 py-1.5 text-sm rounded-lg hover:bg-sunken text-ink transition-colors">
+                        Settings
+                      </Link>
+                    )}
                     <button
                       onClick={handleSignOut}
                       disabled={signingOut}
@@ -372,6 +381,7 @@ export function AppShell({
         branchName={branchName}
         onSignOut={handleSignOut}
         signingOut={signingOut}
+        showSettingsLink={canAccessSettings}
       />
     </div>
   );

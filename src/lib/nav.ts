@@ -1,5 +1,14 @@
 import type { Role } from "@/lib/types";
 
+// Roles allowed into /settings (org/branch/platform/system configuration).
+// Every role — including the ones left out here — can still reach
+// /account for their own profile, photo, password, and sign-out; this
+// list is only the narrower "manages a business or the platform" gate.
+// Kept here (not locally in settings/page.tsx) so middleware.ts and
+// AppShell/MobileMoreMenu's "show a Settings link at all" checks share
+// the exact same source of truth.
+export const SETTINGS_ROLES: Role[] = ["owner", "manager", "super_admin", "system_admin"];
+
 export const ROLES: { id: Role; label: string; dashboardHref: string }[] = [
   { id: "super_admin", label: "Super Admin", dashboardHref: "/admin" },
   { id: "system_admin", label: "System Admin", dashboardHref: "/system" },
@@ -255,8 +264,9 @@ export const MORE_MENU: MoreMenuSection[] = [
   {
     title: "Account",
     items: [
+      { label: "My Account", description: "Your profile, photo, and password", icon: "\u263A", href: "/account", roles: ["owner", "manager", "staff", "trainer", "apprentice", "freelancer"] },
       { label: "Audit Logs", description: "A record of who did what", icon: "\u25A3", href: "/audit", roles: ["owner"] },
-      { label: "Settings", description: "Account and business settings", icon: "\u2699", href: "/settings", roles: ["owner", "manager"] },
+      { label: "Settings", description: "Business and workspace settings", icon: "\u2699", href: "/settings", roles: ["owner", "manager"] },
     ],
   },
 ];
@@ -372,8 +382,8 @@ export function homePathForRole(role: Role): string {
 // walled into — kept in sync with SUPER_ADMIN_ALLOWED_PATHS /
 // SYSTEM_ADMIN_ALLOWED_PATHS in middleware.ts.
 const PLATFORM_ALLOWED_PATHS: Partial<Record<Role, string[]>> = {
-  super_admin: ["/admin", "/notifications", "/settings"],
-  system_admin: ["/system", "/notifications", "/settings"],
+  super_admin: ["/admin", "/notifications", "/settings", "/account"],
+  system_admin: ["/system", "/notifications", "/settings", "/account"],
 };
 
 function isAllowedPath(pathname: string, allowedPath: string) {

@@ -31,6 +31,7 @@ export function MobileMoreMenu({
   branchName,
   onSignOut,
   signingOut,
+  showSettingsLink,
 }: {
   open: boolean;
   onClose: () => void;
@@ -43,6 +44,12 @@ export function MobileMoreMenu({
   branchName?: string | null;
   onSignOut: () => void;
   signingOut: boolean;
+  // Whether this role can reach /settings (Owner, Manager, Super Admin,
+  // System Admin — see SETTINGS_ROLES in lib/nav.ts). The footer's
+  // identity row always links to /account instead, since every role can
+  // manage its own profile/password there; this just decides whether a
+  // separate "Settings" shortcut is also worth showing.
+  showSettingsLink?: boolean;
 }) {
   const [query, setQuery] = useState("");
 
@@ -178,7 +185,7 @@ export function MobileMoreMenu({
 
         <div className="flex-shrink-0 border-t border-border px-3 py-2 space-y-0.5">
           <Link
-            href="/settings"
+            href="/account"
             onClick={onClose}
             className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] font-medium text-ink hover:bg-sunken transition-colors"
           >
@@ -195,9 +202,19 @@ export function MobileMoreMenu({
             </span>
             <span className="min-w-0">
               <span className="block truncate">{fullName}</span>
-              <span className="block text-[11.5px] text-ink-muted truncate">{roleLabel} · Account settings</span>
+              <span className="block text-[11.5px] text-ink-muted truncate">{roleLabel} · My Account</span>
             </span>
           </Link>
+          {showSettingsLink && (
+            <Link
+              href="/settings"
+              onClick={onClose}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] font-medium text-ink hover:bg-sunken transition-colors"
+            >
+              <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[14px] flex-shrink-0">⚙️</span>
+              Settings
+            </Link>
+          )}
           <button
             onClick={onSignOut}
             disabled={signingOut}

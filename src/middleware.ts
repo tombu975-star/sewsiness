@@ -23,7 +23,7 @@ const PUBLIC_PATHS = [
 // not a business Owner — it must never reach business-operational pages,
 // even by typing the URL directly. Keep this in sync with SUPER_ADMIN_SIDEBAR
 // in src/lib/nav.ts.
-const SUPER_ADMIN_ALLOWED_PATHS = ["/admin", "/notifications", "/settings"];
+const SUPER_ADMIN_ALLOWED_PATHS = ["/admin", "/notifications", "/settings", "/account"];
 const SUPER_ADMIN_HOME = "/admin";
 
 // System Admin is Sewsiness's developer/technical account — feature
@@ -33,7 +33,7 @@ const SUPER_ADMIN_HOME = "/admin";
 // operational pages OR Super Admin's business/user-management pages
 // (Enrolled Businesses, Users & Roles). Keep in sync with
 // SYSTEM_ADMIN_SIDEBAR in src/lib/nav.ts.
-const SYSTEM_ADMIN_ALLOWED_PATHS = ["/system", "/notifications", "/settings"];
+const SYSTEM_ADMIN_ALLOWED_PATHS = ["/system", "/notifications", "/settings", "/account"];
 const SYSTEM_ADMIN_HOME = "/system";
 
 const DEFAULT_HOME = "/dashboard";

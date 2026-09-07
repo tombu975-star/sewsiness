@@ -3,41 +3,29 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { Tabs } from "@/components/Tabs";
 import { SubmitButton } from "@/components/SubmitButton";
-import { ROLES, homePathForRole } from "@/lib/nav";
+import { SETTINGS_ROLES, homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 import { updateOrganization } from "./actions";
-import { AvatarUpload } from "./AvatarUpload";
-import { AccountCard } from "./AccountCard";
-import { ProfileDetailsForm } from "./ProfileDetailsForm";
 import { PlatformBrandingForm } from "./PlatformBrandingForm";
 import { SystemOverviewCard } from "./SystemOverviewCard";
 import { BranchesQuickCard } from "./BranchesQuickCard";
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
 // Settings is deliberately narrower than the rest of the app — it holds
-// account security plus organization/branch/platform configuration, not
-// day-to-day operational work. Only the roles that actually manage a
-// business (Owner, Manager) or the platform itself (Super Admin, System
-// Admin) get in; everyone else is redirected to their own home. The
-// sidebar already hides the link for other roles (src/lib/nav.ts) — this
-// is the server-side backstop so a direct link can't bypass that.
-const SETTINGS_ROLES: Role[] = ["owner", "manager", "super_admin", "system_admin"];
+// organization/branch/platform/system configuration, not day-to-day
+// operational work, and not the signed-in person's own account (that
+// lives at /account, reachable by every role). Only the roles that
+// actually manage a business (Owner, Manager) or the platform itself
+// (Super Admin, System Admin) get in here; everyone else is redirected
+// to their own home. The sidebar already hides the link for other roles
+// (src/lib/nav.ts) — this is the server-side backstop so a direct link
+// can't bypass that.
 
 export default async function SettingsPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, phone, role, organization_id, branch_id, avatar_url, created_at")
+    .select("role, organization_id, branch_id")
     .eq("id", user!.id)
     .single();
 
@@ -93,79 +81,7 @@ export default async function SettingsPage() {
     openIncidents = openCount ?? 0;
   }
 
-  const roleLabel = ROLES.find((r) => r.id === role)?.label ?? role;
-  const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long" })
-    : null;
-
-  const tabs: { label: string; content: React.ReactNode }[] = [
-    {
-      label: "My Account",
-      content: (
-        <div className="space-y-5">
-          {/* Identity card — same gradient hero + avatar pattern used on
-              the Customer profile page (see .idcard/.idavatar/.idfacts
-              in globals.css), applied here to the signed-in user's own
-              account instead of a customer's. */}
-          <div className="idcard max-w-lg">
-            <div className="idavatar overflow-hidden">
-              {profile?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt={`${profile?.full_name ?? "Your"} profile photo`} className="w-full h-full object-cover" />
-              ) : (
-                initials(profile?.full_name ?? "?")
-              )}
-            </div>
-            <h2 className="font-display text-xl font-semibold">{profile?.full_name ?? "—"}</h2>
-            <div className="idsub text-[12.5px] mb-4" style={{ color: "#D8CFEE" }}>
-              {roleLabel}
-              {org?.name ? ` · ${org.name}` : ""}
-            </div>
-            <div className="idfacts">
-              <div>
-                <b>{org?.name ?? "Platform"}</b>
-                <span>ORGANIZATION</span>
-              </div>
-              <div>
-                <b>{branch?.name ?? "—"}</b>
-                <span>BRANCH</span>
-              </div>
-              <div>
-                <b>{memberSince ?? "—"}</b>
-                <span>MEMBER SINCE</span>
-              </div>
-            </div>
-            {(profile as any)?.phone || user?.email ? (
-              <div className="quickrow flex justify-center gap-2.5 mt-4">
-                {(profile as any)?.phone && (
-                  <a href={`tel:${(profile as any).phone}`} className="qbtn" aria-label="Call">
-                    📞
-                  </a>
-                )}
-                {user?.email && (
-                  <a href={`mailto:${user.email}`} className="qbtn" aria-label="Email">
-                    ✉️
-                  </a>
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="card p-6 max-w-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="font-display font-semibold text-ink">Profile photo</div>
-              <span className="badge bg-indigo-soft text-indigo">{roleLabel}</span>
-            </div>
-            <AvatarUpload userId={user!.id} fullName={profile?.full_name ?? ""} avatarUrl={profile?.avatar_url ?? null} />
-          </div>
-
-          <ProfileDetailsForm fullName={profile?.full_name ?? ""} phone={(profile as any)?.phone ?? ""} email={user?.email ?? ""} />
-
-          <AccountCard />
-        </div>
-      ),
-    },
-  ];
+  const tabs: { label: string; content: React.ReactNode }[] = [];
 
   if (isOwner) {
     tabs.push({
@@ -233,7 +149,7 @@ export default async function SettingsPage() {
     <div>
       <PageHead
         title="Settings"
-        subtitle="Keep your identity, business profile, workspace structure, and platform presentation accurate."
+        subtitle="Business profile, workspace structure, and platform presentation. Looking for your own profile or password? That's under My Account."
         crumb="Settings"
       />
       <Tabs tabs={tabs} />
