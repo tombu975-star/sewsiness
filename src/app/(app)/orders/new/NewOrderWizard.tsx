@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createOrder } from "../actions";
@@ -63,6 +63,7 @@ export function NewOrderWizard({
   const [mSleeve, setMSleeve] = useState("");
   const [mGarmentLen, setMGarmentLen] = useState("");
   const [mNotes, setMNotes] = useState("");
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const selectedCustomer = customers.find((c) => c.id === customerId);
   const customerMeasurements = useMemo(
@@ -72,6 +73,10 @@ export function NewOrderWizard({
   const totalNumber = Number(total || 0);
   const paymentNumber = Number(initialPayment || 0);
   const balance = Math.max(0, totalNumber - paymentNumber);
+
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+  }, [step]);
 
   // Whenever the customer changes, default the measurements step to
   // whatever makes sense for *this* customer rather than carrying over
@@ -113,24 +118,24 @@ export function NewOrderWizard({
       <input type="hidden" name="payment_method" value={method} />
       <input type="hidden" name="payment_type" value={paymentNumber >= totalNumber && totalNumber > 0 ? "Full" : "Deposit"} />
 
-      <input type="hidden" name="measurement_mode" value={measurementMode} />
+      <input type="hidden" name="measurement_action" value={measurementMode === "new" ? "save" : "skip"} />
       {measurementMode === "new" && (
         <>
           <input type="hidden" name="measurement_label" value={measurementLabel} />
-          <input type="hidden" name="measurement_chest" value={mChest} />
-          <input type="hidden" name="measurement_waist" value={mWaist} />
-          <input type="hidden" name="measurement_hips" value={mHips} />
-          <input type="hidden" name="measurement_shoulder" value={mShoulder} />
-          <input type="hidden" name="measurement_sleeve_length" value={mSleeve} />
-          <input type="hidden" name="measurement_garment_length" value={mGarmentLen} />
+          <input type="hidden" name="chest" value={mChest} />
+          <input type="hidden" name="waist" value={mWaist} />
+          <input type="hidden" name="hips" value={mHips} />
+          <input type="hidden" name="shoulder" value={mShoulder} />
+          <input type="hidden" name="sleeve_length" value={mSleeve} />
+          <input type="hidden" name="garment_length" value={mGarmentLen} />
           <input type="hidden" name="measurement_notes" value={mNotes} />
         </>
       )}
 
-      <div className="card p-4 sm:p-5">
+      <nav className="card p-4 sm:p-5" aria-label="Order creation steps">
         <div className="flex items-center gap-2">
           {STEPS.map((label, index) => (
-            <div key={label} className="flex-1 flex items-center gap-2">
+            <div key={label} className="flex-1 flex items-center gap-2" aria-current={index === step ? "step" : undefined}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${index <= step ? "bg-indigo text-white" : "bg-sunken text-ink-muted"}`}>
                 {index < step ? "✓" : index + 1}
               </div>
@@ -139,19 +144,20 @@ export function NewOrderWizard({
             </div>
           ))}
         </div>
-      </div>
+        <p className="sr-only" aria-live="polite">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
+      </nav>
 
       {error && <div className="callout text-sm" role="alert">{error}</div>}
 
       {step === 0 && (
         <section className="card p-5 sm:p-6 space-y-5">
           <div>
-            <h2 className="font-display text-xl font-semibold text-ink">Who is this order for?</h2>
+            <h2 ref={stepHeadingRef} tabIndex={-1} className="font-display text-xl font-semibold text-ink focus:outline-none">Who is this order for?</h2>
             <p className="text-sm text-ink-muted mt-1">Choose an existing customer or add them first.</p>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-ink mb-2">Customer</label>
-            <select value={customerId} onChange={(e) => selectCustomer(e.target.value)} className="w-full h-12 rounded-lg border border-border bg-surface px-3 text-sm text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/20">
+            <label htmlFor="order-customer" className="block text-sm font-semibold text-ink mb-2">Customer<span className="text-danger ml-1" aria-hidden="true">*</span></label>
+            <select id="order-customer" value={customerId} onChange={(e) => selectCustomer(e.target.value)} className="field-input h-12">
               <option value="">Select a customer…</option>
               {customers.map((c) => <option key={c.id} value={c.id}>{c.full_name}</option>)}
             </select>
@@ -160,14 +166,14 @@ export function NewOrderWizard({
             + Add New Customer
           </Link>
           {selectedCustomer && <div className="rounded-lg bg-indigo-soft p-4 text-sm"><div className="font-semibold text-ink">Selected customer</div><div className="text-ink-muted mt-1">{selectedCustomer.full_name}</div></div>}
-          <div className="flex justify-end pt-1"><button type="button" onClick={next} className="h-11 px-5 rounded-lg bg-indigo text-white text-sm font-semibold hover:opacity-90">Continue →</button></div>
+          <div className="flex justify-end pt-1"><button type="button" onClick={next} className="h-11 px-5 rounded-lg bg-indigo text-white text-sm font-semibold hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2">Continue →</button></div>
         </section>
       )}
 
       {step === 1 && (
         <section className="card p-5 sm:p-6 space-y-5">
           <div>
-            <h2 className="font-display text-xl font-semibold text-ink">Measurements</h2>
+            <h2 ref={stepHeadingRef} tabIndex={-1} className="font-display text-xl font-semibold text-ink focus:outline-none">Measurements</h2>
             <p className="text-sm text-ink-muted mt-1">
               {selectedCustomer?.full_name ?? "This customer"}&apos;s measurement profile — use what&apos;s on file, take new ones, or skip for now.
             </p>
@@ -182,7 +188,8 @@ export function NewOrderWizard({
                 key={mode}
                 type="button"
                 onClick={() => setMeasurementMode(mode)}
-                className={`h-11 rounded-lg border text-sm font-semibold transition-colors ${
+                aria-pressed={measurementMode === mode}
+                className={`h-11 rounded-lg border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 ${
                   measurementMode === mode ? "border-gold bg-gold-soft text-gold-ink" : "border-border bg-surface text-ink hover:bg-sunken"
                 }`}
               >
@@ -227,8 +234,9 @@ export function NewOrderWizard({
           {measurementMode === "new" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-ink mb-2">Set label</label>
+                <label htmlFor="measurement-label" className="block text-sm font-semibold text-ink mb-2">Set label</label>
                 <input
+                  id="measurement-label"
                   value={measurementLabel}
                   onChange={(e) => setMeasurementLabel(e.target.value)}
                   placeholder="e.g. Wedding outfit"
@@ -244,8 +252,9 @@ export function NewOrderWizard({
                 <NumField label="Garment length" value={mGarmentLen} onChange={setMGarmentLen} />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-ink mb-2">Notes</label>
+                <label htmlFor="measurement-notes" className="block text-sm font-semibold text-ink mb-2">Notes</label>
                 <textarea
+                  id="measurement-notes"
                   value={mNotes}
                   onChange={(e) => setMNotes(e.target.value)}
                   rows={2}
@@ -267,31 +276,31 @@ export function NewOrderWizard({
           )}
 
           <div className="flex justify-between gap-2 pt-1">
-            <button type="button" onClick={back} className="h-11 px-4 rounded-lg border border-border text-sm font-semibold text-ink">← Back</button>
-            <button type="button" onClick={next} className="h-11 px-5 rounded-lg bg-indigo text-white text-sm font-semibold hover:opacity-90">Continue →</button>
+            <button type="button" onClick={back} className="h-11 px-4 rounded-lg border border-border text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2">← Back</button>
+            <button type="button" onClick={next} className="h-11 px-5 rounded-lg bg-indigo text-white text-sm font-semibold hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2">Continue →</button>
           </div>
         </section>
       )}
 
       {step === 2 && (
         <section className="card p-5 sm:p-6 space-y-5">
-          <div><h2 className="font-display text-xl font-semibold text-ink">What is being ordered?</h2><p className="text-sm text-ink-muted mt-1">Keep the details simple. You can add more information later.</p></div>
+          <div><h2 ref={stepHeadingRef} tabIndex={-1} className="font-display text-xl font-semibold text-ink focus:outline-none">What is being ordered?</h2><p className="text-sm text-ink-muted mt-1">Keep the details simple. You can add more information later.</p></div>
           <div>
-            <label className="block text-sm font-semibold text-ink mb-2">Garment / Item</label>
-            <input value={garment} onChange={(e) => setGarment(e.target.value)} placeholder="e.g. Kaba & Slit" className="w-full h-12 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-gold" />
+            <label htmlFor="order-garment" className="block text-sm font-semibold text-ink mb-2">Garment / Item<span className="text-danger ml-1" aria-hidden="true">*</span></label>
+            <input id="order-garment" value={garment} onChange={(e) => setGarment(e.target.value)} required maxLength={160} placeholder="e.g. Kaba & Slit" className="field-input h-12" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className="block text-sm font-semibold text-ink mb-2">Delivery date</label><input value={dueDate} onChange={(e) => setDueDate(e.target.value)} type="date" className="w-full h-12 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-gold" /></div>
             <div><label className="block text-sm font-semibold text-ink mb-2">Priority</label><select value={priority} onChange={(e) => setPriority(e.target.value)} className="w-full h-12 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-gold"><option>Normal</option><option>Low</option><option>High</option></select></div>
           </div>
           <div><label className="block text-sm font-semibold text-ink mb-2">Order total (₵)</label><input value={total} onChange={(e) => setTotal(e.target.value)} type="number" step="0.01" min="0" placeholder="0.00" className="w-full h-12 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-gold" /></div>
-          <div className="flex justify-between gap-2 pt-1"><button type="button" onClick={back} className="h-11 px-4 rounded-lg border border-border text-sm font-semibold text-ink">← Back</button><button type="button" onClick={next} className="h-11 px-5 rounded-lg bg-indigo text-white text-sm font-semibold">Continue →</button></div>
+          <div className="flex justify-between gap-2 pt-1"><button type="button" onClick={back} className="h-11 px-4 rounded-lg border border-border text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2">← Back</button><button type="button" onClick={next} className="h-11 px-5 rounded-lg bg-indigo text-white text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2">Continue →</button></div>
         </section>
       )}
 
       {step === 3 && (
         <section className="card p-5 sm:p-6 space-y-5">
-          <div><h2 className="font-display text-xl font-semibold text-ink">Payment & review</h2><p className="text-sm text-ink-muted mt-1">Record an optional deposit now. The balance is calculated automatically.</p></div>
+          <div><h2 ref={stepHeadingRef} tabIndex={-1} className="font-display text-xl font-semibold text-ink focus:outline-none">Payment & review</h2><p className="text-sm text-ink-muted mt-1">Record an optional deposit now. The balance is calculated automatically.</p></div>
           <div className="rounded-xl bg-sunken p-4 space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-ink-muted">Customer</span><strong>{selectedCustomer?.full_name ?? "—"}</strong></div>
             <div className="flex justify-between"><span className="text-ink-muted">Order</span><strong>{garment || "—"}</strong></div>
@@ -312,7 +321,7 @@ export function NewOrderWizard({
             <div><label className="block text-sm font-semibold text-ink mb-2">Payment method</label><select value={method} onChange={(e) => setMethod(e.target.value)} className="w-full h-12 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-gold"><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Card</option></select></div>
           </div>
           <div className="grid grid-cols-2 gap-3"><div className="rounded-lg border border-border p-4"><div className="text-xs text-ink-muted">Paid</div><div className="text-lg font-bold text-ink mt-1">₵{paymentNumber.toFixed(2)}</div></div><div className="rounded-lg border border-border p-4"><div className="text-xs text-ink-muted">Balance</div><div className="text-lg font-bold text-ink mt-1">₵{balance.toFixed(2)}</div></div></div>
-          <div className="flex justify-between gap-2 pt-1"><button type="button" onClick={back} className="h-11 px-4 rounded-lg border border-border text-sm font-semibold text-ink">← Back</button><SubmitButton pendingLabel="Creating order…">Create Order</SubmitButton></div>
+          <div className="flex justify-between gap-2 pt-1"><button type="button" onClick={back} className="h-11 px-4 rounded-lg border border-border text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2">← Back</button><SubmitButton pendingLabel="Creating order…">Create Order</SubmitButton></div>
         </section>
       )}
     </form>

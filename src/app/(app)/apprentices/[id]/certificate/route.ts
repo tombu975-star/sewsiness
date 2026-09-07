@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildCertificatePdf } from "@/lib/pdf/certificate";
+import { siteUrl } from "@/lib/site-url";
 
 // A Route Handler rather than a Server Action, since the point is a
 // binary file download with its own Content-Type/Content-Disposition —
@@ -38,19 +39,37 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     .eq("profile_id", params.id)
     .maybeSingle();
 
-  if (!ap?.completed_at) {
+  const { data: structuredCertificate } = await supabase
+    .from("certificates")
+    .select("certificate_number, verification_code, final_score, grade, issued_at, program:program_id(name, program_type)")
+    .eq("apprentice_id", params.id)
+    .is("revoked_at", null)
+    .order("issued_at", { ascending: false })
+    .maybeSingle();
+
+  if (!structuredCertificate && !ap?.completed_at) {
     return new NextResponse("This apprentice's training hasn't been marked complete yet.", { status: 404 });
   }
+
+  const certificate = structuredCertificate as any;
+  const program = certificate?.program as any;
+  const completedAt = certificate?.issued_at ?? ap?.completed_at;
 
   const pdfBytes = await buildCertificatePdf({
     apprenticeName: apprentice.full_name,
     organizationName: (apprentice as any).organizations?.name ?? "Sewsiness",
-    specialisation: ap.specialisation,
-    trainingLevel: ap.training_level,
+    specialisation: ap?.specialisation ?? null,
+    trainingLevel: ap?.training_level ?? null,
     trainerName: (ap as any).trainer?.full_name ?? null,
-    startDate: ap.start_date,
-    completedAt: ap.completed_at,
-    certificateNumber: ap.certificate_number,
+    startDate: ap?.start_date ?? null,
+    completedAt,
+    certificateNumber: certificate?.certificate_number ?? ap?.certificate_number,
+    programName: program?.name ?? null,
+    programType: program?.program_type ?? null,
+    grade: certificate?.grade ?? null,
+    finalScore: certificate?.final_score ?? null,
+    verificationCode: certificate?.verification_code ?? null,
+    verificationUrl: certificate?.verification_code ? `${siteUrl()}/verify/${certificate.verification_code}` : null,
   });
 
   const safeName = apprentice.full_name.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "");

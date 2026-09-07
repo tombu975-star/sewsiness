@@ -145,7 +145,7 @@ async function completeIfAllTasksApproved(admin: ReturnType<typeof createAdminCl
       const passScore = Number((enrollment.program as any)?.pass_score ?? 70);
       const grade = finalScore >= 80 ? "Distinction" : finalScore >= passScore ? "Pass" : "Not Yet Competent";
       if (finalScore >= passScore) {
-        await admin.from("certificates").insert({
+        const { error: certificateError } = await admin.from("certificates").insert({
           organization_id: organizationId,
           apprentice_id: apprenticeId,
           program_id: enrollment.program_id,
@@ -156,6 +156,7 @@ async function completeIfAllTasksApproved(admin: ReturnType<typeof createAdminCl
           grade,
           issued_by: actorId,
         });
+        if (certificateError) throw new Error(`Enrollment completed, but certificate issuance failed: ${certificateError.message}`);
       }
     }
     return;

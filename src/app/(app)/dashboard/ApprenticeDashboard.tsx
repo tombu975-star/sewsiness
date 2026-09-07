@@ -13,7 +13,7 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
   const supabase = createClient();
   const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
 
-  const [{ data: apprenticeProfile }, { data: tasks }, { data: portfolio }] = await Promise.all([
+  const [{ data: apprenticeProfile }, { data: tasks }, { data: portfolio }, { data: structuredCertificate }] = await Promise.all([
     supabase
       .from("apprentice_profiles")
       .select("training_level, specialisation, training_goals, start_date, completed_at, certificate_number, trainer:trainer_id(full_name)")
@@ -30,12 +30,21 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
       .eq("apprentice_id", userId)
       .order("created_at", { ascending: false })
       .limit(4),
+    supabase
+      .from("certificates")
+      .select("certificate_number, final_score, grade, issued_at, program:program_id(name, program_type)")
+      .eq("apprentice_id", userId)
+      .is("revoked_at", null)
+      .order("issued_at", { ascending: false })
+      .maybeSingle(),
   ]);
 
   const taskRows = (tasks ?? []) as any[];
   const doneCount = taskRows.filter((t) => t.status === "Approved").length;
   const openTasks = taskRows.filter((t) => t.status !== "Approved").slice(0, 6);
   const trainerName = (apprenticeProfile as any)?.trainer?.full_name ?? null;
+  const certificate = structuredCertificate as any;
+  const completed = Boolean(certificate || (apprenticeProfile as any)?.completed_at);
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -48,7 +57,7 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
         subtitle="Your training progress and assigned tasks."
         actions={
           <>
-            {(apprenticeProfile as any)?.completed_at && (
+            {completed && (
               <a
                 href={`/apprentices/${userId}/certificate`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-gold text-[#3a2400] hover:brightness-[1.03] border border-gold transition-all duration-150 active:scale-[0.98]"
@@ -64,11 +73,11 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
         }
       />
 
-      {(apprenticeProfile as any)?.completed_at && (
+      {completed && (
         <div className="callout mb-6">
           <div className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">Training Completed 🎓</div>
           <p>
-            Certificate No. {(apprenticeProfile as any).certificate_number ?? "—"} — you can download it any time from the button
+            Certificate No. {certificate?.certificate_number ?? (apprenticeProfile as any).certificate_number ?? "—"}{certificate?.grade ? ` · ${certificate.grade}` : ""}{certificate?.final_score != null ? ` · ${Number(certificate.final_score).toFixed(1)}%` : ""} — you can download it any time from the button
             above.
           </p>
         </div>

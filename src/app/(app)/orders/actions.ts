@@ -118,15 +118,24 @@ export async function recordOrderPayment(formData: FormData) {
     .single();
 
   const order_id = String(formData.get("order_id") ?? "");
-  const customer_id = String(formData.get("customer_id") ?? "");
   const amount = Number(formData.get("amount") || 0);
-  if (!order_id || amount <= 0) throw new Error("A valid amount is required");
+  if (!order_id || !Number.isFinite(amount) || amount <= 0) throw new Error("A valid amount is required");
+
+  const { data: order } = await supabase
+    .from("custom_orders")
+    .select("customer_id, total_amount, amount_paid")
+    .eq("id", order_id)
+    .eq("organization_id", profile?.organization_id ?? "")
+    .single();
+  if (!order) throw new Error("Order not found.");
+  const outstanding = Math.max(0, Number(order.total_amount) - Number(order.amount_paid));
+  if (amount > outstanding) throw new Error(`Payment cannot be more than the outstanding balance of ₵${outstanding.toFixed(2)}.`);
 
   const { error: payErr } = await supabase.from("payments").insert({
     organization_id: profile?.organization_id,
     branch_id: profile?.branch_id ?? null,
     order_id,
-    customer_id,
+    customer_id: order.customer_id,
     amount,
     method: (formData.get("method") as string) || "Cash",
     type: (formData.get("type") as string) || "Deposit",
@@ -134,7 +143,6 @@ export async function recordOrderPayment(formData: FormData) {
   });
   if (payErr) throw new Error(payErr.message);
 
-  const { data: order } = await supabase.from("custom_orders").select("amount_paid").eq("id", order_id).single();
   const { error: updErr } = await supabase
     .from("custom_orders")
     .update({ amount_paid: Number(order?.amount_paid ?? 0) + amount })

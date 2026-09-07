@@ -103,20 +103,21 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                     <input type="hidden" name="order_id" value={order.id} />
                     <input type="hidden" name="customer_id" value={order.customers?.id ?? ""} />
                     <div>
-                      <label className="block text-xs font-semibold text-ink-muted mb-1">Amount (₵)</label>
+                      <label htmlFor="order-payment-amount" className="field-label">Amount (₵)<span className="text-danger ml-1" aria-hidden="true">*</span></label>
                       <input
+                        id="order-payment-amount"
                         name="amount"
                         type="number"
                         step="0.01"
                         min="0"
                         max={balance}
                         required
-                        className="w-32 rounded-sm border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold"
+                        className="field-input w-32"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-ink-muted mb-1">Method</label>
-                      <select name="method" className="rounded-sm border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold">
+                      <label htmlFor="order-payment-method" className="field-label">Method</label>
+                      <select id="order-payment-method" name="method" className="field-input">
                         <option>Cash</option>
                         <option>Mobile Money</option>
                         <option>Bank Transfer</option>
@@ -124,8 +125,8 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-ink-muted mb-1">Type</label>
-                      <select name="type" className="rounded-sm border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold">
+                      <label htmlFor="order-payment-type" className="field-label">Type</label>
+                      <select id="order-payment-type" name="type" className="field-input">
                         <option>Deposit</option>
                         <option>Balance</option>
                         <option>Full</option>

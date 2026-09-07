@@ -10,6 +10,12 @@ export interface CertificateInput {
   startDate: string | null;
   completedAt: string;
   certificateNumber: string | null;
+  programName?: string | null;
+  programType?: string | null;
+  grade?: string | null;
+  finalScore?: number | null;
+  verificationCode?: string | null;
+  verificationUrl?: string | null;
 }
 
 // A4 landscape, in points (1pt = 1/72in) — the shape everyone already
@@ -58,19 +64,25 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
   drawKenteStrip(page, inner, inner, width - inner * 2, 6);
 
   drawCenteredText(page, "CERTIFICATE OF COMPLETION", centerX, height - 148, 28, serifBold, COLORS.indigo);
-  drawCenteredText(page, "Fashion & Tailoring Apprenticeship", centerX, height - 170, 12, sans, COLORS.inkMuted);
+  drawCenteredText(page, input.programName ?? "Fashion & Tailoring Apprenticeship", centerX, height - 170, 12, sansBold, COLORS.inkMuted);
+  if (input.programType === "tvet") drawCenteredText(page, "TVET COMPETENCY PROGRAMME", centerX, height - 188, 8.5, sansBold, COLORS.goldInk);
 
   drawCenteredText(page, "This certificate is proudly presented to", centerX, height - 218, 11, serif, COLORS.inkMuted);
   drawCenteredText(page, input.apprenticeName, centerX, height - 262, 32, serifBold, COLORS.goldInk);
 
   const specialisation = input.specialisation ?? "Tailoring & Dressmaking";
   const levelClause = input.trainingLevel ? ` at the ${input.trainingLevel} level` : "";
-  const body = `has successfully completed a structured apprenticeship in ${specialisation}${levelClause} at ${input.organizationName}.`;
+  const body = `has successfully completed ${input.programName ? `the ${input.programName} programme` : `a structured apprenticeship in ${specialisation}${levelClause}`} at ${input.organizationName}.`;
   const afterBody = drawWrappedCenteredText(page, body, centerX, height - 300, 460, 12.5, serif, COLORS.ink, 18);
 
   const startStr = input.startDate ? formatDate(input.startDate) : null;
   const period = startStr ? `${startStr}  –  ${formatDate(input.completedAt)}` : `Completed ${formatDate(input.completedAt)}`;
   drawCenteredText(page, period, centerX, Math.min(afterBody - 14, height - 348), 11, sansBold, COLORS.ink);
+
+  if (input.grade || typeof input.finalScore === "number") {
+    const result = `${input.grade ?? "Completed"}${typeof input.finalScore === "number" ? `  ·  ${input.finalScore.toFixed(1)}%` : ""}`;
+    drawCenteredText(page, result, centerX, height - 382, 12, sansBold, COLORS.indigo);
+  }
 
   // Signature lines
   const sigY = 118;
@@ -88,6 +100,7 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
 
   const footer = `Certificate No. ${input.certificateNumber ?? "—"}   ·   Issued ${formatDate(input.completedAt)}   ·   Sewsiness Fashion Business OS`;
   drawCenteredText(page, footer, centerX, inner + 18, 8, sans, COLORS.inkMuted);
+  if (input.verificationUrl) drawCenteredText(page, `Verify at ${input.verificationUrl}`, centerX, inner + 31, 7.5, sans, COLORS.inkMuted);
 
   return doc.save();
 }

@@ -7,76 +7,87 @@ export default function NewProductPage() {
   return (
     <div>
       <PageHead title="New Product" subtitle="This product will be immediately sellable through POS." crumb="Products / New" />
-      <form action={createProduct} className="card p-6 max-w-xl space-y-4">
+      <form action={createProduct} className="card p-5 sm:p-6 max-w-xl space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-ink-muted mb-1.5">Product name</label>
+          <label htmlFor="product-name" className="field-label">Product name<span className="text-danger ml-1" aria-hidden="true">*</span></label>
           <input
+            id="product-name"
             name="name"
             required
+            maxLength={120}
             placeholder="e.g. Women's Ready Blouse"
-            className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+            className="field-input"
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Category</label>
+            <label htmlFor="product-category" className="field-label">Category</label>
             <input
+              id="product-category"
               name="category"
               placeholder="e.g. Ready-to-wear"
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+              maxLength={120}
+              className="field-input"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-ink-muted mb-1.5">SKU</label>
+            <label htmlFor="product-sku" className="field-label">SKU</label>
             <input
+              id="product-sku"
               name="sku"
               placeholder="Optional"
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+              maxLength={80}
+              className="field-input"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Brand</label>
+            <label htmlFor="product-brand" className="field-label">Brand</label>
             <input
+              id="product-brand"
               name="brand"
               placeholder="Optional"
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+              maxLength={120}
+              className="field-input"
             />
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Selling price (₵)</label>
+            <label htmlFor="selling-price" className="field-label">Selling price (₵)<span className="text-danger ml-1" aria-hidden="true">*</span></label>
             <input
+              id="selling-price"
               name="selling_price"
               type="number"
               step="0.01"
               min="0"
               required
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+              className="field-input"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Cost price (₵)</label>
+            <label htmlFor="cost-price" className="field-label">Cost price (₵)</label>
             <input
+              id="cost-price"
               name="cost_price"
               type="number"
               step="0.01"
               min="0"
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+              className="field-input"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Stock qty</label>
+            <label htmlFor="stock-qty" className="field-label">Stock qty</label>
             <input
+              id="stock-qty"
               name="stock_qty"
               type="number"
               min="0"
               defaultValue={0}
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold"
+              className="field-input"
             />
           </div>
         </div>
-        <div className="flex items-center gap-2 pt-2">
+        <div className="flex items-center justify-end gap-2 pt-2 flex-wrap">
           <Button href="/products" variant="ghost">
             Cancel
           </Button>
