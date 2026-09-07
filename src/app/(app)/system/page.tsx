@@ -21,6 +21,11 @@ export default async function SystemOverviewPage() {
   const integrationsWithIssues = integrationRows.filter((i) => i.status === "error" || i.status === "not_configured").length;
   const openIncidents = incidentRows.filter((i) => i.status !== "resolved").length;
   const criticalOpen = incidentRows.filter((i) => i.status !== "resolved" && i.severity === "critical").length;
+  const attentionItems = [
+    ...(criticalOpen > 0 ? [{ href: "/system/incidents", label: `${criticalOpen} critical incident${criticalOpen === 1 ? "" : "s"} open`, tone: "bg-danger-soft text-danger" }] : []),
+    ...(integrationsWithIssues > 0 ? [{ href: "/system/integrations", label: `${integrationsWithIssues} integration${integrationsWithIssues === 1 ? "" : "s"} need attention`, tone: "bg-warning-soft text-warning" }] : []),
+    ...(openIncidents > criticalOpen ? [{ href: "/system/incidents", label: `${openIncidents - criticalOpen} other open incident${openIncidents - criticalOpen === 1 ? "" : "s"}`, tone: "bg-warning-soft text-warning" }] : []),
+  ];
 
   return (
     <div>
@@ -36,6 +41,27 @@ export default async function SystemOverviewPage() {
         <StatCard label="Open Incidents" value={openIncidents} accent={openIncidents > 0} />
         <StatCard label="Critical & Open" value={criticalOpen} accent={criticalOpen > 0} />
       </div>
+
+      {attentionItems.length > 0 ? (
+        <section className="card p-5 mb-6 border-danger/30">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <h2 className="font-display text-lg font-semibold text-ink">Needs attention now</h2>
+              <p className="text-xs text-ink-muted mt-0.5">Resolve system issues before they become user-facing problems.</p>
+            </div>
+            <span className="badge bg-danger-soft text-danger">{attentionItems.length} alert{attentionItems.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="space-y-2">
+            {attentionItems.map((item) => (
+              <a key={item.label} href={item.href} className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${item.tone}`}>
+                <span>{item.label}</span><span aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="callout mb-6"><strong>System healthy.</strong> No open incidents or integration failures detected.</div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <a href="/system/flags" className="card p-5 hover:border-border-strong transition-colors block">

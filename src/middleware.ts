@@ -34,6 +34,10 @@ const SYSTEM_ADMIN_HOME = "/system";
 
 const DEFAULT_HOME = "/dashboard";
 
+function isAllowedPath(pathname: string, allowedPath: string) {
+  return pathname === allowedPath || pathname.startsWith(`${allowedPath}/`);
+}
+
 export async function middleware(request: NextRequest) {
   // Computed up front because it doesn't depend on Supabase at all — if
   // everything below throws (missing/misconfigured env vars, Supabase
@@ -45,7 +49,7 @@ export async function middleware(request: NextRequest) {
   // with "/") so it doesn't accidentally make the whole app public.
   const isPublic =
     request.nextUrl.pathname === "/" ||
-    PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+    PUBLIC_PATHS.some((p) => isAllowedPath(request.nextUrl.pathname, p));
 
   // A misconfigured or unreachable Supabase project must never take the
   // *entire* app down (including pages that don't need auth). It's
@@ -152,7 +156,7 @@ export async function middleware(request: NextRequest) {
       if (
         role === "super_admin" &&
         !isPublic &&
-        !SUPER_ADMIN_ALLOWED_PATHS.some((p) => request.nextUrl.pathname.startsWith(p))
+        !SUPER_ADMIN_ALLOWED_PATHS.some((p) => isAllowedPath(request.nextUrl.pathname, p))
       ) {
         const url = request.nextUrl.clone();
         url.pathname = SUPER_ADMIN_HOME;
@@ -167,7 +171,7 @@ export async function middleware(request: NextRequest) {
       if (
         role === "system_admin" &&
         !isPublic &&
-        !SYSTEM_ADMIN_ALLOWED_PATHS.some((p) => request.nextUrl.pathname.startsWith(p))
+        !SYSTEM_ADMIN_ALLOWED_PATHS.some((p) => isAllowedPath(request.nextUrl.pathname, p))
       ) {
         const url = request.nextUrl.clone();
         url.pathname = SYSTEM_ADMIN_HOME;

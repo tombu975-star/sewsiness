@@ -28,7 +28,6 @@ const ROLE_FILTERS: (Role | "all")[] = [
   "freelancer",
   "trainer",
   "super_admin",
-  "system_admin",
 ];
 
 export default async function PlatformUsersPage({
@@ -47,6 +46,7 @@ export default async function PlatformUsersPage({
   let query = supabase
     .from("profiles")
     .select("id, full_name, role, created_at, suspended_at, organization:organization_id(name)")
+    .neq("role", "system_admin")
     .order("created_at", { ascending: false });
   if (roleFilter) query = query.eq("role", roleFilter);
   if (q) query = query.ilike("full_name", `%${q}%`);

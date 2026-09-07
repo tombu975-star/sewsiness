@@ -4,7 +4,7 @@ import { PageHead } from "@/components/PageHead";
 import { PermissionToggle } from "./PermissionToggle";
 import type { Role } from "@/lib/types";
 
-const ROLES: Role[] = ["super_admin", "system_admin", "owner", "manager", "staff", "trainer", "apprentice", "freelancer"];
+const ROLES: Role[] = ["super_admin", "owner", "manager", "staff", "trainer", "apprentice", "freelancer"];
 const ROLE_LABEL: Record<Role, string> = {
   super_admin: "Super Admin",
   system_admin: "System Admin",

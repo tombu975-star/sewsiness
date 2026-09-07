@@ -112,7 +112,7 @@ export const SIDEBAR: NavItem[] = [
     children: [
       { label: "Apprentices", href: "/apprentices" },
       { label: "Madam Hub", href: "/apprentice-madam-hub" },
-      { label: "Training Programs", href: "/training-programs", roles: ["owner", "manager", "trainer"] },
+      { label: "Training Programs", href: "/training-programs" },
       { label: "Training Plans", href: "/training-plans" },
       { label: "Portfolios", href: "/portfolios" },
     ],
@@ -376,6 +376,10 @@ const PLATFORM_ALLOWED_PATHS: Partial<Record<Role, string[]>> = {
   system_admin: ["/system", "/notifications", "/settings"],
 };
 
+function isAllowedPath(pathname: string, allowedPath: string) {
+  return pathname === allowedPath || pathname.startsWith(`${allowedPath}/`);
+}
+
 // Resolves where a just-logged-in user should land, honoring a
 // "?next=" redirect target (e.g. from a bookmarked link) but never for
 // Super Admin / System Admin outside their own walled-off paths — those
@@ -388,7 +392,7 @@ export function resolveLoginDestination(role: Role, next?: string | null): strin
   if (!next) return home;
 
   const allowed = PLATFORM_ALLOWED_PATHS[role];
-  if (allowed && !allowed.some((p) => next.startsWith(p))) {
+  if (allowed && !allowed.some((p) => isAllowedPath(next, p))) {
     return home;
   }
   return next;
