@@ -13,7 +13,8 @@ export default async function StaffPage() {
   await requirePageRole(["owner", "manager"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();
+  const { data: profile } = await supabase.from("profiles").select("organization_id, role").eq("id", user!.id).single();
+  const canDeleteUsers = profile?.role === "owner";
 
   const { data: staff } = await supabase
     .from("profiles")
@@ -67,14 +68,14 @@ export default async function StaffPage() {
                 ) : (
                   <span className="text-ink-faint">—</span>
                 ),
-                action: (
+                action: canDeleteUsers ? (
                   <form action={deleteUser} className="inline-block">
                     <input type="hidden" name="profile_id" value={s.id} />
                     <SubmitButton variant="outline" pendingLabel="Deleting…" className="!px-2.5 !py-1 !text-[11px] border-danger/40 text-danger hover:bg-danger-soft">
                       Delete
                     </SubmitButton>
                   </form>
-                ),
+                ) : null,
               },
             };
           })}

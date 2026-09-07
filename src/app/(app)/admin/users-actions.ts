@@ -30,9 +30,9 @@ async function requireOrgAdminForUserDelete() {
 
   if (!profile) throw new Error("Your account profile could not be found.");
   if (profile.role === "super_admin") return { user, profile };
-  if (profile.role === "owner" || profile.role === "manager") return { user, profile };
+  if (profile.role === "owner") return { user, profile };
 
-  throw new Error("Only Super Admin or an Owner/Manager can delete users.");
+  throw new Error("Only Super Admin or an Owner can delete users.");
 }
 
 // Suspends a business member. This does not delete anything they created —
