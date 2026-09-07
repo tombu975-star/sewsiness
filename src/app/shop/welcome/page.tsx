@@ -1,6 +1,11 @@
+import Image from "next/image";
 import { Button } from "@/components/Button";
+import { getPlatformSettings } from "@/lib/platform-settings";
 
-export default function WelcomePage() {
+export default async function WelcomePage() {
+  const platform = await getPlatformSettings();
+  const heroImage = platform.coverImages[0] ?? "/images/marketing/cover-1-atelier-review.jpg";
+
   return (
     <div className="min-h-screen bg-canvas">
       <div className="kente-strip" />
@@ -19,23 +24,26 @@ export default function WelcomePage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-col px-5 pb-12 pt-8 sm:px-8 sm:pt-14">
-        <section className="card relative overflow-hidden bg-surface px-6 py-10 sm:px-12 sm:py-16">
-          <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-gold-soft opacity-70" />
-          <div className="relative max-w-2xl">
-            <div className="eyebrow">Customer marketplace</div>
-            <h1 className="mt-5 font-display text-4xl font-semibold leading-tight text-ink sm:text-6xl">
-              Find your fit. Wear your story.
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-ink-muted sm:text-lg">
-              Discover skilled tailors, browse original designs, and create clothing made for the way you live.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button href="/shop/home" className="w-full py-3 sm:w-auto sm:px-7">
-                Explore the marketplace
-              </Button>
-              <Button href="/signup" variant="outline" className="w-full py-3 sm:w-auto sm:px-7">
-                Create an account
-              </Button>
+        <section className="card relative min-h-[560px] overflow-hidden bg-indigo px-6 py-10 sm:px-12 sm:py-16">
+          <Image src={heroImage} alt="Tailor and customer reviewing fabric options" fill className="object-cover opacity-80" sizes="(max-width: 1024px) 100vw, 1200px" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#17151b]/90 via-[#17151b]/55 to-[#17151b]/20" />
+          <div className="relative z-10 flex min-h-[470px] items-end">
+            <div className="max-w-2xl">
+              <div className="eyebrow text-[#f7ebd2]">Customer marketplace</div>
+              <h1 className="mt-5 font-display text-4xl font-semibold leading-tight text-white sm:text-6xl">
+                Find your fit. Wear your story.
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-7 text-white/80 sm:text-lg">
+                Discover skilled tailors, browse original designs, and create clothing made for the way you live.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button href="/shop/home" className="w-full bg-gold !text-ink hover:brightness-105 sm:w-auto sm:px-7">
+                  Explore the marketplace
+                </Button>
+                <Button href="/shop/account" variant="outline" className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20 sm:w-auto sm:px-7">
+                  Create customer account
+                </Button>
+              </div>
             </div>
           </div>
         </section>
