@@ -5,6 +5,7 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import { OrderStatusGlance } from "@/components/dashboard/OrderStatusGlance";
+import { AdvisoryAlert } from "@/components/dashboard/AdvisoryAlert";
 import { markAdvisoryNoteSeen } from "../admin/actions";
 import type { Role } from "@/lib/types";
 
@@ -80,6 +81,7 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
 
   return (
     <div>
+      <AdvisoryAlert notes={((advisoryNotes ?? []) as { id: string; message: string; created_at: string }[])} />
       {((advisoryNotes ?? []) as { id: string; message: string; created_at: string }[]).map((note) => (
         <div key={note.id} className="callout flex items-start justify-between gap-3 mb-3">
           <div>
