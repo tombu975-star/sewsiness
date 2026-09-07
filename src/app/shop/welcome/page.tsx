@@ -2,43 +2,58 @@ import { Button } from "@/components/Button";
 
 export default function WelcomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-canvas pb-8">
-      <div className="relative mx-4 mt-4 h-[58vh] min-h-[400px] overflow-hidden rounded-[28px] bg-indigo">
-        <svg viewBox="0 0 400 520" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="heroBg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#1b2a4d" />
-              <stop offset="100%" stopColor="#0e1830" />
-            </linearGradient>
-          </defs>
-          <rect width="400" height="520" fill="url(#heroBg)" />
-          <g opacity="0.9">
-            <ellipse cx="200" cy="150" rx="34" ry="40" fill="#f5c99b" />
-            <path
-              d="M120 210c0-38 36-58 80-58s80 20 80 58l14 170c2 22-16 40-38 40H144c-22 0-40-18-38-40l14-170Z"
-              fill="#fbbf24"
-            />
-            <path d="M150 200c18 14 82 14 100 0" stroke="#0e1830" strokeWidth="4" fill="none" strokeLinecap="round" />
-            <rect x="94" y="330" width="212" height="10" rx="5" fill="#0e1830" opacity="0.25" />
-          </g>
-          <g stroke="#e7eaf3" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.8">
-            <path d="M60 430c30-20 60 20 90 0s60-20 90 0 60 20 90 0" />
-          </g>
-          <circle cx="330" cy="90" r="3" fill="#fbbf24" />
-          <circle cx="60" cy="120" r="3" fill="#fbbf24" />
-          <circle cx="300" cy="440" r="3" fill="#e7eaf3" />
-        </svg>
-      </div>
-
-      <div className="flex flex-1 flex-col items-center px-8 pt-8 text-center">
-        <h1 className="font-display text-[26px] font-semibold text-ink">Tailor-made clothing</h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          Tailor-made clothing offers unmatched comfort, style, and precision.
-        </p>
-        <Button href="/shop/home" className="mt-6 w-full py-3.5 text-base">
-          Get started
+    <div className="min-h-screen bg-canvas">
+      <div className="kente-strip" />
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
+        <div className="flex items-center gap-2.5">
+          <svg width="28" height="28" viewBox="-270 -10 520 500" aria-hidden="true">
+            <path d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385" fill="none" stroke="#C9A6E8" strokeWidth="78" strokeLinecap="round" />
+            <path d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265" fill="none" stroke="#FBBF24" strokeWidth="28" strokeLinecap="round" />
+            <path d="M-25 205 L145 20" stroke="#FBBF24" strokeWidth="14" strokeLinecap="round" />
+          </svg>
+          <span className="font-display text-sm font-bold tracking-wide text-ink">SEWSINESS</span>
+        </div>
+        <Button href="/login" variant="outline" className="!px-4 !py-2 text-xs">
+          Sign in
         </Button>
-      </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-6xl flex-col px-5 pb-12 pt-8 sm:px-8 sm:pt-14">
+        <section className="card relative overflow-hidden bg-surface px-6 py-10 sm:px-12 sm:py-16">
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-gold-soft opacity-70" />
+          <div className="relative max-w-2xl">
+            <div className="eyebrow">Customer marketplace</div>
+            <h1 className="mt-5 font-display text-4xl font-semibold leading-tight text-ink sm:text-6xl">
+              Find your fit. Wear your story.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-ink-muted sm:text-lg">
+              Discover skilled tailors, browse original designs, and create clothing made for the way you live.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button href="/shop/home" className="w-full py-3 sm:w-auto sm:px-7">
+                Explore the marketplace
+              </Button>
+              <Button href="/signup" variant="outline" className="w-full py-3 sm:w-auto sm:px-7">
+                Create an account
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          {[
+            ["01", "Browse designs", "Explore pieces and inspiration from local makers."],
+            ["02", "Choose your tailor", "Find a specialist who understands your style."],
+            ["03", "Make it yours", "Share your measurements and bring the look to life."],
+          ].map(([number, title, description]) => (
+            <div key={number} className="card bg-surface p-5">
+              <span className="font-mono text-xs font-semibold text-gold-ink">{number}</span>
+              <h2 className="mt-4 font-display text-base font-semibold text-ink">{title}</h2>
+              <p className="mt-1.5 text-sm leading-6 text-ink-muted">{description}</p>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
