@@ -7,6 +7,74 @@ import { requireRole } from "@/lib/auth/require-role";
 
 const ANY_ROLE = ["owner", "manager", "staff", "trainer", "apprentice", "freelancer", "super_admin", "system_admin"] as const;
 
+export interface ProfileUpdateState {
+  error?: string;
+  success?: string;
+}
+
+export interface ChangePasswordState {
+  error?: string;
+  success?: string;
+}
+
+export async function updateProfile(_prevState: ProfileUpdateState, formData: FormData): Promise<ProfileUpdateState> {
+  try {
+    const { user } = await requireRole([...ANY_ROLE]);
+    const supabase = createClient();
+
+    const full_name = String(formData.get("full_name") ?? "").trim();
+    if (!full_name) throw new Error("Name is required.");
+    if (full_name.length > 120) throw new Error("Name must be 120 characters or fewer.");
+    const phone = String(formData.get("phone") ?? "").trim();
+    if (phone.length > 40 || (phone && !/^[0-9+().\-\s]+$/.test(phone))) throw new Error("Enter a valid phone number.");
+
+    const { error } = await supabase.from("profiles").update({ full_name, phone: phone || null }).eq("id", user.id);
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/settings");
+    revalidatePath("/account");
+    return { success: "Profile details updated." };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not update your profile." };
+  }
+}
+
+export async function changePassword(
+  _prevState: ChangePasswordState,
+  formData: FormData
+): Promise<ChangePasswordState> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) return { error: "Not signed in." };
+
+  const currentPassword = String(formData.get("current_password") ?? "");
+  const newPassword = String(formData.get("new_password") ?? "");
+  const confirmPassword = String(formData.get("confirm_password") ?? "");
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { error: "All fields are required." };
+  }
+  if (newPassword.length < 8) {
+    return { error: "New password must be at least 8 characters." };
+  }
+  if (newPassword !== confirmPassword) {
+    return { error: "New password and confirmation don't match." };
+  }
+
+  const { error: verifyErr } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (verifyErr) return { error: "Current password is incorrect." };
+
+  const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword });
+  if (updateErr) return { error: updateErr.message };
+
+  revalidatePath("/settings");
+  revalidatePath("/account");
+  return { success: "Password updated successfully." };
+}
+
 // Logo/cover-image/advertisement uploads used to receive the raw file as
 // part of these Server Actions' own FormData body, uploaded server-side
 // via the service-role client. That hits the same wall
