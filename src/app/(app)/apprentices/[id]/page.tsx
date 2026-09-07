@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { requirePageRole } from "@/lib/auth/require-role";
-import { MarkTrainingCompleteButton } from "../MarkTrainingCompleteButton";
 
 export default async function ApprenticeDetailPage({ params }: { params: { id: string } }) {
   const { profile } = await requirePageRole(["owner", "manager", "trainer"]);
@@ -34,7 +33,15 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
     .eq("apprentice_id", params.id)
     .order("created_at", { ascending: false });
 
+  const { data: tasks } = await supabase
+    .from("training_tasks")
+    .select("id, title, status, score")
+    .eq("apprentice_id", params.id)
+    .order("created_at", { ascending: false });
+
   const rows = (portfolio ?? []) as any[];
+  const taskRows = (tasks ?? []) as any[];
+  const approvedTasks = taskRows.filter((task) => task.status === "Approved").length;
   const isCompleted = Boolean(ap?.completed_at);
 
   return (
@@ -88,13 +95,27 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
           ) : (
             <div>
               <p className="text-sm text-ink-muted mb-4">
-                Training is still in progress. Mark it complete once the apprentice has finished — this issues a
-                certificate with a unique number and can&rsquo;t be undone.
+                Training is still in progress. The certificate will become available automatically when every assigned
+                task has been submitted and approved by the trainer.
               </p>
-              <MarkTrainingCompleteButton apprenticeId={params.id} />
+              <div className="rounded-lg bg-sunken px-3 py-2 text-sm text-ink">
+                Progress: <strong>{approvedTasks} / {taskRows.length}</strong> tasks approved
+              </div>
             </div>
           )}
         </div>
+      </div>
+
+      <div className="card mb-6 divide-y divide-border">
+        <div className="p-4 font-display text-[15px] font-semibold text-ink">Training Tasks</div>
+        {taskRows.length === 0 ? (
+          <div className="p-4 text-sm text-ink-muted">No tasks assigned yet.</div>
+        ) : taskRows.map((task) => (
+          <div key={task.id} className="flex items-center justify-between gap-3 p-4">
+            <span className="text-sm text-ink">{task.title}</span>
+            <span className="text-xs font-semibold text-ink-muted">{task.status}{task.score !== null ? ` · ${task.score}/100` : ""}</span>
+          </div>
+        ))}
       </div>
 
       <div className="flex items-center justify-between mb-3">

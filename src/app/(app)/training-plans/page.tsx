@@ -3,7 +3,8 @@ import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { assignTask } from "./actions";
-import { TaskStatusSelect } from "./TaskStatusSelect";
+import { TaskSubmissionForm } from "./TaskSubmissionForm";
+import { TaskReviewForm } from "./TaskReviewForm";
 import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function TrainingPlansPage() {
@@ -15,7 +16,7 @@ export default async function TrainingPlansPage() {
 
   let query = supabase
     .from("training_tasks")
-    .select("id, title, status, due_date, apprentice:apprentice_id(id, full_name)")
+    .select("id, title, status, due_date, submission_text, score, feedback, apprentice:apprentice_id(id, full_name)")
     .eq("organization_id", profile?.organization_id ?? "")
     .order("created_at", { ascending: false });
   if (isApprentice) query = query.eq("apprentice_id", user!.id);
@@ -60,15 +61,30 @@ export default async function TrainingPlansPage() {
       ) : (
         <div className="card divide-y divide-border">
           {rows.map((t) => (
-            <div key={t.id} className="p-3.5 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-medium text-ink">{t.title}</div>
-                <div className="text-xs text-ink-muted">
-                  {!isApprentice && `${t.apprentice?.full_name} · `}
-                  {t.due_date ? `Due ${t.due_date}` : "No due date"}
+            <div key={t.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-ink">{t.title}</div>
+                  <div className="text-xs text-ink-muted">
+                    {!isApprentice && `${t.apprentice?.full_name} · `}
+                    {t.due_date ? `Due ${t.due_date}` : "No due date"}
+                  </div>
                 </div>
+                <span className="shrink-0 rounded-full bg-sunken px-2.5 py-1 text-xs font-semibold text-ink">{t.status}</span>
               </div>
-              <TaskStatusSelect taskId={t.id} current={t.status} />
+              {isApprentice && ["Assigned", "In Progress", "Needs Changes"].includes(t.status) && (
+                <TaskSubmissionForm taskId={t.id} existing={t.submission_text} />
+              )}
+              {!isApprentice && t.status === "Submitted" && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Apprentice submission</div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{t.submission_text}</p>
+                  <TaskReviewForm taskId={t.id} />
+                </div>
+              )}
+              {isApprentice && t.feedback && (
+                <p className="mt-3 border-t border-border pt-3 text-xs text-ink-muted"><strong>Trainer feedback:</strong> {t.feedback}</p>
+              )}
             </div>
           ))}
         </div>

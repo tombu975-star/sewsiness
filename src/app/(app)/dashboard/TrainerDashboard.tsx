@@ -35,9 +35,9 @@ export async function TrainerDashboard({ userId }: { userId: string }) {
     : { data: [] };
 
   const taskRows = (tasks ?? []) as any[];
-  const doneCount = taskRows.filter((t) => t.status === "Done").length;
+  const doneCount = taskRows.filter((t) => t.status === "Approved").length;
   const openTasks = taskRows
-    .filter((t) => t.status !== "Done")
+    .filter((t) => t.status !== "Approved")
     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))
     .slice(0, 6);
   const nameById = new Map(rows.map((a) => [a.profile_id, a.profiles?.full_name]));

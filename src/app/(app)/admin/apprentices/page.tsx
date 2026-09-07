@@ -26,7 +26,7 @@ export default async function PlatformApprenticesPage() {
   const taskRows = (tasks ?? []) as any[];
 
   const businessesWithApprentices = new Set(apprenticeRows.map((a) => a.organization_id)).size;
-  const doneTasks = taskRows.filter((t) => t.status === "Done").length;
+  const doneTasks = taskRows.filter((t) => t.status === "Approved").length;
   const completionRate = taskRows.length ? Math.round((doneTasks / taskRows.length) * 100) : null;
 
   // Per-business breakdown for the table below.
@@ -41,7 +41,7 @@ export default async function PlatformApprenticesPage() {
     const entry = byOrg.get(t.organization_id);
     if (!entry) continue;
     entry.tasks += 1;
-    if (t.status === "Done") entry.done += 1;
+    if (t.status === "Approved") entry.done += 1;
   }
   const orgRows = Array.from(byOrg.values()).sort((a, b) => b.apprentices - a.apprentices);
 

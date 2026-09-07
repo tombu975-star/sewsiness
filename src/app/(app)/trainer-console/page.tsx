@@ -24,7 +24,7 @@ export default async function TrainerConsolePage() {
   const { data: tasks } = ids.length
     ? await supabase.from("training_tasks").select("apprentice_id, status").in("apprentice_id", ids)
     : { data: [] };
-  const doneCount = (tasks ?? []).filter((t: any) => t.status === "Done").length;
+  const doneCount = (tasks ?? []).filter((t: any) => t.status === "Approved").length;
 
   return (
     <div>

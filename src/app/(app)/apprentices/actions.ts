@@ -109,6 +109,15 @@ export async function markTrainingComplete(apprenticeId: string): Promise<MarkCo
     }
     if (ap.completed_at) return { error: "Training was already marked complete." };
 
+    const { data: tasks } = await admin
+      .from("training_tasks")
+      .select("status")
+      .eq("apprentice_id", apprenticeId)
+      .eq("organization_id", profile.organization_id);
+    if (!tasks?.length || tasks.some((task) => task.status !== "Approved")) {
+      return { error: "Every assigned task must be approved before training can be completed." };
+    }
+
     const certificateNumber = `SEW-${new Date().getFullYear()}-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     const { error: updateErr } = await admin

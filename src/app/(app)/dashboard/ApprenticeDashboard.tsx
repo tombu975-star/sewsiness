@@ -33,8 +33,8 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
   ]);
 
   const taskRows = (tasks ?? []) as any[];
-  const doneCount = taskRows.filter((t) => t.status === "Done").length;
-  const openTasks = taskRows.filter((t) => t.status !== "Done").slice(0, 6);
+  const doneCount = taskRows.filter((t) => t.status === "Approved").length;
+  const openTasks = taskRows.filter((t) => t.status !== "Approved").slice(0, 6);
   const trainerName = (apprenticeProfile as any)?.trainer?.full_name ?? null;
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
