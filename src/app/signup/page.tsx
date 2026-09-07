@@ -1,5 +1,7 @@
 import { SignupForm } from "./SignupForm";
+import { getPlatformSettings } from "@/lib/platform-settings";
 
-export default function SignupPage() {
-  return <SignupForm />;
+export default async function SignupPage() {
+  const platform = await getPlatformSettings();
+  return <SignupForm platform={platform} />;
 }

@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
+import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
+import { recordInvite } from "@/lib/invites";
 
 async function requireSuperAdmin() {
   const supabase = createClient();
@@ -48,14 +50,14 @@ export async function enrollBusiness(_prevState: ActionState, formData: FormData
       .insert({ name: businessName, region: region || null, plan })
       .select("id")
       .single();
-    if (orgErr) return { error: orgErr.message };
+    if (orgErr) return { error: toSafeErrorMessage(orgErr, "Couldn't create the business. Please try again.") };
 
     const { data: branch, error: branchErr } = await admin
       .from("branches")
       .insert({ organization_id: org.id, name: "Main", city: region || null })
       .select("id")
       .single();
-    if (branchErr) return { error: branchErr.message };
+    if (branchErr) return { error: toSafeErrorMessage(branchErr, "Couldn't set up the business's branch. Please try again.") };
 
     const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(ownerEmail, {
       data: { full_name: ownerName, role: "owner" },
@@ -74,7 +76,22 @@ export async function enrollBusiness(_prevState: ActionState, formData: FormData
       full_name: ownerName,
       role: "owner",
     });
-    if (profileErr) return { error: profileErr.message };
+    if (profileErr) return { error: toSafeErrorMessage(profileErr, "Couldn't finish creating the owner's account. Please try again.") };
+
+    // Without this, the owner invite has no row in `invites` at all —
+    // /admin/users has nothing to look up, so its Resend button never
+    // renders for a business owner (it renders fine for staff/
+    // apprentices/freelancers, which all call recordInvite() the same
+    // way — this was the one invite path that didn't). Same 30-minute
+    // expiry + Resend support as every other invite type.
+    await recordInvite(admin, {
+      organization_id: org.id,
+      user_id: invited.user.id,
+      email: ownerEmail,
+      full_name: ownerName,
+      role: "owner",
+      invited_by: enroller.id,
+    });
 
     await admin.from("audit_logs").insert({
       organization_id: org.id,

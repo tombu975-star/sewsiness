@@ -4,8 +4,10 @@ import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/Button";
 import { DataTable } from "@/components/DataTable";
 import { EmptyState } from "@/components/EmptyState";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function MadamHubPage() {
+  await requirePageRole(["owner", "manager", "trainer"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

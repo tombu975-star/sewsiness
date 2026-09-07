@@ -3,8 +3,12 @@ import { PageHead } from "@/components/PageHead";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
+import { requirePageRole } from "@/lib/auth/require-role";
+import { InviteStatusBadge } from "@/components/InviteStatusBadge";
+import { ResendInviteButton } from "@/components/ResendInviteButton";
 
 export default async function ApprenticesPage() {
+  await requirePageRole(["owner", "manager", "trainer"]);
   const supabase = createClient();
   const {
     data: { user },
@@ -17,6 +21,12 @@ export default async function ApprenticesPage() {
     .eq("organization_id", profile?.organization_id ?? "")
     .eq("role", "apprentice")
     .order("full_name");
+
+  const { data: invites } = await supabase
+    .from("invites")
+    .select("id, user_id, status, expires_at")
+    .eq("organization_id", profile?.organization_id ?? "");
+  const inviteByUser = new Map((invites ?? []).map((i: any) => [i.user_id, i]));
 
   const rows = (apprentices ?? []) as any[];
 
@@ -44,17 +54,32 @@ export default async function ApprenticesPage() {
             { key: "specialisation", label: "Specialisation" },
             { key: "trainer", label: "Trainer" },
             { key: "start", label: "Start Date" },
+            { key: "invite", label: "Invite" },
           ]}
-          rows={rows.map((a) => ({
-            id: a.id,
-            cells: {
-              name: a.full_name,
-              level: a.apprentice_profiles?.[0]?.training_level ?? "—",
-              specialisation: a.apprentice_profiles?.[0]?.specialisation ?? "—",
-              trainer: a.apprentice_profiles?.[0]?.trainer?.full_name ?? "—",
-              start: a.apprentice_profiles?.[0]?.start_date ?? "—",
-            },
-          }))}
+          rows={rows.map((a) => {
+            const invite = inviteByUser.get(a.id);
+            return {
+              id: a.id,
+              href: `/apprentices/${a.id}`,
+              cells: {
+                name: a.full_name,
+                level: a.apprentice_profiles?.[0]?.training_level ?? "—",
+                specialisation: a.apprentice_profiles?.[0]?.specialisation ?? "—",
+                trainer: a.apprentice_profiles?.[0]?.trainer?.full_name ?? "—",
+                start: a.apprentice_profiles?.[0]?.start_date ?? "—",
+                invite: invite ? (
+                  <div>
+                    <InviteStatusBadge status={invite.status} expiresAt={invite.expires_at} />
+                    {invite.status !== "revoked" && (
+                      <ResendInviteButton inviteId={invite.id} revalidatePath="/apprentices" status={invite.status} />
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-ink-faint">—</span>
+                ),
+              },
+            };
+          })}
         />
       )}
     </div>

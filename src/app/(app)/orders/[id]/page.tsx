@@ -7,14 +7,15 @@ import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Tabs } from "@/components/Tabs";
 import { TapeStepper } from "@/components/TapeStepper";
+import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
 import { recordOrderPayment } from "../actions";
 import { OrderStatusSelect } from "./OrderStatusSelect";
 import { ProductionTab, FittingsTab, AlterationsTab, QualityControlTab, CostingTab } from "./OrderWorkflowTabs";
 
-const ORDER_STATUSES = ["Pending", "In Progress", "Review", "Completed", "Overdue", "Cancelled"];
+const ORDER_STATUSES = ["New", "Confirmed", "In Production", "Ready", "Delivered", "Cancelled"];
 const PRODUCTION_STAGES = ["Cutting", "Sewing", "Finishing", "Pressing", "Ready"];
 
-export default async function OrderDetailPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailPage({ params, searchParams }: { params: { id: string }; searchParams: { tab?: string } }) {
   const supabase = createClient();
   const { data: order } = await supabase
     .from("custom_orders")
@@ -71,11 +72,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         })()}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <StatCard label="Customer" value={order.customers?.full_name ?? "—"} />
         <StatCard label="Due Date" value={order.due_date ?? "—"} />
         <StatCard label="Total" value={`₵${Number(order.total_amount).toFixed(2)}`} />
+        <StatCard label="Paid" value={`₵${Number(order.amount_paid).toFixed(2)}`} />
         <StatCard label="Balance" value={`₵${balance.toFixed(2)}`} accent />
+        <StatCard label="Payment" value={<PaymentStatusBadge total={Number(order.total_amount)} paid={Number(order.amount_paid)} />} />
       </div>
 
       <div className="mb-5">
@@ -83,11 +86,18 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       </div>
 
       <Tabs
+        defaultLabel={searchParams.tab === "production" ? "Production" : undefined}
         tabs={[
           {
             label: "Payments",
             content: (
               <div className="space-y-5">
+                {balance > 0 && (
+                  <div className="rounded-lg bg-warning-soft text-warning px-4 py-3 text-sm font-semibold flex items-center gap-2">
+                    <span aria-hidden="true">⚠</span>
+                    ₵{balance.toFixed(2)} Outstanding
+                  </div>
+                )}
                 {balance > 0 && (
                   <form action={recordOrderPayment} className="card p-4 flex flex-wrap items-end gap-3">
                     <input type="hidden" name="order_id" value={order.id} />

@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { PosTerminal } from "./PosTerminal";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function PosPage() {
+  await requirePageRole(["owner", "manager", "staff"]);
   const supabase = createClient();
   const {
     data: { user },

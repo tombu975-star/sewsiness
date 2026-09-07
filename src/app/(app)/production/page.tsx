@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 const STAGES = ["Cutting", "Sewing", "Finishing", "Pressing", "Ready"];
 const STAGE_COLORS: Record<string, string> = {
@@ -31,6 +32,7 @@ function currentStage(orderStages: { stage: string; status: string }[]) {
 }
 
 export default async function ProductionPage() {
+  await requirePageRole(["owner", "manager", "staff"]);
   const supabase = createClient();
   const {
     data: { user },

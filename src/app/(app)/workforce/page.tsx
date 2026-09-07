@@ -2,8 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/Button";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function WorkforcePage() {
+  await requirePageRole(["owner", "manager"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

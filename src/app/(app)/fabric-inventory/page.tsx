@@ -6,8 +6,10 @@ import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StockButtons } from "./StockButtons";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function FabricInventoryPage() {
+  await requirePageRole(["owner", "manager"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

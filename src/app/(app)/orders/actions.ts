@@ -37,7 +37,7 @@ export async function createOrder(formData: FormData) {
       due_date: formData.get("due_date") || null,
       total_amount: Number(formData.get("total_amount") || 0),
       amount_paid: 0,
-      status: "Pending",
+      status: "New",
       priority: (formData.get("priority") as string) || "Normal",
     })
     .select("id")
@@ -45,8 +45,55 @@ export async function createOrder(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  const initialPayment = Number(formData.get("initial_payment") || 0);
+  const totalAmount = Number(formData.get("total_amount") || 0);
+  if (initialPayment > 0) {
+    if (initialPayment > totalAmount) throw new Error("Initial payment cannot be more than the order total");
+    const { error: paymentError } = await supabase.from("payments").insert({
+      organization_id: profile?.organization_id,
+      branch_id: profile?.branch_id ?? null,
+      order_id: data.id,
+      customer_id,
+      amount: initialPayment,
+      method: String(formData.get("payment_method") || "Cash"),
+      type: String(formData.get("payment_type") || "Deposit"),
+    });
+    if (paymentError) throw new Error(paymentError.message);
+    const { error: amountError } = await supabase
+      .from("custom_orders")
+      .update({ amount_paid: initialPayment })
+      .eq("id", data.id);
+    if (amountError) throw new Error(amountError.message);
+  }
+
+  const measurementAction = String(formData.get("measurement_action") ?? "skip");
+  if (measurementAction === "save") {
+    const num = (key: string) => (formData.get(key) ? Number(formData.get(key)) : null);
+    const hasAnyValue = ["chest", "waist", "hips", "shoulder", "sleeve_length", "garment_length"].some(
+      (key) => formData.get(key) && String(formData.get(key)).trim() !== ""
+    );
+    if (hasAnyValue) {
+      const { error: measurementError } = await supabase.from("measurements").insert({
+        organization_id: profile?.organization_id,
+        customer_id,
+        label: (formData.get("measurement_label") as string) || "Standard",
+        chest: num("chest"),
+        waist: num("waist"),
+        hips: num("hips"),
+        shoulder: num("shoulder"),
+        sleeve_length: num("sleeve_length"),
+        garment_length: num("garment_length"),
+        notes: formData.get("measurement_notes") || null,
+      });
+      if (measurementError) throw new Error(measurementError.message);
+      revalidatePath("/measurements");
+      revalidatePath(`/customers/${customer_id}`);
+    }
+  }
+
   revalidatePath("/orders");
-  redirect(`/orders/${data.id}`);
+  revalidatePath("/payments");
+  redirect(`/orders/${data.id}/confirmation`);
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {

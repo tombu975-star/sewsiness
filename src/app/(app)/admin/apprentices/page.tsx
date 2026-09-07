@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { EmptyState } from "@/components/EmptyState";
 
 export default async function PlatformApprenticesPage() {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
   // RLS ("super admin can read all ...") on profiles, apprentice_profiles

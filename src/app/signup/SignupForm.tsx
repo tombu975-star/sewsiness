@@ -4,10 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AuthCover } from "@/components/auth/AuthCover";
 import { submitBusinessSignup } from "./actions";
+import type { PlatformSettings } from "@/lib/platform-settings";
+import { BUSINESS_CATEGORIES, LEGAL_ENTITY_TYPES, TIN_PATTERN } from "@/lib/onboarding/identity";
 
-type Step = "account" | "ghana-card" | "selfie" | "review";
+type Step = "account" | "profile" | "ghana-card" | "selfie" | "review";
 const STEPS: { key: Step; label: string }[] = [
   { key: "account", label: "Business & Owner" },
+  { key: "profile", label: "Business Profile" },
   { key: "ghana-card", label: "Ghana Card" },
   { key: "selfie", label: "Facial Verification" },
   { key: "review", label: "Review & Submit" },
@@ -28,14 +31,18 @@ function StepDots({ current }: { current: Step }) {
   );
 }
 
+const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024; // 1.2MB — mirrors MAX_FILE_BYTES in ./actions.ts; see that file for why
+
 function FilePreview({
   file,
   onPick,
   label,
+  onReject,
 }: {
   file: File | null;
   onPick: (f: File | null) => void;
   label: string;
+  onReject: (message: string) => void;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
   useEffect(() => {
@@ -71,7 +78,17 @@ function FilePreview({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="hidden"
-            onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              if (f && f.size > MAX_UPLOAD_BYTES) {
+                onReject(
+                  `${label} is too large (max 1.2MB — try your phone's "medium" photo quality, or crop tightly to the card).`
+                );
+                e.target.value = ""; // let them pick the same filename again after fixing it
+                return;
+              }
+              onPick(f);
+            }}
           />
         </label>
       )}
@@ -79,7 +96,7 @@ function FilePreview({
   );
 }
 
-export function SignupForm() {
+export function SignupForm({ platform }: { platform?: PlatformSettings }) {
   const [step, setStep] = useState<Step>("account");
   const [businessName, setBusinessName] = useState("");
   const [region, setRegion] = useState("");
@@ -87,6 +104,11 @@ export function SignupForm() {
   const [ownerEmail, setOwnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [legalEntityType, setLegalEntityType] = useState("");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [taxId, setTaxId] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [businessAgeYears, setBusinessAgeYears] = useState("");
   const [ghanaCardNumber, setGhanaCardNumber] = useState("");
   const [cardFront, setCardFront] = useState<File | null>(null);
   const [cardBack, setCardBack] = useState<File | null>(null);
@@ -112,6 +134,21 @@ export function SignupForm() {
     return null;
   }
 
+  function toggleCategory(cat: string) {
+    setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
+  }
+
+  function validateProfileStep() {
+    if (!legalEntityType) return "Select the business's legal type.";
+    if (categories.length === 0) return "Select at least one business category.";
+    if (!businessAgeYears.trim() || Number(businessAgeYears) < 0) return "Enter how many years the business has been operating.";
+    if (Number(businessAgeYears) > 150) return "That doesn't look right — check the number of years.";
+    if (taxId.trim() && !TIN_PATTERN.test(taxId.trim())) {
+      return "Tax ID (TIN) should look like GHA-123456789-0, or leave it blank.";
+    }
+    return null;
+  }
+
   function validateGhanaCardStep() {
     if (!/^GHA-\d{9}-\d$/i.test(ghanaCardNumber.trim())) {
       return "Ghana Card number should look like GHA-123456789-0.";
@@ -126,6 +163,10 @@ export function SignupForm() {
     if (step === "account") {
       const err = validateAccountStep();
       if (err) return setError(err);
+      setStep("profile");
+    } else if (step === "profile") {
+      const err = validateProfileStep();
+      if (err) return setError(err);
       setStep("ghana-card");
     } else if (step === "ghana-card") {
       const err = validateGhanaCardStep();
@@ -139,7 +180,8 @@ export function SignupForm() {
 
   function goBack() {
     setError(null);
-    if (step === "ghana-card") setStep("account");
+    if (step === "profile") setStep("account");
+    else if (step === "ghana-card") setStep("profile");
     else if (step === "selfie") setStep("ghana-card");
     else if (step === "review") setStep("selfie");
   }
@@ -157,6 +199,11 @@ export function SignupForm() {
     fd.set("owner_name", ownerName.trim());
     fd.set("owner_email", ownerEmail.trim());
     fd.set("password", password);
+    fd.set("legal_entity_type", legalEntityType);
+    fd.set("registration_number", registrationNumber.trim());
+    fd.set("tax_id", taxId.trim().toUpperCase());
+    fd.set("business_categories", JSON.stringify(categories));
+    fd.set("business_age_years", businessAgeYears.trim());
     fd.set("ghana_card_number", ghanaCardNumber.trim().toUpperCase());
     fd.set("ghana_card_front", cardFront);
     fd.set("ghana_card_back", cardBack);
@@ -171,7 +218,13 @@ export function SignupForm() {
   }
 
   return (
-    <AuthCover mode="signup">
+    <AuthCover
+      mode="signup"
+      logoUrl={platform?.logoUrl}
+      coverImages={platform?.coverImages}
+      headline={platform?.coverHeadline}
+      subheadline={platform?.coverSubheadline}
+    >
       <div className="card p-6">
         <div className="text-center mb-1">
           <div className="font-display font-bold text-lg text-ink">Create your business account</div>
@@ -248,6 +301,94 @@ export function SignupForm() {
           </div>
         )}
 
+        {step === "profile" && (
+          <div className="space-y-4">
+            <div className="callout text-xs">
+              A quick profile of the business itself — this feeds your Business Health dashboard
+              once you&rsquo;re approved. Registration and Tax ID are optional if you don&rsquo;t
+              have them yet.
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Business type</label>
+              <select
+                value={legalEntityType}
+                onChange={(e) => setLegalEntityType(e.target.value)}
+                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              >
+                <option value="">Select…</option>
+                {LEGAL_ENTITY_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                  Registration number <span className="text-ink-faint font-normal">(optional)</span>
+                </label>
+                <input
+                  value={registrationNumber}
+                  onChange={(e) => setRegistrationNumber(e.target.value)}
+                  placeholder="RGD number"
+                  className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                  Tax ID / TIN <span className="text-ink-faint font-normal">(optional)</span>
+                </label>
+                <input
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  placeholder="GHA-123456789-0"
+                  className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold font-mono"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                Years in operation
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={150}
+                value={businessAgeYears}
+                onChange={(e) => setBusinessAgeYears(e.target.value)}
+                placeholder="e.g. 3"
+                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5">
+                Business category <span className="text-ink-faint font-normal">(select all that apply)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {BUSINESS_CATEGORIES.map((cat) => {
+                  const active = categories.includes(cat);
+                  return (
+                    <button
+                      type="button"
+                      key={cat}
+                      onClick={() => toggleCategory(cat)}
+                      aria-pressed={active}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        active
+                          ? "bg-gold border-gold text-[#3a2400]"
+                          : "border-border-strong text-ink-muted bg-surface hover:border-gold"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {step === "ghana-card" && (
           <div className="space-y-4">
             <div className="callout text-xs">
@@ -263,8 +404,8 @@ export function SignupForm() {
                 className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold font-mono"
               />
             </div>
-            <FilePreview file={cardFront} onPick={setCardFront} label="Ghana Card — front" />
-            <FilePreview file={cardBack} onPick={setCardBack} label="Ghana Card — back" />
+            <FilePreview file={cardFront} onPick={setCardFront} label="Ghana Card — front" onReject={setError} />
+            <FilePreview file={cardBack} onPick={setCardBack} label="Ghana Card — back" onReject={setError} />
           </div>
         )}
 
@@ -284,6 +425,14 @@ export function SignupForm() {
               <div className="flex justify-between border-b border-border pb-2">
                 <span className="text-ink-muted">Email</span>
                 <span className="font-medium text-ink">{ownerEmail}</span>
+              </div>
+              <div className="flex justify-between border-b border-border pb-2">
+                <span className="text-ink-muted">Business type</span>
+                <span className="font-medium text-ink">{legalEntityType || "—"}</span>
+              </div>
+              <div className="flex justify-between border-b border-border pb-2">
+                <span className="text-ink-muted">Category</span>
+                <span className="font-medium text-ink text-right">{categories.join(", ") || "—"}</span>
               </div>
               <div className="flex justify-between border-b border-border pb-2">
                 <span className="text-ink-muted">Ghana Card</span>
@@ -396,8 +545,16 @@ function SelfieCapture({ selfie, onCapture }: { selfie: File | null; onCapture: 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Downscale to a max 720px edge — a live KYC selfie doesn't need the
+    // camera's native resolution (often 1080p+ on modern phones, which
+    // at quality 0.92 can easily exceed the 1.2MB per-file budget these
+    // three signup images share; see MAX_FILE_BYTES in ./actions.ts for
+    // why that budget exists). 720px is still more than enough detail
+    // for a human reviewer to compare against the Ghana Card photo.
+    const MAX_EDGE = 720;
+    const scale = Math.min(1, MAX_EDGE / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.translate(canvas.width, 0);
@@ -409,7 +566,7 @@ function SelfieCapture({ selfie, onCapture }: { selfie: File | null; onCapture: 
         onCapture(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
       },
       "image/jpeg",
-      0.92
+      0.85
     );
     streamRef.current?.getTracks().forEach((t) => t.stop());
   }

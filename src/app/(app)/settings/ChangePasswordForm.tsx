@@ -7,7 +7,12 @@ import { changePassword, type ChangePasswordState } from "./actions";
 
 const initialState: ChangePasswordState = {};
 
-export function ChangePasswordForm() {
+// `className` lets a caller drop the card chrome (border/padding) when
+// this is being embedded inside another container that already
+// provides it — see AccountCard, which expands this in place under a
+// "Change password" row instead of showing it as its own standalone
+// card.
+export function ChangePasswordForm({ className = "card p-6 max-w-lg space-y-4" }: { className?: string }) {
   const [state, formAction] = useFormState(changePassword, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -16,7 +21,7 @@ export function ChangePasswordForm() {
   }, [state.success]);
 
   return (
-    <form ref={formRef} action={formAction} className="card p-6 max-w-lg space-y-4">
+    <form ref={formRef} action={formAction} className={className}>
       <div className="font-display font-semibold text-ink">Change Password</div>
 
       <div>

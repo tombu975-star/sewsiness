@@ -1,8 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { suspendUser, reactivateUser } from "../users-actions";
 import { SubmitButton } from "@/components/SubmitButton";
+import { InviteStatusBadge } from "@/components/InviteStatusBadge";
+import { ResendInviteButton } from "@/components/ResendInviteButton";
 import type { Role } from "@/lib/types";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -33,6 +36,7 @@ export default async function PlatformUsersPage({
 }: {
   searchParams: { role?: string; q?: string };
 }) {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
   const roleFilter = (searchParams.role as Role | undefined) ?? undefined;
   const q = searchParams.q?.trim() ?? "";
@@ -49,6 +53,14 @@ export default async function PlatformUsersPage({
 
   const { data, error } = await query;
   const users = (data ?? []) as any[];
+
+  // RLS ("super admin can read all invites", 037) is what makes this
+  // cross-tenant select possible — same reasoning as the profiles query
+  // above. Not every user has a row here: accounts created before the
+  // invites feature existed (032) are grandfathered in with nothing to
+  // show, same as on the Staff/Freelancers/Apprentices pages.
+  const { data: invites } = await supabase.from("invites").select("id, user_id, status, expires_at");
+  const inviteByUser = new Map((invites ?? []).map((i: any) => [i.user_id, i]));
 
   return (
     <div>
@@ -96,12 +108,15 @@ export default async function PlatformUsersPage({
                 <th className="text-left px-4 py-2.5 font-medium">Role</th>
                 <th className="text-left px-4 py-2.5 font-medium">Business</th>
                 <th className="text-left px-4 py-2.5 font-medium">Status</th>
+                <th className="text-left px-4 py-2.5 font-medium">Invite</th>
                 <th className="text-left px-4 py-2.5 font-medium">Joined</th>
                 <th className="px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {users.map((u) => {
+                const invite = inviteByUser.get(u.id);
+                return (
                 <tr key={u.id} className="border-t border-border">
                   <td className="px-4 py-3 font-medium text-ink">{u.full_name}</td>
                   <td className="px-4 py-3 text-ink-muted">{ROLE_LABEL[u.role as Role] ?? u.role}</td>
@@ -110,6 +125,18 @@ export default async function PlatformUsersPage({
                     <span className={`badge ${u.suspended_at ? "bg-danger-soft text-danger" : "bg-success-soft text-success"}`}>
                       {u.suspended_at ? "Suspended" : "Active"}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {invite ? (
+                      <div>
+                        <InviteStatusBadge status={invite.status} expiresAt={invite.expires_at} />
+                        {invite.status !== "revoked" && (
+                          <ResendInviteButton inviteId={invite.id} revalidatePath="/admin/users" status={invite.status} />
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-ink-faint">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-ink-muted">{new Date(u.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right">
@@ -130,7 +157,8 @@ export default async function PlatformUsersPage({
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

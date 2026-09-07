@@ -1,24 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
+import { AuthCover } from "@/components/auth/AuthCover";
+import type { PlatformSettings } from "@/lib/platform-settings";
 
 // Lands here from the invite email link. Supabase puts the session tokens
 // in the URL fragment (#access_token=...&type=invite), which browsers never
 // send to a server — so this has to run client-side. createClient() (the
 // browser client) auto-detects and applies those tokens on load; we just
 // wait for that to happen, then show a normal "set your password" form.
+//
+// A session establishing here only proves Supabase's own link token was
+// still valid — which, absent a dashboard change, can be a much longer
+// window than this product wants. So once a session lands, this also
+// checks this app's own `invites.expires_at` (see
+// supabase/migrations/032_invite_expiry_and_resend.sql) and treats the
+// link as expired — signing the just-created session back out — if
+// that's passed, even though Supabase itself was happy to hand it out.
+// A user_id with no invites row at all (invites created before this
+// feature existed) is grandfathered in as valid, since there's nothing
+// to check it against.
 type Status = "checking" | "ready" | "expired";
 
-export function AcceptInviteForm() {
-  const router = useRouter();
+export function AcceptInviteForm({ platform }: { platform?: PlatformSettings }) {
   const [status, setStatus] = useState<Status>("checking");
   const [fullName, setFullName] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,9 +38,25 @@ export function AcceptInviteForm() {
     const supabase = createClient();
     let settled = false;
 
-    function markReady(name?: string | null) {
+    async function checkInviteAndFinish(userId: string, name?: string | null) {
       if (settled) return;
       settled = true;
+
+      const { data: invite } = await supabase
+        .from("invites")
+        .select("status, expires_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const expired =
+        invite && invite.status === "pending" && new Date(invite.expires_at).getTime() <= Date.now();
+
+      if (expired) {
+        await supabase.auth.signOut();
+        setStatus("expired");
+        return;
+      }
+
       setFullName(name ?? null);
       setStatus("ready");
     }
@@ -36,7 +64,9 @@ export function AcceptInviteForm() {
     // Covers the case where the client already finished processing the
     // URL hash by the time this effect runs.
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) markReady(data.session.user.user_metadata?.full_name as string | undefined);
+      if (data.session) {
+        checkInviteAndFinish(data.session.user.id, data.session.user.user_metadata?.full_name as string | undefined);
+      }
     });
 
     // Covers the more common case: the hash is still being processed when
@@ -45,7 +75,7 @@ export function AcceptInviteForm() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
-        markReady(session.user.user_metadata?.full_name as string | undefined);
+        checkInviteAndFinish(session.user.id, session.user.user_metadata?.full_name as string | undefined);
       }
     });
 
@@ -83,111 +113,102 @@ export function AcceptInviteForm() {
       return;
     }
 
+    // Best-effort — if this fails, the person can still use the app; it
+    // just means the invites row stays "pending" until it self-flags
+    // expired, which doesn't affect anyone's ability to sign in later.
+    await supabase.rpc("mark_own_invite_accepted");
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user!.id).single();
 
     setSubmitting(false);
-    router.push(homePathForRole((profile?.role as Role) ?? "staff"));
-    router.refresh();
+    // Full browser navigation, not router.push — see LoginForm.tsx for why:
+    // this is another place a session is newly established client-side and
+    // then routed based on role, so it carries the same stale-cache risk.
+    window.location.assign(homePathForRole((profile?.role as Role) ?? "staff"));
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas px-4 py-10">
-      <div className="w-full max-w-sm">
-        <div
-          className="relative overflow-hidden rounded-[20px] px-6 py-10 text-center text-white mb-4"
-          style={{ background: "linear-gradient(160deg, var(--indigo), var(--indigo2))" }}
-        >
-          <div
-            className="absolute -top-10 -right-10 w-40 h-40 rounded-full"
-            style={{ background: "rgba(251,191,36,.18)" }}
-          />
-          <svg width="44" height="44" viewBox="-270 -10 520 500" className="mx-auto mb-3 relative">
-            <path
-              d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
-              fill="none"
-              stroke="#C9A6E8"
-              strokeWidth="78"
-              strokeLinecap="round"
-            />
-            <path
-              d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265"
-              fill="none"
-              stroke="#FBBF24"
-              strokeWidth="28"
-              strokeLinecap="round"
-            />
-            <path d="M-25 205 L145 20" stroke="#FBBF24" strokeWidth="14" strokeLinecap="round" />
-          </svg>
-          <div className="font-display font-semibold text-sm tracking-wide relative" style={{ color: "#D8CFEE" }}>
-            {fullName ? `WELCOME, ${fullName.split(" ")[0].toUpperCase()}` : "WELCOME TO"}
-          </div>
-          <div className="font-display font-extrabold text-2xl relative">SEWSINESS</div>
+    <AuthCover
+      mode="invite"
+      logoUrl={platform?.logoUrl}
+      coverImages={platform?.coverImages}
+      headline={fullName ? `Welcome, ${fullName.split(" ")[0]}` : "You've been invited"}
+      subheadline="Set a password to finish setting up your SEWSINESS account."
+    >
+      {status === "checking" && (
+        <div className="card p-6 text-center text-sm text-ink-muted">Confirming your invite…</div>
+      )}
+
+      {status === "expired" && (
+        <div className="card p-6 text-center space-y-2">
+          <div className="text-sm font-semibold text-ink">This invite link has expired or was already used.</div>
+          <p className="text-xs text-ink-muted">
+            Ask whoever invited you (your Owner, Manager, or Trainer) to send a fresh invite.
+          </p>
         </div>
+      )}
 
-        {status === "checking" && (
-          <div className="card p-6 text-center text-sm text-ink-muted">Confirming your invite…</div>
-        )}
-
-        {status === "expired" && (
-          <div className="card p-6 text-center space-y-2">
-            <div className="text-sm font-semibold text-ink">This invite link has expired or was already used.</div>
-            <p className="text-xs text-ink-muted">
-              Ask whoever invited you (your Owner, Manager, or Trainer) to send a fresh invite.
-            </p>
-          </div>
-        )}
-
-        {status === "ready" && (
-          <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-            <div>
-              <div className="font-display font-semibold text-ink text-sm">Set your password</div>
-              <div className="text-xs text-ink-muted mt-1">
-                {fullName ? `${fullName}, choose` : "Choose"} a password to finish setting up your account.
-              </div>
+      {status === "ready" && (
+        <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+          <div>
+            <div className="font-display font-semibold text-ink text-sm">Set your password</div>
+            <div className="text-xs text-ink-muted mt-1">
+              {fullName ? `${fullName}, choose` : "Choose"} a password to finish setting up your account.
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Password</label>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Password</label>
+            <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 minLength={8}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 pr-10 text-sm text-ink outline-none focus:border-gold"
                 placeholder="At least 8 characters"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-ink-faint hover:text-ink-muted text-xs"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1.5">Confirm password</label>
-              <input
-                type="password"
-                required
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
-                placeholder="Re-type your password"
-              />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1.5">Confirm password</label>
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
+              placeholder="Re-type your password"
+            />
+          </div>
+          {error && (
+            <div className="text-xs text-danger bg-danger-soft border border-danger/20 rounded-sm px-3 py-2">
+              {error}
             </div>
-            {error && (
-              <div className="text-xs text-danger bg-danger-soft border border-danger/20 rounded-sm px-3 py-2">
-                {error}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
-            >
-              {submitting ? "Setting password…" : "Set password & continue"}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+          )}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-sm bg-gold text-[#3a2400] font-semibold text-sm py-2.5 hover:brightness-105 disabled:opacity-60"
+          >
+            {submitting ? "Setting password…" : "Set password & continue"}
+          </button>
+        </form>
+      )}
+    </AuthCover>
   );
 }

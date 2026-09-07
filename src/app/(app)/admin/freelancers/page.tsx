@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -7,6 +8,7 @@ import { verifyFreelancer, unverifyFreelancer } from "../freelancers-actions";
 import { suspendUser, reactivateUser } from "../users-actions";
 
 export default async function PlatformFreelancersPage() {
+  await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
   // RLS ("super admin can read all profiles / freelancer profiles / work

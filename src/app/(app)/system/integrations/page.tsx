@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -19,6 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function IntegrationsPage() {
+  await requirePageRole(["system_admin"]);
   const supabase = createClient();
   const { data, error } = await supabase
     .from("integration_checks")
@@ -32,7 +34,7 @@ export default async function IntegrationsPage() {
     <div>
       <PageHead
         title="Integrations"
-        subtitle="What Sewsiness connects to, and whether the env vars each one needs are actually set on this deployment. No secret values are ever stored or shown here — real keys stay in Render's environment settings."
+        subtitle="What Sewsiness connects to, and whether the env vars each one needs are actually set on this deployment. No secret values are ever stored or shown here — real keys stay in Vercel's environment variable settings."
         crumb="System Admin"
       />
 

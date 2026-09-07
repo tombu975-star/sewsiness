@@ -1,9 +1,38 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { LEGAL_ENTITY_TYPES, TIN_PATTERN } from "@/lib/onboarding/identity";
 
-const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6MB
+const MAX_SIGNUPS_PER_IP = 5;
+const SIGNUP_WINDOW_MINUTES = 60;
+
+// Vercel overwrites x-forwarded-for itself and does not forward
+// externally-supplied values, so it's not spoofable the way it can be on
+// some other hosts. This reads x-vercel-forwarded-for specifically
+// because Vercel's own docs note it's the one guaranteed not to be
+// affected even if a customer puts their own proxy in front of Vercel,
+// whereas plain x-forwarded-for carries that one edge-case caveat:
+// https://vercel.com/docs/headers/request-headers
+// Falls back to x-forwarded-for/x-real-ip for local dev, where neither
+// Vercel header is present.
+function clientIp(): string {
+  const h = headers();
+  return h.get("x-vercel-forwarded-for") || h.get("x-forwarded-for") || h.get("x-real-ip") || "unknown";
+}
+
+// Vercel Functions enforce a HARD 4.5MB request-body ceiling that no
+// Next.js config can raise (confirmed: https://vercel.com/docs/functions/limitations
+// — "The maximum payload size for the request body ... of a Vercel
+// Function is 4.5 MB"). This Server Action receives three files (Ghana
+// Card front, back, selfie) in one multipart FormData body, plus ~15
+// text fields and multipart boundary/header overhead. 1.2MB × 3 = 3.6MB,
+// leaving real headroom under 4.5MB — a 6MB-per-file limit (3 files =
+// up to 18MB) would have made every signup with genuine, un-shrunk phone
+// photos fail outright in production with an opaque
+// FUNCTION_PAYLOAD_TOO_LARGE error, not the friendly message below.
+const MAX_FILE_BYTES = 1.2 * 1024 * 1024; // 1.2MB per file — see comment above
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function extFor(file: File) {
@@ -14,12 +43,29 @@ function extFor(file: File) {
 
 function validateImage(file: File | null, label: string): string | null {
   if (!file || file.size === 0) return `${label} is required.`;
-  if (file.size > MAX_FILE_BYTES) return `${label} is too large (max 6MB).`;
+  if (file.size > MAX_FILE_BYTES) return `${label} is too large (max 1.2MB — try your phone's "medium" photo quality, or crop tightly to the card).`;
   if (!ALLOWED_TYPES.has(file.type)) return `${label} must be a JPG, PNG, or WEBP image.`;
   return null;
 }
 
 export async function submitBusinessSignup(formData: FormData): Promise<{ error: string } | void> {
+  const admin = createAdminClient();
+  const ip = clientIp();
+
+  // Checked before any validation or file upload — a blocked IP should
+  // never reach the point of uploading Ghana Card images, which is the
+  // actual cost/abuse surface this protects.
+  const windowStart = new Date(Date.now() - SIGNUP_WINDOW_MINUTES * 60 * 1000).toISOString();
+  const { count: recentAttempts } = await admin
+    .from("signup_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("ip", ip)
+    .gte("created_at", windowStart);
+  if ((recentAttempts ?? 0) >= MAX_SIGNUPS_PER_IP) {
+    return { error: "Too many signup attempts from this network. Please try again in an hour, or contact support." };
+  }
+  await admin.from("signup_attempts").insert({ ip });
+
   const businessName = String(formData.get("business_name") || "").trim();
   const region = String(formData.get("region") || "").trim();
   const ownerName = String(formData.get("owner_name") || "").trim();
@@ -29,6 +75,19 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
   const cardFront = formData.get("ghana_card_front") as File | null;
   const cardBack = formData.get("ghana_card_back") as File | null;
   const selfie = formData.get("selfie") as File | null;
+
+  // Light business-identity/compliance fields (see src/lib/onboarding).
+  const legalEntityType = String(formData.get("legal_entity_type") || "").trim();
+  const registrationNumber = String(formData.get("registration_number") || "").trim();
+  const taxId = String(formData.get("tax_id") || "").trim();
+  const businessAgeYearsRaw = String(formData.get("business_age_years") || "").trim();
+  let businessCategories: string[] = [];
+  try {
+    const parsed = JSON.parse(String(formData.get("business_categories") || "[]"));
+    if (Array.isArray(parsed)) businessCategories = parsed.filter((c) => typeof c === "string");
+  } catch {
+    businessCategories = [];
+  }
 
   if (!businessName || !ownerName || !ownerEmail || !ghanaCardNumber) {
     return { error: "Please fill in every required field." };
@@ -40,14 +99,25 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
   if (!/^GHA-\d{9}-\d$/i.test(ghanaCardNumber)) {
     return { error: "Ghana Card number should look like GHA-123456789-0." };
   }
+  if (!(LEGAL_ENTITY_TYPES as readonly string[]).includes(legalEntityType)) {
+    return { error: "Select the business's legal type." };
+  }
+  if (businessCategories.length === 0) {
+    return { error: "Select at least one business category." };
+  }
+  const businessAgeYears = Number(businessAgeYearsRaw);
+  if (!businessAgeYearsRaw || Number.isNaN(businessAgeYears) || businessAgeYears < 0 || businessAgeYears > 150) {
+    return { error: "Enter how many years the business has been operating." };
+  }
+  if (taxId && !TIN_PATTERN.test(taxId)) {
+    return { error: "Tax ID (TIN) should look like GHA-123456789-0, or leave it blank." };
+  }
   const cardFrontErr = validateImage(cardFront, "Ghana Card (front)");
   if (cardFrontErr) return { error: cardFrontErr };
   const cardBackErr = validateImage(cardBack, "Ghana Card (back)");
   if (cardBackErr) return { error: cardBackErr };
   const selfieErr = validateImage(selfie, "Your selfie");
   if (selfieErr) return { error: selfieErr };
-
-  const admin = createAdminClient();
 
   // Track what we've created so we can unwind on any failure — an
   // auth user with no organization behind it would permanently block that
@@ -58,13 +128,25 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
 
   async function cleanup() {
     for (const path of uploadedPaths) {
-      await admin.storage.from("kyc-documents").remove([path]).catch(() => {});
+      try {
+        await admin.storage.from("kyc-documents").remove([path]);
+      } catch {
+        // best-effort — don't let cleanup itself throw
+      }
     }
     if (createdOrgId) {
-      await admin.from("organizations").delete().eq("id", createdOrgId).catch(() => {});
+      try {
+        await admin.from("organizations").delete().eq("id", createdOrgId);
+      } catch {
+        // best-effort
+      }
     }
     if (createdUserId) {
-      await admin.auth.admin.deleteUser(createdUserId).catch(() => {});
+      try {
+        await admin.auth.admin.deleteUser(createdUserId);
+      } catch {
+        // best-effort
+      }
     }
   }
 
@@ -93,6 +175,12 @@ export async function submitBusinessSignup(formData: FormData): Promise<{ error:
         verification_status: "pending",
         ghana_card_number: ghanaCardNumber,
         verification_submitted_at: new Date().toISOString(),
+        legal_entity_type: legalEntityType,
+        registration_number: registrationNumber || null,
+        tax_id: taxId || null,
+        business_categories: businessCategories,
+        business_age_years: businessAgeYears,
+        contact_email: ownerEmail,
       })
       .select("id")
       .single();

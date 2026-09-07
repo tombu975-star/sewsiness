@@ -3,8 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function CustomersPage() {
+  await requirePageRole(["owner", "manager", "staff"]);
   const supabase = createClient();
   const {
     data: { user },

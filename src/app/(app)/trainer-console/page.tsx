@@ -3,8 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { DataTable } from "@/components/DataTable";
 import { EmptyState } from "@/components/EmptyState";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function TrainerConsolePage() {
+  await requirePageRole(["owner", "trainer"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id, role").eq("id", user!.id).single();
@@ -37,7 +39,7 @@ export default async function TrainerConsolePage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Apprentice" }, { key: "level", label: "Level" }, { key: "specialisation", label: "Specialisation" }]}
-          rows={rows.map((a) => ({ id: a.profile_id, href: "/apprentices", cells: { name: a.profiles?.full_name, level: a.training_level ?? "—", specialisation: a.specialisation ?? "—" } }))}
+          rows={rows.map((a) => ({ id: a.profile_id, href: `/apprentices/${a.profile_id}`, cells: { name: a.profiles?.full_name, level: a.training_level ?? "—", specialisation: a.specialisation ?? "—" } }))}
         />
       )}
     </div>

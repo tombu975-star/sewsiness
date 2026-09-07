@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
+import { requirePageRole } from "@/lib/auth/require-role";
 
 export default async function ReportsPage() {
+  await requirePageRole(["owner", "manager"]);
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

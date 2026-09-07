@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 
-export function Tabs({ tabs }: { tabs: { label: string; content: React.ReactNode }[] }) {
-  const [active, setActive] = useState(0);
+export function Tabs({ tabs, defaultLabel }: { tabs: { label: string; content: React.ReactNode }[]; defaultLabel?: string }) {
+  const initialIndex = defaultLabel
+    ? Math.max(0, tabs.findIndex((t) => t.label.toLowerCase() === defaultLabel.toLowerCase()))
+    : 0;
+  const [active, setActive] = useState(initialIndex);
   return (
     <div>
       <div className="flex items-center gap-1 border-b border-border mb-5 overflow-x-auto scrollbar-thin">
