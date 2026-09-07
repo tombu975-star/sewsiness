@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/require-role";
 
+const ANY_ROLE = ["owner", "manager", "staff", "trainer", "apprentice", "freelancer", "super_admin", "system_admin"] as const;
+
 // Logo/cover-image/advertisement uploads used to receive the raw file as
 // part of these Server Actions' own FormData body, uploaded server-side
 // via the service-role client. That hits the same wall
@@ -65,6 +67,54 @@ async function getPlatformSettingsRow() {
     ? ((data as any).advertisements as any[]).filter((v) => v && typeof v === "object")
     : [];
   return { logoUrl: (data as any)?.logo_url ?? null, images, ads };
+}
+
+export async function updateAvatarUrl(url: string) {
+  const { user } = await requireRole([...ANY_ROLE]);
+  const supabase = createClient();
+  const avatarPath = ownedAvatarPath(url, user.id);
+  if (!avatarPath) throw new Error("Invalid profile photo URL.");
+  const { data: current } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).single();
+
+  const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+  if (error) throw new Error(error.message);
+
+  const oldPath = ownedAvatarPath(current?.avatar_url, user.id);
+  if (oldPath && oldPath !== avatarPath) await createAdminClient().storage.from("avatars").remove([oldPath]);
+
+  revalidatePath("/settings");
+  revalidatePath("/account");
+  revalidatePath("/", "layout");
+}
+
+export async function removeAvatar() {
+  const { user } = await requireRole([...ANY_ROLE]);
+  const supabase = createClient();
+  const { data: current } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).single();
+
+  const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+  if (error) throw new Error(error.message);
+
+  const oldPath = ownedAvatarPath(current?.avatar_url, user.id);
+  if (oldPath) await createAdminClient().storage.from("avatars").remove([oldPath]);
+
+  revalidatePath("/settings");
+  revalidatePath("/account");
+  revalidatePath("/", "layout");
+}
+
+function ownedAvatarPath(url: string | null | undefined, userId: string) {
+  if (!url || !process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+  try {
+    const parsed = new URL(url);
+    const expectedOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin;
+    const prefix = "/storage/v1/object/public/avatars/";
+    if (parsed.origin !== expectedOrigin || !parsed.pathname.startsWith(prefix)) return null;
+    const path = decodeURIComponent(parsed.pathname.slice(prefix.length));
+    return path.startsWith(`${userId}/`) && !path.includes("..") ? path : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function updatePlatformCoverCopy(formData: FormData) {
