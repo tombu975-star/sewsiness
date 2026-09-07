@@ -41,8 +41,9 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const supabase = createClient();
+
     try {
+      const supabase = createClient();
       const trimmedIdentifier = identifier.trim();
 
     // Login accepts either an email or the phone number on file for the
