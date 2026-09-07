@@ -10,6 +10,8 @@ export async function assignTask(formData: FormData) {
 
   const apprentice_id = String(formData.get("apprentice_id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
+  const module_id = String(formData.get("module_id") ?? "") || null;
+  const enrollment_id = String(formData.get("enrollment_id") ?? "") || null;
   if (!apprentice_id || !title) throw new Error("Apprentice and task title are required.");
 
   const { data: apprentice } = await admin
@@ -22,11 +24,22 @@ export async function assignTask(formData: FormData) {
     throw new Error("You can only assign tasks to apprentices assigned to you.");
   }
 
+  if (enrollment_id) {
+    const { data: enrollment } = await admin.from("program_enrollments").select("id, apprentice_id, organization_id").eq("id", enrollment_id).single();
+    if (!enrollment || enrollment.apprentice_id !== apprentice_id || enrollment.organization_id !== profile.organization_id) throw new Error("Enrollment does not belong to this apprentice.");
+  }
+  if (module_id) {
+    const { data: module } = await admin.from("training_modules").select("id, organization_id").eq("id", module_id).eq("organization_id", profile.organization_id).single();
+    if (!module) throw new Error("Training module not found.");
+  }
+
   const { error } = await admin.from("training_tasks").insert({
     apprentice_id,
     organization_id: profile?.organization_id,
     title,
     due_date: formData.get("due_date") || null,
+    module_id,
+    enrollment_id,
   });
   if (error) throw new Error(error.message);
   revalidatePath("/training-plans");

@@ -111,6 +111,38 @@ body {
   transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 9px 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: var(--gold);
+}
+
+.section-label {
+  margin-bottom: 10px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* Opt-in lift for cards that represent something clickable/live — stat
    tiles, list rows presented as cards, etc. Static content cards (forms,
    long-form sections) stay on .card alone so the whole page doesn't
