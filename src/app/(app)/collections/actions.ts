@@ -2,12 +2,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireRoleFeature } from "@/lib/auth/require-role";
 
 export async function createCollection(formData: FormData) {
+  const { profile } = await requireRoleFeature(["owner", "manager", "staff"], "dressmaking_collections");
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).single();
 
   const name = String(formData.get("name") ?? "").trim();
   if (!name) throw new Error("Collection name is required.");

@@ -2,8 +2,10 @@ import { PageHead } from "@/components/PageHead";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createCollection } from "../actions";
+import { requirePageFeature } from "@/lib/auth/require-role";
 
-export default function NewCollectionPage() {
+export default async function NewCollectionPage() {
+  await requirePageFeature(["owner", "manager", "staff"], "dressmaking_collections");
   return (
     <div>
       <PageHead title="New Collection" crumb="Dressmaking / Collections / New" />

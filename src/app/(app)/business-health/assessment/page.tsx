@@ -3,10 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { Button } from "@/components/Button";
 import { AssessmentForm } from "./AssessmentForm";
 import type { Answers } from "@/lib/onboarding/scoring";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageFeature } from "@/lib/auth/require-role";
 
 export default async function AssessmentPage() {
-  await requirePageRole(["owner", "manager"]);
+  await requirePageFeature(["owner", "manager"], "business_health");
   const supabase = createClient();
   const {
     data: { user },

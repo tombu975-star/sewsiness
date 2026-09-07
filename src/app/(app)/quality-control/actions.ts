@@ -1,11 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireRoleFeature } from "@/lib/auth/require-role";
 
 export async function submitQualityCheck(formData: FormData) {
+  const { user, profile } = await requireRoleFeature(["owner", "manager", "staff"], "quality_control");
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();
 
   const order_id = String(formData.get("order_id") ?? "");
   const seams_ok = formData.get("seams_ok") === "on";

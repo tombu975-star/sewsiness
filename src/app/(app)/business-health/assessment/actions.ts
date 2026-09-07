@@ -7,22 +7,11 @@ import { scoreAllDimensions, weightedHealthScore, healthBand, recommendations, c
 import { assessmentAnswersSchema } from "@/lib/onboarding/validation";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
 import { toSafeErrorMessage } from "@/lib/db-error";
+import { requireRoleFeature } from "@/lib/auth/require-role";
 
 async function requireOwnerOrManager() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not signed in.");
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id, role")
-    .eq("id", user.id)
-    .single();
-  if (!profile?.organization_id || !["owner", "manager"].includes(profile.role)) {
-    throw new Error("Only Owner or Manager can update the Business Health Assessment.");
-  }
-  return { supabase, user, organizationId: profile.organization_id as string };
+  const { user, profile } = await requireRoleFeature(["owner", "manager"], "business_health");
+  return { supabase: createClient(), user, organizationId: profile.organization_id as string };
 }
 
 // Merges newly-submitted answers for one dimension into whatever draft

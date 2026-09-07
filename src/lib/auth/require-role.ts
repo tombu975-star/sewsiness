@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 /**
  * Resolves the signed-in user's own profile (organization_id, branch_id,
@@ -75,4 +76,16 @@ export async function requirePageRole(allowed: Role[]) {
     redirect(homePathForRole(profile.role as Role));
   }
   return { user, profile };
+}
+
+export async function requirePageFeature(allowed: Role[], featureKey: string) {
+  const result = await requirePageRole(allowed);
+  if (!(await isFeatureEnabled(featureKey))) redirect(homePathForRole(result.profile.role as Role));
+  return result;
+}
+
+export async function requireRoleFeature(allowed: Role[], featureKey: string) {
+  const result = await requireRole(allowed);
+  if (!(await isFeatureEnabled(featureKey))) throw new Error("This feature is currently unavailable.");
+  return result;
 }
