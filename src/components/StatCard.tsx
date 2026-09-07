@@ -17,7 +17,7 @@ export function StatCard({
         <div className="text-xs font-semibold text-ink-muted uppercase tracking-wide">{label}</div>
         {icon && (
           <div
-            className={`w-7 h-7 rounded-lg flex items-center justify-center text-[13px] flex-shrink-0 ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] flex-shrink-0 ${
               accent ? "bg-indigo-soft text-indigo" : "bg-sunken text-ink-soft"
             }`}
           >

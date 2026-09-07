@@ -13,6 +13,10 @@ const PUBLIC_PATHS = [
   "/favicon.ico",
   "/suspended",
   "/pending-verification",
+  // Customer-facing storefront (browse tailors, customize, order) — a
+  // separate public surface from the staff/owner operations dashboard,
+  // so it must never require a staff login.
+  "/shop",
 ];
 
 // Super Admin is Sewsiness's own platform account (it enrolls businesses),

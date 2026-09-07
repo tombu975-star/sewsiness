@@ -272,7 +272,7 @@ export function AppShell({
           <div className="flex items-center gap-2.5">
             <Link
               href="/notifications"
-              className="relative w-9 h-9 rounded-lg border border-border flex items-center justify-center text-ink-soft hover:bg-sunken hover:border-border-strong active:scale-95 transition-all"
+              className="relative w-9 h-9 rounded-full border border-border flex items-center justify-center text-ink-soft hover:bg-sunken hover:border-border-strong active:scale-95 transition-all"
               aria-label={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread notifications` : "Notifications"}
             >
               🔔
