@@ -54,9 +54,9 @@ const nextConfig = {
 
     const csp = [
       "default-src 'self'",
-      // 'unsafe-inline' — see comment above. No 'unsafe-eval': this app
-      // ships no code that needs it.
-      "script-src 'self' 'unsafe-inline'",
+      process.env.NODE_ENV === "production"
+        ? "script-src 'self' 'unsafe-inline'"
+        : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       // Tailwind + this app's own extensive use of inline `style={{}}`
       // props (dynamic brand colors, progress bars, etc.) needs this —
       // a nonce/hash approach here has the same dynamic-rendering
