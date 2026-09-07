@@ -7,6 +7,12 @@ alter table training_tasks add column if not exists submission_text text;
 alter table training_tasks add column if not exists submitted_at timestamptz;
 
 alter table training_tasks drop constraint if exists training_tasks_status_check;
+
+-- Preserve existing completed tasks while moving them to the LMS vocabulary.
+update training_tasks
+set status = 'Approved'
+where status = 'Done';
+
 alter table training_tasks add constraint training_tasks_status_check
   check (status in ('Assigned', 'In Progress', 'Submitted', 'Needs Changes', 'Approved'));
 
