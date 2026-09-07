@@ -156,7 +156,7 @@ export function AuthCover({
   if (mode !== "landing") {
     return (
       <div
-        className="relative min-h-screen flex flex-col bg-canvas overflow-hidden"
+        className="relative min-h-screen flex flex-col bg-canvas overflow-hidden lg:justify-center"
         style={!hasImages ? { background: "linear-gradient(160deg, var(--indigo), var(--indigo2))" } : undefined}
       >
         {hasImages ? (
@@ -179,16 +179,16 @@ export function AuthCover({
           </Link>
         </div>
 
-        <div className="relative flex-1 flex flex-col items-center justify-center px-4 py-8 gap-6">
+        <div className="relative flex-1 flex flex-col items-center justify-center px-4 py-8 gap-6 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:justify-items-center lg:px-12 xl:px-16">
           {!businessName && (
-            <div className="text-center text-white max-w-md hidden sm:block">
-              <h1 className="font-display font-extrabold text-2xl md:text-3xl leading-tight mb-2 drop-shadow-sm">{tagline}</h1>
-              <p className="text-sm" style={{ color: "#E7DFF7" }}>
+            <div className="text-center text-white max-w-md hidden lg:block lg:text-left lg:max-w-lg">
+              <h1 className="font-display font-extrabold text-2xl md:text-3xl lg:text-4xl leading-tight mb-2 drop-shadow-sm">{tagline}</h1>
+              <p className="text-sm lg:text-base" style={{ color: "#E7DFF7" }}>
                 {desc}
               </p>
             </div>
           )}
-          <div className="w-full max-w-sm">{children}</div>
+          <div className="w-full max-w-sm lg:max-w-md lg:justify-self-center">{children}</div>
           {hasImages && <CoverDots count={images.length} index={index} />}
         </div>
       </div>
