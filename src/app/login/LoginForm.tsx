@@ -42,7 +42,8 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     setLoading(true);
     setError(null);
     const supabase = createClient();
-    const trimmedIdentifier = identifier.trim();
+    try {
+      const trimmedIdentifier = identifier.trim();
 
     // Login accepts either an email or the phone number on file for the
     // account (see supabase/migrations/033_login_by_phone_or_email.sql)
@@ -117,7 +118,11 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
     // fresh server response replaces it. A hard navigation guarantees the
     // cache is discarded and the very first paint is already correctly
     // scoped to the just-authenticated user's real role.
-    window.location.assign(destination);
+      window.location.assign(destination);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : "Unable to sign in. Please try again.");
+    }
   }
 
   return (
