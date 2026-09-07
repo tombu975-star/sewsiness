@@ -1,6 +1,6 @@
+import Link from "next/link";
+
 export function EmptyState({
-  icon = "+",
-  title,
   description,
   actionLabel,
   actionHref,
@@ -22,13 +22,13 @@ export function EmptyState({
       <div className="font-display text-lg font-semibold text-ink">{title}</div>
       <p className="text-sm text-ink-muted max-w-sm">{description}</p>
       {actionLabel && actionHref && (
-        <a
+        <Link
           href={actionHref}
           className="mt-2 inline-flex items-center rounded-lg bg-gold text-[#3a2400] text-sm font-semibold px-4 py-2.5 hover:brightness-[1.03] transition-all active:scale-[0.98]"
           style={{ boxShadow: "var(--shadow-gold)" }}
         >
           {actionLabel}
-        </a>
+        </Link>
       )}
     </div>
   );

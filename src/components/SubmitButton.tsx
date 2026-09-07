@@ -30,7 +30,7 @@ export function SubmitButton({
       type="submit"
       disabled={pending}
       aria-busy={pending}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 transition-all duration-150 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait disabled:active:scale-100 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait disabled:active:scale-100 ${VARIANTS[variant]} ${className}`}
     >
       {pending && <Spinner />}
       {pending ? pendingLabel ?? "Saving…" : children}

@@ -19,6 +19,7 @@ export function Button({
   onClick,
   type = "button",
   disabled,
+  className = "",
 }: {
   children: React.ReactNode;
   variant?: "primary" | "outline" | "ghost";
@@ -26,8 +27,9 @@ export function Button({
   onClick?: () => void;
   type?: "button" | "submit";
   disabled?: boolean;
+  className?: string;
 }) {
-  const cls = `inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold px-4 py-2.5 transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 ${VARIANTS[variant]}`;
+  const cls = `inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANTS[variant]} ${className}`;
   const style = { boxShadow: SHADOWS[variant] };
   if (href) {
     return (

@@ -49,6 +49,13 @@ export function DataTable({
     router.push(href);
   }
 
+  function handleRowKeyDown(e: React.KeyboardEvent, href?: string) {
+    if (!href || (e.key !== "Enter" && e.key !== " ")) return;
+    if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
+    e.preventDefault();
+    router.push(href);
+  }
+
   if (rows.length === 0) {
     return <div className="card p-10 text-center text-ink-muted text-sm">{emptyLabel}</div>;
   }
@@ -71,7 +78,11 @@ export function DataTable({
           <div
             key={row.id}
             onClick={(e) => handleRowClick(e, row.href)}
-            className={`card p-4 ${row.href ? "active:bg-sunken active:scale-[0.99] transition-all cursor-pointer" : ""}`}
+            onKeyDown={(e) => handleRowKeyDown(e, row.href)}
+            tabIndex={row.href ? 0 : undefined}
+            role={row.href ? "link" : undefined}
+            aria-label={row.href ? `Open ${String(row.cells[primaryKey ?? ""] ?? "record")}` : undefined}
+            className={`card p-4 ${row.href ? "active:bg-sunken active:scale-[0.99] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:outline-none" : ""}`}
           >
             <div className="flex items-start justify-between gap-3 mb-2.5">
               <div className="font-display font-semibold text-[15px] text-ink leading-snug min-w-0 break-words">
@@ -124,7 +135,10 @@ export function DataTable({
               <tr
                 key={row.id}
                 onClick={(e) => handleRowClick(e, row.href)}
-                className={row.href ? "group hover:bg-sunken/50 cursor-pointer transition-colors" : ""}
+                onKeyDown={(e) => handleRowKeyDown(e, row.href)}
+                tabIndex={row.href ? 0 : undefined}
+                aria-label={row.href ? `Open ${String(row.cells[primaryKey ?? ""] ?? "record")}` : undefined}
+                className={row.href ? "group hover:bg-sunken/50 focus-visible:bg-sunken/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo2 cursor-pointer transition-colors" : ""}
               >
                 {columns.map((c) => (
                   <td
