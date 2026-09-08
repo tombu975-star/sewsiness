@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES, fetchFeaturedDesign, fetchTailors } from "@/lib/storefront/demo-data";
+import { getShopCustomer } from "@/lib/auth/require-shop-customer";
 
 const CATEGORY_ICON: Record<string, React.ReactNode> = {
   cloths: (
@@ -41,25 +42,38 @@ const CATEGORY_ICON: Record<string, React.ReactNode> = {
 };
 
 export default async function ShopHomePage() {
-  const [featured, tailors] = await Promise.all([fetchFeaturedDesign(), fetchTailors()]);
+  const [featured, tailors, shopper] = await Promise.all([fetchFeaturedDesign(), fetchTailors(), getShopCustomer()]);
+  const firstName = shopper?.customer.full_name?.split(" ")[0];
 
   return (
     <div className="px-5 pb-6 pt-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-ink-faint">Good morning</p>
-          <p className="font-display text-lg font-semibold text-ink">Hello, Akosua</p>
+          <p className="font-display text-lg font-semibold text-ink">{firstName ? `Hello, ${firstName}` : "Hello there"}</p>
         </div>
-        <Link
-          href="/shop/orders"
-          aria-label="Notifications"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" strokeLinejoin="round" />
-            <path d="M10 19a2 2 0 0 0 4 0" strokeLinecap="round" />
-          </svg>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/shop/account"
+            aria-label="Your account"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="8" r="3.2" />
+              <path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" />
+            </svg>
+          </Link>
+          <Link
+            href="/shop/orders"
+            aria-label="Notifications"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" strokeLinejoin="round" />
+              <path d="M10 19a2 2 0 0 0 4 0" strokeLinecap="round" />
+            </svg>
+          </Link>
+        </div>
       </div>
 
       <label className="mt-5 flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink-muted">
