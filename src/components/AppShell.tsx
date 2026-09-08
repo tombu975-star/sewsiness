@@ -135,26 +135,47 @@ export function AppShell({
     !bottomHrefs.includes(pathname) && items.some((i) => isItemActive(i.href, i.children));
 
   const NavList = ({ onNavigate, rail }: { onNavigate?: () => void; rail?: boolean }) => (
-    <div className="p-nav flex-1 overflow-y-auto overflow-x-visible scrollbar-thin px-2 py-2 space-y-0.5">
+    <nav aria-label="Primary" className="p-nav flex-1 overflow-y-auto overflow-x-visible scrollbar-thin px-2 py-2 space-y-0.5">
       {items.map((item) => {
         const active = isItemActive(item.href, item.children);
 
         if (item.children) {
           return (
             <div key={item.label} className={`mb-1 relative ${rail ? "group" : ""}`}>
-              <div
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-semibold transition-colors ${
-                  rail ? "justify-center" : ""
-                } ${active ? "text-white" : "text-sidebar-ink"} ${rail ? "group-hover:bg-white/[0.08] group-hover:text-white" : ""}`}
-              >
-                <span className="w-4 text-center text-[14px] flex-shrink-0">{item.icon}</span>
-                {!rail && (
-                  <>
-                    <span className="truncate">{item.label}</span>
-                    {item.isNew && <NewTag />}
-                  </>
-                )}
-              </div>
+              {rail ? (
+                // Rail mode has no visible label to click — the flyout of
+                // child links only ever appears on :hover/:focus-within.
+                // A plain <div> can never itself receive focus, so a
+                // keyboard user tabbing through the collapsed sidebar
+                // would land on the *next* top-level item and skip this
+                // group's children entirely, with no way to reach them
+                // short of expanding the whole sidebar first. A real
+                // <button> gives Tab something to land on, which is what
+                // triggers group-focus-within and reveals the flyout —
+                // same reveal path as :hover, just keyboard-reachable.
+                // It doesn't need an onClick: revealing the flyout *is*
+                // its job, navigation happens on the links inside it.
+                <button
+                  type="button"
+                  aria-haspopup="true"
+                  aria-label={`${item.label} submenu`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-semibold transition-colors justify-center ${
+                    active ? "text-white" : "text-sidebar-ink"
+                  } group-hover:bg-white/[0.08] group-hover:text-white focus-visible:bg-white/[0.08] focus-visible:text-white focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--gold)]`}
+                >
+                  <span className="w-4 text-center text-[14px] flex-shrink-0">{item.icon}</span>
+                </button>
+              ) : (
+                <div
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-semibold transition-colors ${
+                    active ? "text-white" : "text-sidebar-ink"
+                  }`}
+                >
+                  <span className="w-4 text-center text-[14px] flex-shrink-0">{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                  {item.isNew && <NewTag />}
+                </div>
+              )}
 
               {/* Expanded mode: children render inline, below the parent. */}
               {!rail &&
@@ -230,7 +251,7 @@ export function AppShell({
             </Link>
             {rail && (
               <div
-                className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap px-2.5 py-1.5 rounded-md text-[12.5px] font-semibold text-white z-50"
+                className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-all duration-150 absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap px-2.5 py-1.5 rounded-md text-[12.5px] font-semibold text-white z-50"
                 style={{ background: "#2a0d40", boxShadow: "0 6px 18px -4px rgba(20,8,40,0.5)" }}
               >
                 {item.label}
@@ -240,7 +261,7 @@ export function AppShell({
           </div>
         );
       })}
-    </div>
+    </nav>
   );
 
   return (
@@ -341,7 +362,19 @@ export function AppShell({
         </header>
         <div className="kente-strip" />
 
-        <main className="flex-1 overflow-y-auto scrollbar-thin pb-20 md:pb-6">
+        {/* Visually hidden until focused — the very first Tab stop on
+            every page, so a keyboard/screen-reader user isn't forced to
+            tab through the entire sidebar (20+ links) on every single
+            page load just to reach the actual content. Standard pattern
+            on any app with a persistent nav rail. */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-indigo focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
+
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto scrollbar-thin pb-20 md:pb-6">
           <div className="max-w-6xl mx-auto p-4 md:p-7">{children}</div>
         </main>
 

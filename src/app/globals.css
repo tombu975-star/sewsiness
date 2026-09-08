@@ -468,16 +468,21 @@ input[type="radio"] {
   cursor: pointer;
 }
 
-/* Every text-like input/textarea/select gets a soft focus glow on top
-   of whatever `focus:border-*` a page already sets — the combination
-   (border color change + glow) is the same focus treatment used across
-   most fintech-grade dashboards, and reads as considerably more
-   deliberate than a border-color change alone. */
+/* Every text-like input/textarea/select gets a focus ring on top of
+   whatever `focus:border-*` a page already sets. Two layered shadows:
+   a solid --indigo2 ring immediately against the field edge is the
+   actual WCAG-compliant indicator (2.4.11 non-text contrast needs
+   ~3:1 against the white field — --gold-soft alone here measured
+   ~1.05:1, i.e. functionally invisible), with a soft --gold-soft halo
+   further out purely for the fintech-dashboard glow this was going
+   for. Losing the halo would look flat; losing the solid ring would
+   fail contrast — keeping both gets the polish without losing the
+   indicator that's actually doing the accessibility work. */
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px var(--gold-soft);
+  box-shadow: 0 0 0 2px var(--indigo2), 0 0 0 6px var(--gold-soft);
 }
 
 /* Textareas: allow vertical resize (useful), never horizontal (which
