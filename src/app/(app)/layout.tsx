@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/AppShell";
+import { getDisabledFeatureKeys } from "@/lib/feature-flags";
 import type { Profile, Role } from "@/lib/types";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -49,8 +50,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       : org?.name ?? "Sewiness";
   const branchName = isPlatformAccount ? null : branch?.name;
 
+  // Super Admin/System Admin's own nav (SUPER_ADMIN_SIDEBAR / SYSTEM_ADMIN_SIDEBAR
+  // in nav.ts) has no `featureKey`s at all — platform-oversight pages are never
+  // switchable — so this lookup is only ever meaningful for business roles, but
+  // it's cheap and harmless to fetch regardless.
+  const disabledFeatureKeys = await getDisabledFeatureKeys();
+
   return (
-    <AppShell role={role} fullName={fullName} orgName={orgName} branchName={branchName} avatarUrl={profile?.avatar_url ?? null} unreadNotificationCount={unreadNotificationCount ?? 0}>
+    <AppShell
+      role={role}
+      fullName={fullName}
+      orgName={orgName}
+      branchName={branchName}
+      avatarUrl={profile?.avatar_url ?? null}
+      unreadNotificationCount={unreadNotificationCount ?? 0}
+      disabledFeatureKeys={Array.from(disabledFeatureKeys)}
+    >
       {children}
     </AppShell>
   );

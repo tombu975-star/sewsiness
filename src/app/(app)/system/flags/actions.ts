@@ -44,6 +44,45 @@ export async function createFeatureFlag(formData: FormData) {
   revalidatePath("/system/flags");
 }
 
+// Toggles a FEATURE_REGISTRY entry (src/lib/nav.ts) by key rather than
+// by row id — registry features are shown on /system/flags even before
+// any feature_flags row exists for them (see page.tsx), since "no row"
+// reads as "on" for these (they're already-live modules, not
+// opt-in-when-ready work). Upserts on the table's unique `key` so the
+// very first toggle creates the row instead of erroring on a missing id.
+export async function toggleRegistryFeature(formData: FormData) {
+  const { user } = await requireRole(["system_admin"]);
+
+  const key = String(formData.get("key") ?? "").trim();
+  const label = String(formData.get("label") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const nextEnabled = String(formData.get("next_enabled") ?? "false") === "true";
+  if (!key || !label) throw new Error("Missing feature.");
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("feature_flags")
+    .upsert(
+      {
+        key,
+        label,
+        description: description || null,
+        enabled: nextEnabled,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      },
+      { onConflict: "key" }
+    );
+  if (error) throw new Error(error.message);
+
+  await logSystemAction(user.id, `feature_flag_${nextEnabled ? "enabled" : "disabled"}`, "feature_flags", key);
+  revalidatePath("/system/flags");
+  // A registry feature gates the sidebar/nav for every business account
+  // (see src/app/(app)/layout.tsx) — refresh everything so a flip is
+  // visible immediately, not just on the flags screen itself.
+  revalidatePath("/", "layout");
+}
+
 export async function toggleFeatureFlag(formData: FormData) {
   const { user } = await requireRole(["system_admin"]);
 

@@ -8,7 +8,17 @@ import { logSignOut } from "@/app/(app)/audit/actions";
 import { Spinner } from "@/components/Spinner";
 import { InactivityGuard } from "@/components/InactivityGuard";
 import { MobileMoreMenu } from "@/components/MobileMoreMenu";
-import { ROLES, SETTINGS_ROLES, sidebarForRole, bottomNavForRole, moreMenuForRole, pageTitleForPath } from "@/lib/nav";
+import {
+  ROLES,
+  SETTINGS_ROLES,
+  sidebarForRole,
+  bottomNavForRole,
+  moreMenuForRole,
+  pageTitleForPath,
+  filterNavByFeatures,
+  filterMoreMenuByFeatures,
+  filterBottomNavByFeatures,
+} from "@/lib/nav";
 import type { Role } from "@/lib/types";
 
 const SIDEBAR_COLLAPSED_KEY = "sewsiness_sidebar_collapsed";
@@ -22,6 +32,7 @@ export function AppShell({
   branchName,
   avatarUrl,
   unreadNotificationCount,
+  disabledFeatureKeys,
   children,
 }: {
   role: Role;
@@ -30,6 +41,11 @@ export function AppShell({
   branchName?: string | null;
   avatarUrl?: string | null;
   unreadNotificationCount: number;
+  // Keys from FEATURE_REGISTRY (src/lib/nav.ts) a System Admin has
+  // switched off — plain array, not a Set, since it crosses the
+  // server/client boundary as a prop. Defaults to none so existing
+  // callers/tests that don't pass it still render the full nav.
+  disabledFeatureKeys?: string[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -76,8 +92,9 @@ export function AppShell({
     });
   }
 
-  const items = sidebarForRole(role);
-  const bottomItems = bottomNavForRole(role);
+  const disabledKeySet = new Set(disabledFeatureKeys ?? []);
+  const items = filterNavByFeatures(sidebarForRole(role), disabledKeySet);
+  const bottomItems = filterBottomNavByFeatures(bottomNavForRole(role), disabledKeySet);
   const pageTitle = pageTitleForPath(pathname, role);
   const roleLabel = ROLES.find((r) => r.id === role)?.label ?? role;
   const initials = fullName
@@ -372,7 +389,7 @@ export function AppShell({
       <MobileMoreMenu
         open={moreMenuOpen}
         onClose={() => setMoreMenuOpen(false)}
-        sections={moreMenuForRole(role)}
+        sections={filterMoreMenuByFeatures(moreMenuForRole(role), disabledKeySet)}
         pathname={pathname}
         fullName={fullName}
         roleLabel={roleLabel}
