@@ -123,7 +123,6 @@ export function DataTable({
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  scope="col"
                   className="text-left px-4 py-3 font-mono font-semibold text-ink-soft text-[10.5px] uppercase tracking-wider whitespace-nowrap"
                 >
                   {c.label}
