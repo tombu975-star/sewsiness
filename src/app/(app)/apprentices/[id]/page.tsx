@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { requirePageRegistryFeature } from "@/lib/auth/require-role";
+import { getApprenticeCertificateStatus } from "@/lib/apprentice-certificate";
 
 export default async function ApprenticeDetailPage({ params }: { params: { id: string } }) {
   const { profile } = await requirePageRegistryFeature(["owner", "manager", "trainer"], "apprentices");
@@ -19,13 +20,14 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
     );
   }
 
-  const { data: ap } = await supabase
-    .from("apprentice_profiles")
-    .select(
-      "training_level, specialisation, training_goals, start_date, completed_at, certificate_number, trainer:trainer_id(full_name)"
-    )
-    .eq("profile_id", params.id)
-    .maybeSingle();
+  // Single source of truth for "is a certificate ready?" — see
+  // apprentice-certificate.ts. This used to check apprentice_profiles.
+  // completed_at alone, which missed anyone completed through a
+  // structured Training Program enrollment (that path issues a real
+  // `certificates` row but never sets completed_at) — so a Trainer
+  // could never see or open a certificate that had, in fact, already
+  // been issued.
+  const status = await getApprenticeCertificateStatus(supabase, params.id);
 
   const { data: portfolio } = await supabase
     .from("portfolio_items")
@@ -42,7 +44,7 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
   const rows = (portfolio ?? []) as any[];
   const taskRows = (tasks ?? []) as any[];
   const approvedTasks = taskRows.filter((task) => task.status === "Approved").length;
-  const isCompleted = Boolean(ap?.completed_at);
+  const isCompleted = status.ready;
 
   return (
     <div>
@@ -57,17 +59,17 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
           <h3 className="font-display text-[15px] font-semibold text-ink mb-3">Training Record</h3>
           <dl className="grid grid-cols-2 gap-y-3 text-sm">
             <dt className="text-ink-muted">Trainer</dt>
-            <dd className="text-ink text-right">{(ap as any)?.trainer?.full_name ?? "Not assigned"}</dd>
+            <dd className="text-ink text-right">{status.trainerName ?? "Not assigned"}</dd>
             <dt className="text-ink-muted">Training Level</dt>
-            <dd className="text-ink text-right">{ap?.training_level ?? "—"}</dd>
+            <dd className="text-ink text-right">{status.trainingLevel ?? "—"}</dd>
             <dt className="text-ink-muted">Specialisation</dt>
-            <dd className="text-ink text-right">{ap?.specialisation ?? "—"}</dd>
+            <dd className="text-ink text-right">{status.specialisation ?? "—"}</dd>
             <dt className="text-ink-muted">Start Date</dt>
-            <dd className="text-ink text-right">{ap?.start_date ?? "—"}</dd>
-            {ap?.training_goals && (
+            <dd className="text-ink text-right">{status.startDate ?? "—"}</dd>
+            {status.trainingGoals && (
               <>
                 <dt className="text-ink-muted">Goals</dt>
-                <dd className="text-ink text-right">{ap.training_goals}</dd>
+                <dd className="text-ink text-right">{status.trainingGoals}</dd>
               </>
             )}
           </dl>
@@ -79,11 +81,11 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
             <div>
               <p className="text-sm text-success mb-1">
                 ✓ Training completed{" "}
-                {ap?.completed_at
-                  ? new Date(ap.completed_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+                {status.completedAt
+                  ? new Date(status.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
                   : ""}
               </p>
-              <p className="text-xs text-ink-muted mb-4">Certificate No. {ap?.certificate_number ?? "—"}</p>
+              <p className="text-xs text-ink-muted mb-4">Certificate No. {status.certificateNumber ?? "—"}</p>
               <a
                 href={`/apprentices/${params.id}/certificate`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-indigo text-white hover:brightness-110 border border-indigo transition-all duration-150 active:scale-[0.98]"

@@ -3,6 +3,7 @@ import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
+import { getApprenticeCertificateStatus } from "@/lib/apprentice-certificate";
 
 // An Apprentice sees none of the shop's money or its full customer/order
 // list — their sidebar reaches exactly three things (My Training i.e.
@@ -13,12 +14,9 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
   const supabase = createClient();
   const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
 
-  const [{ data: apprenticeProfile }, { data: tasks }, { data: portfolio }, { data: structuredCertificate }] = await Promise.all([
-    supabase
-      .from("apprentice_profiles")
-      .select("training_level, specialisation, training_goals, start_date, completed_at, certificate_number, trainer:trainer_id(full_name)")
-      .eq("profile_id", userId)
-      .maybeSingle(),
+  // Single source of truth for "is a certificate ready?" — see
+  // apprentice-certificate.ts.
+  const [{ data: tasks }, { data: portfolio }, status] = await Promise.all([
     supabase
       .from("training_tasks")
       .select("id, title, status, due_date")
@@ -30,21 +28,13 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
       .eq("apprentice_id", userId)
       .order("created_at", { ascending: false })
       .limit(4),
-    supabase
-      .from("certificates")
-      .select("certificate_number, final_score, grade, issued_at, program:program_id(name, program_type)")
-      .eq("apprentice_id", userId)
-      .is("revoked_at", null)
-      .order("issued_at", { ascending: false })
-      .maybeSingle(),
+    getApprenticeCertificateStatus(supabase, userId),
   ]);
 
   const taskRows = (tasks ?? []) as any[];
   const doneCount = taskRows.filter((t) => t.status === "Approved").length;
   const openTasks = taskRows.filter((t) => t.status !== "Approved").slice(0, 6);
-  const trainerName = (apprenticeProfile as any)?.trainer?.full_name ?? null;
-  const certificate = structuredCertificate as any;
-  const completed = Boolean(certificate || (apprenticeProfile as any)?.completed_at);
+  const completed = status.ready;
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -77,7 +67,7 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
         <div className="callout mb-6">
           <div className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">Training Completed 🎓</div>
           <p>
-            Certificate No. {certificate?.certificate_number ?? (apprenticeProfile as any).certificate_number ?? "—"}{certificate?.grade ? ` · ${certificate.grade}` : ""}{certificate?.final_score != null ? ` · ${Number(certificate.final_score).toFixed(1)}%` : ""} — you can download it any time from the button
+            Certificate No. {status.certificateNumber ?? "—"}{status.structured?.grade ? ` · ${status.structured.grade}` : ""}{status.structured?.finalScore != null ? ` · ${Number(status.structured.finalScore).toFixed(1)}%` : ""} — you can download it any time from the button
             above.
           </p>
         </div>
@@ -86,31 +76,51 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <div className="card p-4">
           <div className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1.5">My Trainer</div>
-          <div className="font-display text-lg font-semibold text-ink">{trainerName ?? "Not yet assigned"}</div>
+          <div className="font-display text-lg font-semibold text-ink">{status.trainerName ?? "Not yet assigned"}</div>
         </div>
-        <StatCard label="Training Level" value={(apprenticeProfile as any)?.training_level ?? "—"} icon="◎" />
+        <StatCard label="Training Level" value={status.trainingLevel ?? "—"} icon="◎" />
         <StatCard label="Tasks Done" value={`${doneCount} / ${taskRows.length}`} accent icon="✓" />
       </div>
 
-      {((apprenticeProfile as any)?.specialisation || (apprenticeProfile as any)?.training_goals) && (
+      {(status.specialisation || status.trainingGoals) && (
         <div className="card p-5 mb-6" style={{ boxShadow: "var(--shadow-sm)" }}>
           <h3 className="font-display text-[15px] font-semibold text-ink mb-3">About your training</h3>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            {(apprenticeProfile as any)?.specialisation && (
+            {status.specialisation && (
               <div>
                 <dt className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1">Specialisation</dt>
-                <dd className="text-ink">{(apprenticeProfile as any).specialisation}</dd>
+                <dd className="text-ink">{status.specialisation}</dd>
               </div>
             )}
-            {(apprenticeProfile as any)?.training_goals && (
+            {status.trainingGoals && (
               <div>
                 <dt className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1">Training Goals</dt>
-                <dd className="text-ink">{(apprenticeProfile as any).training_goals}</dd>
+                <dd className="text-ink">{status.trainingGoals}</dd>
               </div>
             )}
           </dl>
         </div>
       )}
+
+      {/* Every other page an Apprentice can reach (see the "apprentice"
+          entries in SIDEBAR, src/lib/nav.ts) as one tappable grid, so
+          getting to Learning Programs/Quizzes/Skills/etc. doesn't
+          depend on noticing the same links tucked into the sidebar —
+          useful on mobile too, where the sidebar collapses into the
+          "More" sheet. */}
+      <div className="mb-6">
+        <h2 className="font-display text-lg font-semibold text-ink mb-3">Quick Links</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <NavCard href="/training-programs" icon="◎" label="Learning Programs" description="Courses assigned to you" />
+          <NavCard href="/training-sessions" icon="◎" label="Training Sessions" description="Classes & attendance" />
+          <NavCard href="/training-plans" icon="▤" label="My Tasks" description="Assignments to submit" badge={openTasks.length > 0 ? String(openTasks.length) : undefined} />
+          <NavCard href="/skills-matrix" icon="⚙" label="My Skills" description="Your competency levels" />
+          <NavCard href="/quizzes" icon="✓" label="My Quizzes" description="Auto-scored assessments" />
+          <NavCard href="/portfolios" icon="✂" label="My Portfolio" description="Your finished work" />
+          <NavCard href="/notifications" icon="◍" label="Notifications" description="Updates on your training" />
+          <NavCard href="/account" icon="☺" label="My Account" description="Profile, photo & password" />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -172,5 +182,47 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// One tappable tile per destination — icon + label with a one-line
+// description underneath, and an optional small count badge (used for
+// My Tasks' open-task count). `card-hover` (globals.css) already gives
+// every `.card` in this app a lift + shadow on hover; this just adds
+// the same treatment on `:active` so it reads as tappable on mobile
+// too, not only hoverable with a mouse.
+function NavCard({
+  href,
+  icon,
+  label,
+  description,
+  badge,
+}: {
+  href: string;
+  icon: string;
+  label: string;
+  description: string;
+  badge?: string;
+}) {
+  return (
+    <a
+      href={href}
+      className="card card-hover p-4 flex flex-col gap-2 transition-transform active:scale-[0.97]"
+    >
+      <div className="flex items-center justify-between">
+        <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] flex-shrink-0">
+          {icon}
+        </div>
+        {badge && (
+          <span className="rounded-full bg-burgundy text-white text-[10.5px] font-bold px-1.5 py-0.5 min-w-[18px] text-center leading-tight">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-ink">{label}</div>
+        <div className="text-[11.5px] text-ink-muted mt-0.5">{description}</div>
+      </div>
+    </a>
   );
 }

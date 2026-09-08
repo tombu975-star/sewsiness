@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildCertificatePdf } from "@/lib/pdf/certificate";
+import { getApprenticeCertificateStatus } from "@/lib/apprentice-certificate";
 import { siteUrl } from "@/lib/site-url";
 
 // A Route Handler rather than a Server Action, since the point is a
@@ -28,48 +29,35 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     .from("profiles")
     .select("full_name, organization_id, organizations(name)")
     .eq("id", params.id)
-    .single();
+    .maybeSingle();
   if (!apprentice || apprentice.organization_id !== caller.organization_id) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const { data: ap } = await supabase
-    .from("apprentice_profiles")
-    .select("training_level, specialisation, start_date, completed_at, certificate_number, trainer:trainer_id(full_name)")
-    .eq("profile_id", params.id)
-    .maybeSingle();
+  // Single source of truth for "is a certificate ready?" — see
+  // apprentice-certificate.ts for why this used to be three separately
+  // hand-written (and quietly inconsistent) copies of the same check.
+  const status = await getApprenticeCertificateStatus(supabase, params.id);
 
-  const { data: structuredCertificate } = await supabase
-    .from("certificates")
-    .select("certificate_number, verification_code, final_score, grade, issued_at, program:program_id(name, program_type)")
-    .eq("apprentice_id", params.id)
-    .is("revoked_at", null)
-    .order("issued_at", { ascending: false })
-    .maybeSingle();
-
-  if (!structuredCertificate && !ap?.completed_at) {
+  if (!status.ready) {
     return new NextResponse("This apprentice's training hasn't been marked complete yet.", { status: 404 });
   }
-
-  const certificate = structuredCertificate as any;
-  const program = certificate?.program as any;
-  const completedAt = certificate?.issued_at ?? ap?.completed_at;
 
   const pdfBytes = await buildCertificatePdf({
     apprenticeName: apprentice.full_name,
     organizationName: (apprentice as any).organizations?.name ?? "Sewsiness",
-    specialisation: ap?.specialisation ?? null,
-    trainingLevel: ap?.training_level ?? null,
-    trainerName: (ap as any).trainer?.full_name ?? null,
-    startDate: ap?.start_date ?? null,
-    completedAt,
-    certificateNumber: certificate?.certificate_number ?? ap?.certificate_number,
-    programName: program?.name ?? null,
-    programType: program?.program_type ?? null,
-    grade: certificate?.grade ?? null,
-    finalScore: certificate?.final_score ?? null,
-    verificationCode: certificate?.verification_code ?? null,
-    verificationUrl: certificate?.verification_code ? `${siteUrl()}/verify/${certificate.verification_code}` : null,
+    specialisation: status.specialisation,
+    trainingLevel: status.trainingLevel,
+    trainerName: status.trainerName,
+    startDate: status.startDate,
+    completedAt: status.completedAt!,
+    certificateNumber: status.certificateNumber,
+    programName: status.structured?.programName ?? null,
+    programType: status.structured?.programType ?? null,
+    grade: status.structured?.grade ?? null,
+    finalScore: status.structured?.finalScore ?? null,
+    verificationCode: status.structured?.verificationCode ?? null,
+    verificationUrl: status.structured?.verificationCode ? `${siteUrl()}/verify/${status.structured.verificationCode}` : null,
   });
 
   const safeName = apprentice.full_name.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "");
