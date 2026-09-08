@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireRoleRegistryFeature } from "@/lib/auth/require-role";
 
 export async function createTrainingProgram(formData: FormData) {
-  const { user, profile } = await requireRole(["owner", "manager"]);
+  const { user, profile } = await requireRoleRegistryFeature(["owner", "manager"], "apprentices");
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const programType = String(formData.get("program_type") ?? "workplace");
@@ -31,7 +31,7 @@ export async function createTrainingProgram(formData: FormData) {
 }
 
 export async function createTrainingModule(formData: FormData) {
-  const { profile } = await requireRole(["owner", "manager"]);
+  const { profile } = await requireRoleRegistryFeature(["owner", "manager"], "apprentices");
   const programId = String(formData.get("program_id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -53,7 +53,7 @@ export async function createTrainingModule(formData: FormData) {
 }
 
 export async function enrollApprentice(formData: FormData) {
-  const { profile } = await requireRole(["owner", "manager"]);
+  const { profile } = await requireRoleRegistryFeature(["owner", "manager"], "apprentices");
   const programId = String(formData.get("program_id") ?? "");
   const apprenticeId = String(formData.get("apprentice_id") ?? "");
   const trainerId = String(formData.get("trainer_id") ?? "") || null;

@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createTrainingModule, createTrainingProgram, enrollApprentice } from "./actions";
 
 export default async function TrainingProgramsPage() {
-  const { user, profile } = await requirePageRole(["owner", "manager", "trainer", "apprentice"]);
+  const { user, profile } = await requirePageRegistryFeature(["owner", "manager", "trainer", "apprentice"], "apprentices");
   const supabase = createClient();
   const canManage = profile.role === "owner" || profile.role === "manager";
 

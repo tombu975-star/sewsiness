@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 
 export default async function ApprenticeDetailPage({ params }: { params: { id: string } }) {
-  const { profile } = await requirePageRole(["owner", "manager", "trainer"]);
+  const { profile } = await requirePageRegistryFeature(["owner", "manager", "trainer"], "apprentices");
   const supabase = createClient();
 
   const { data: apprentice } = await supabase

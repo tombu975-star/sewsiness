@@ -1,13 +1,26 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { DataTable } from "@/components/DataTable";
 import { EmptyState } from "@/components/EmptyState";
+import { homePathForRole } from "@/lib/nav";
+import { getDisabledFeatureKeys } from "@/lib/feature-flags";
+import type { Role } from "@/lib/types";
 
 export default async function CostingPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id, role").eq("id", user!.id).single();
+
+  // Unlike every other registry-gated page, Costing checks role inline
+  // rather than via requirePageRole, so it never picked up the shared
+  // requirePageRole->requirePageRegistryFeature swap. Added directly
+  // here instead so a System Admin turning "costing" off in
+  // /system/flags blocks this URL too, not just the sidebar entry.
+  if ((await getDisabledFeatureKeys()).has("costing")) {
+    redirect(homePathForRole(profile?.role as Role));
+  }
 
   if (!["owner", "manager", "super_admin"].includes(profile?.role ?? "")) {
     return (

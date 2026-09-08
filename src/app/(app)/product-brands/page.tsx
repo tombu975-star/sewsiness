@@ -3,10 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 
 export default async function ProductBrandsPage() {
-  await requirePageRole(["owner", "manager"]);
+  await requirePageRegistryFeature(["owner", "manager"], "products");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

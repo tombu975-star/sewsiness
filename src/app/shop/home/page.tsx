@@ -127,7 +127,7 @@ export default async function ShopHomePage() {
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-5 gap-2">
+      <div className="mt-6 grid grid-cols-5 gap-2 sm:gap-4">
         {CATEGORIES.map((c) => (
           <Link
             key={c.id}
@@ -151,8 +151,8 @@ export default async function ShopHomePage() {
         </Link>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        {tailors.slice(0, 2).map((t) => (
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {tailors.slice(0, 3).map((t) => (
           <div key={t.id} className="rounded-2xl border border-border bg-surface p-4 text-center">
             <span
               className="mx-auto flex h-16 w-16 items-center justify-center rounded-full text-lg font-semibold text-white"

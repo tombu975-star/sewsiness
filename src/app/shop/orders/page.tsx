@@ -35,7 +35,7 @@ export default async function CustomerOrdersPage() {
   return (
     <div className="px-5 pb-8 pt-6">
       <h1 className="font-display text-lg font-semibold text-ink">Your orders</h1>
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {orders.map((order) => (
           <div key={order.id} className="rounded-2xl border border-border bg-surface p-4">
             <div className="flex items-start justify-between gap-2">

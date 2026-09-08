@@ -3,10 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { DataTable } from "@/components/DataTable";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 
 export default async function CustomerMaterialsPage() {
-  await requirePageRole(["owner", "manager", "staff"]);
+  await requirePageRegistryFeature(["owner", "manager", "staff"], "customer_materials");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

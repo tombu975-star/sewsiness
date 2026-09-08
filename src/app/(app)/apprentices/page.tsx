@@ -3,12 +3,12 @@ import { PageHead } from "@/components/PageHead";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 import { InviteStatusBadge } from "@/components/InviteStatusBadge";
 import { ResendInviteButton } from "@/components/ResendInviteButton";
 
 export default async function ApprenticesPage() {
-  await requirePageRole(["owner", "manager", "trainer"]);
+  await requirePageRegistryFeature(["owner", "manager", "trainer"], "apprentices");
   const supabase = createClient();
   const {
     data: { user },

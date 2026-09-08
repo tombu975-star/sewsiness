@@ -2,10 +2,10 @@
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireRoleRegistryFeature } from "@/lib/auth/require-role";
 
 export async function assignTask(formData: FormData) {
-  const { profile, user } = await requireRole(["owner", "manager", "trainer"]);
+  const { profile, user } = await requireRoleRegistryFeature(["owner", "manager", "trainer"], "apprentices");
   const admin = createAdminClient();
 
   const apprentice_id = String(formData.get("apprentice_id") ?? "");
@@ -46,7 +46,7 @@ export async function assignTask(formData: FormData) {
 }
 
 export async function submitTask(formData: FormData) {
-  const { user, profile } = await requireRole(["apprentice"]);
+  const { user, profile } = await requireRoleRegistryFeature(["apprentice"], "apprentices");
   const taskId = String(formData.get("task_id") ?? "");
   const submissionText = String(formData.get("submission_text") ?? "").trim();
   if (!taskId || !submissionText) throw new Error("Add a short description of the work you completed.");
@@ -94,7 +94,7 @@ export async function submitTask(formData: FormData) {
 }
 
 export async function reviewTask(formData: FormData) {
-  const { user, profile } = await requireRole(["owner", "manager", "trainer"]);
+  const { user, profile } = await requireRoleRegistryFeature(["owner", "manager", "trainer"], "apprentices");
   const taskId = String(formData.get("task_id") ?? "");
   const decision = String(formData.get("decision") ?? "");
   const feedback = String(formData.get("feedback") ?? "").trim();

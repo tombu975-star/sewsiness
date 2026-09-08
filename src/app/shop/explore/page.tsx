@@ -9,7 +9,7 @@ export default async function ExplorePage() {
       <h1 className="font-display text-lg font-semibold text-ink">Explore tailors</h1>
       <p className="mt-1 text-sm text-ink-muted">Find a tailor by style, rating, or specialty.</p>
 
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {tailors.map((t) => (
           <div key={t.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
             <span

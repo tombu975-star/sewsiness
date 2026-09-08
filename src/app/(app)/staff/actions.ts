@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireRoleRegistryFeature } from "@/lib/auth/require-role";
 import { isFrameworkSignal, type ActionState } from "@/lib/action-state";
 import { toSafeErrorMessage } from "@/lib/db-error";
 import { siteUrl } from "@/lib/site-url";
@@ -31,7 +31,7 @@ const ROLES_INVITABLE_BY: Partial<Record<Role, Role[]>> = {
 // Returns { error } instead of throwing — see staff/new/InviteStaffForm.tsx.
 export async function inviteStaff(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const { profile, user } = await requireRole(["owner", "manager"]);
+    const { profile, user } = await requireRoleRegistryFeature(["owner", "manager"], "staff");
 
     const full_name = String(formData.get("full_name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();

@@ -3,10 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ReceiveButton } from "./ReceiveButton";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 
 export default async function GoodsReceivedPage() {
-  await requirePageRole(["owner", "manager"]);
+  await requirePageRegistryFeature(["owner", "manager"], "purchases");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();

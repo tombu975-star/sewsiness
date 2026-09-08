@@ -13,7 +13,7 @@ export default async function CustomerAccountPage() {
         <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-indigo text-lg font-semibold text-white">
           {customer.full_name
             .split(" ")
-            .map((p) => p[0])
+            .map((p: string) => p[0])
             .slice(0, 2)
             .join("")
             .toUpperCase()}

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { homePathForRole } from "@/lib/nav";
 import type { Role } from "@/lib/types";
-import { isFeatureEnabled } from "@/lib/feature-flags";
+import { isFeatureEnabled, getDisabledFeatureKeys } from "@/lib/feature-flags";
 
 /**
  * Resolves the signed-in user's own profile (organization_id, branch_id,
@@ -87,5 +87,35 @@ export async function requirePageFeature(allowed: Role[], featureKey: string) {
 export async function requireRoleFeature(allowed: Role[], featureKey: string) {
   const result = await requireRole(allowed);
   if (!(await isFeatureEnabled(featureKey))) throw new Error("This feature is currently unavailable.");
+  return result;
+}
+
+/**
+ * Page-level hard block for a FEATURE_REGISTRY module (src/lib/nav.ts) —
+ * the ~17 already-shipped modules that System Admin can take offline
+ * from /system/flags, as opposed to requirePageFeature's brand-new
+ * opt-in-when-ready features.
+ *
+ * Deliberately does NOT reuse requirePageFeature/isFeatureEnabled():
+ * that helper treats a missing flag row as OFF, which is right for new
+ * work-in-progress but wrong here — every registry module is already
+ * live in production, so a business with no row yet for e.g. "pos"
+ * must still see it. This checks getDisabledFeatureKeys() instead,
+ * which mirrors the same "missing row = on, except DEFAULT_OFF_FEATURE_KEYS"
+ * rule the sidebar and /system/flags already use, so a URL visit and
+ * the nav entry never disagree about whether a module is reachable.
+ */
+export async function requirePageRegistryFeature(allowed: Role[], featureKey: string) {
+  const result = await requirePageRole(allowed);
+  const disabled = await getDisabledFeatureKeys();
+  if (disabled.has(featureKey)) redirect(homePathForRole(result.profile.role as Role));
+  return result;
+}
+
+/** Server Action counterpart to requirePageRegistryFeature() — see its comment. */
+export async function requireRoleRegistryFeature(allowed: Role[], featureKey: string) {
+  const result = await requireRole(allowed);
+  const disabled = await getDisabledFeatureKeys();
+  if (disabled.has(featureKey)) throw new Error("This feature is currently unavailable.");
   return result;
 }

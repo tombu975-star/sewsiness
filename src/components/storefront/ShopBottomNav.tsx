@@ -18,7 +18,7 @@ export function ShopBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-surface px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
-      <div className="mx-auto flex max-w-md items-center justify-between">
+      <div className="mx-auto flex max-w-md items-center justify-between sm:max-w-2xl sm:px-6 md:max-w-4xl lg:max-w-5xl">
         {TABS.map((tab) => {
           const active = pathname?.startsWith(tab.href);
           const Icon = tab.icon;

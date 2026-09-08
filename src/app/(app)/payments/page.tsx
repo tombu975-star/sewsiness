@@ -3,10 +3,10 @@ import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
 import { DataTable } from "@/components/DataTable";
 import { EmptyState } from "@/components/EmptyState";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 
 export default async function PaymentsPage() {
-  await requirePageRole(["owner", "manager"]);
+  await requirePageRegistryFeature(["owner", "manager"], "payments");
   const supabase = createClient();
   const {
     data: { user },
