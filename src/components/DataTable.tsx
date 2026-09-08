@@ -1,52 +1,163 @@
-import Link from "next/link";
+"use client";
 
-const VARIANTS: Record<string, string> = {
-  primary: "bg-indigo text-white hover:brightness-110 border border-indigo",
-  outline: "border border-border-strong text-ink bg-surface hover:bg-sunken hover:border-ink-faint",
-  ghost: "text-ink-muted hover:text-ink hover:bg-sunken",
-};
+import { useRouter } from "next/navigation";
+import { StatusBadge } from "./StatusBadge";
 
-const SHADOWS: Record<string, string> = {
-  primary: "var(--shadow-gold)",
-  outline: "var(--shadow-xs)",
-  ghost: "none",
-};
+export interface DataTableColumn {
+  key: string;
+  label: string;
+  isStatus?: boolean;
+  // Mobile card view only: hides this column from the card body. Use for
+  // columns that are redundant once the primary/status fields are shown
+  // (e.g. a raw internal id sitting next to a friendlier order number).
+  hideOnMobile?: boolean;
+}
 
-export function Button({
-  children,
-  variant = "primary",
-  href,
-  onClick,
-  type = "button",
-  disabled,
-  className = "",
-  ariaLabel,
-}: {
-  children: React.ReactNode;
-  variant?: "primary" | "outline" | "ghost";
+export interface DataTableRow {
+  id: string;
   href?: string;
-  onClick?: () => void;
-  type?: "button" | "submit";
-  disabled?: boolean;
-  className?: string;
-  // For icon-only buttons (no visible text in `children`) — without
-  // this there's no way for a caller to give the button an accessible
-  // name, and a screen reader falls back to reading nothing useful
-  // (or the raw icon glyph) instead of what the button actually does.
-  ariaLabel?: string;
+  cells: Record<string, React.ReactNode>;
+}
+
+export function DataTable({
+  columns,
+  rows,
+  emptyLabel = "No records yet.",
+  // Which column heads the mobile card as its title. Defaults to the
+  // first column, which is the right choice almost everywhere this
+  // component is used (order number, customer name, product name, ...).
+  mobilePrimaryKey,
+}: {
+  columns: DataTableColumn[];
+  rows: DataTableRow[];
+  emptyLabel?: string;
+  mobilePrimaryKey?: string;
 }) {
-  const cls = `inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANTS[variant]} ${className}`;
-  const style = { boxShadow: SHADOWS[variant] };
-  if (href) {
-    return (
-      <Link href={href} className={cls} style={style} aria-label={ariaLabel}>
-        {children}
-      </Link>
-    );
+  const router = useRouter();
+
+  // A row can be clickable (href) AND contain its own interactive cell
+  // content (a Resend/Mark Complete button, a status <select>, etc — see
+  // apprentices/page.tsx). Without this guard, clicking that nested
+  // control would bubble up to the row's own onClick and navigate away
+  // mid-click. Checking the actual click target's ancestry, rather than
+  // just not setting href on such rows, means callers don't have to
+  // choose between "this row links somewhere" and "this row has a
+  // working button in it" — both already need to coexist today.
+  function handleRowClick(e: React.MouseEvent, href?: string) {
+    if (!href) return;
+    if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
+    router.push(href);
   }
+
+  function handleRowKeyDown(e: React.KeyboardEvent, href?: string) {
+    if (!href || (e.key !== "Enter" && e.key !== " ")) return;
+    if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
+    e.preventDefault();
+    router.push(href);
+  }
+
+  if (rows.length === 0) {
+    return <div className="card p-10 text-center text-ink-muted text-sm">{emptyLabel}</div>;
+  }
+
+  const statusCol = columns.find((c) => c.isStatus);
+  const primaryKey = mobilePrimaryKey ?? columns[0]?.key;
+  const primaryCol = columns.find((c) => c.key === primaryKey);
+  const detailCols = columns.filter((c) => c.key !== primaryKey && c.key !== statusCol?.key && !c.hideOnMobile);
+
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={cls} style={style} aria-label={ariaLabel}>
-      {children}
-    </button>
+    <>
+      {/* Mobile: a tappable card per row, with the row's own status badge
+          (if any) up top and every other field laid out as a plain
+          label/value list — no sideways scrolling, no squinting at a
+          ten-column table shrunk onto a phone screen. This is the same
+          `columns`/`rows` data every page already passes in; nothing
+          about existing call sites needs to change for this to apply. */}
+      <div className="md:hidden space-y-2.5">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            onClick={(e) => handleRowClick(e, row.href)}
+            onKeyDown={(e) => handleRowKeyDown(e, row.href)}
+            tabIndex={row.href ? 0 : undefined}
+            role={row.href ? "link" : undefined}
+            aria-label={row.href ? `Open ${String(row.cells[primaryKey ?? ""] ?? "record")}` : undefined}
+            className={`card p-4 ${row.href ? "active:bg-sunken active:scale-[0.99] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:outline-none" : ""}`}
+          >
+            <div className="flex items-start justify-between gap-3 mb-2.5">
+              <div className="font-display font-semibold text-[15px] text-ink leading-snug min-w-0 break-words">
+                {primaryCol ? row.cells[primaryCol.key] : null}
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {statusCol &&
+                  (typeof row.cells[statusCol.key] === "string" ? (
+                    <StatusBadge value={row.cells[statusCol.key] as string} />
+                  ) : (
+                    row.cells[statusCol.key]
+                  ))}
+                {row.href && <span className="text-ink-faint text-[13px]">›</span>}
+              </div>
+            </div>
+            {detailCols.length > 0 && (
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-2.5 border-t border-border">
+                {detailCols.map((c) => (
+                  <div key={c.key} className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint mb-0.5">{c.label}</dt>
+                    <dd className="text-[12.5px] text-ink-soft truncate">{row.cells[c.key]}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop / tablet: the classic dense table. */}
+      <div className="hidden md:block card overflow-hidden overflow-x-auto scrollbar-thin">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr
+              className="border-b border-border"
+              style={{ background: "linear-gradient(180deg, var(--sunken), var(--surface))" }}
+            >
+              {columns.map((c) => (
+                <th
+                  key={c.key}
+                  scope="col"
+                  className="text-left px-4 py-3 font-mono font-semibold text-ink-soft text-[10.5px] uppercase tracking-wider whitespace-nowrap"
+                >
+                  {c.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.id}
+                onClick={(e) => handleRowClick(e, row.href)}
+                onKeyDown={(e) => handleRowKeyDown(e, row.href)}
+                tabIndex={row.href ? 0 : undefined}
+                aria-label={row.href ? `Open ${String(row.cells[primaryKey ?? ""] ?? "record")}` : undefined}
+                className={row.href ? "group hover:bg-sunken/50 focus-visible:bg-sunken/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo2 cursor-pointer transition-colors" : ""}
+              >
+                {columns.map((c) => (
+                  <td
+                    key={c.key}
+                    className="px-4 py-3.5 border-b border-border last:border-b-0 align-top whitespace-nowrap group-hover:border-border-strong transition-colors"
+                  >
+                    {c.isStatus && typeof row.cells[c.key] === "string" ? (
+                      <StatusBadge value={row.cells[c.key] as string} />
+                    ) : (
+                      row.cells[c.key]
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
