@@ -29,6 +29,8 @@ export default async function ProductCategoriesPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Category" }, { key: "count", label: "Products" }, { key: "stock", label: "Total Stock" }]}
+          searchKeys={["name"]}
+          searchPlaceholder="Search categories…"
           rows={rows.map(([name, v]) => ({ id: name, cells: { name, count: v.count, stock: v.stock } }))}
         />
       )}

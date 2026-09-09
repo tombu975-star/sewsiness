@@ -80,29 +80,6 @@ export async function StaffDashboard({ userId }: { userId: string }) {
         <StatCard label="Low / Out of Stock" value={(lowStock ?? []).length} icon="⚠" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <a href="/orders/new" className="card card-hover p-4">
-          <div className="w-9 h-9 rounded-xl bg-indigo-soft text-indigo2 flex items-center justify-center text-[15px] font-bold mb-2">+</div>
-          <div className="text-sm font-semibold text-ink">New Order</div>
-          <div className="text-[11.5px] text-ink-muted mt-0.5">Create an order</div>
-        </a>
-        <a href="/orders" className="card card-hover p-4">
-          <div className="w-9 h-9 rounded-xl bg-indigo-soft text-indigo2 flex items-center justify-center text-[15px] mb-2">▤</div>
-          <div className="text-sm font-semibold text-ink">Orders</div>
-          <div className="text-[11.5px] text-ink-muted mt-0.5">Update order status</div>
-        </a>
-        <a href="/products" className="card card-hover p-4">
-          <div className="w-9 h-9 rounded-xl bg-indigo-soft text-indigo2 flex items-center justify-center text-[15px] mb-2">◫</div>
-          <div className="text-sm font-semibold text-ink">Fabric Inventory</div>
-          <div className="text-[11.5px] text-ink-muted mt-0.5">Check stock levels</div>
-        </a>
-        <a href="/pos" className="card card-hover p-4">
-          <div className="w-9 h-9 rounded-xl bg-indigo-soft text-indigo2 flex items-center justify-center text-[15px] mb-2">₵</div>
-          <div className="text-sm font-semibold text-ink">Open POS</div>
-          <div className="text-[11.5px] text-ink-muted mt-0.5">Take a walk-in sale</div>
-        </a>
-      </div>
-
       <OrderStatusGlance newOrders={statusCounts.newOrders} inProduction={statusCounts.inProduction} delivered={statusCounts.delivered} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -49,10 +49,13 @@ export default async function CustomersPage() {
             { key: "branch", label: "Branch" },
             { key: "status", label: "Status", isStatus: true },
           ]}
+          searchKeys={["name", "phone"]}
+          searchPlaceholder="Search by name or phone…"
+          filterKey="status"
+          filterOptions={Array.from(new Set(rows.map((c) => c.status).filter(Boolean)))}
           rows={rows.map((c) => ({
             id: c.id,
             href: `/customers/${c.id}`,
-            avatarLabel: c.full_name,
             cells: {
               name: c.full_name,
               phone: c.phone ?? "—",
@@ -60,7 +63,6 @@ export default async function CustomersPage() {
               status: c.status,
             },
           }))}
-          searchable="Search clients by name or phone…"
         />
       )}
     </div>

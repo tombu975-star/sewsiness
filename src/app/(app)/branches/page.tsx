@@ -37,6 +37,8 @@ export default async function BranchesPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Branch" }, { key: "city", label: "City" }, { key: "staff", label: "Staff" }, { key: "orders", label: "Orders" }]}
+          searchKeys={["name", "city"]}
+          searchPlaceholder="Search branches…"
           rows={withCounts.map((b) => ({ id: b.id, cells: { name: b.name, city: b.city ?? "—", staff: b.staffCount, orders: b.orderCount } }))}
         />
       )}

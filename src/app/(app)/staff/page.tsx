@@ -50,11 +50,12 @@ export default async function StaffPage() {
             { key: "invite", label: "Invite" },
             { key: "action", label: "Actions", hideOnMobile: true },
           ]}
+          searchKeys={["name", "role", "branch"]}
+          searchPlaceholder="Search by name, role, or branch…"
           rows={rows.map((s) => {
             const invite = inviteByUser.get(s.id);
             return {
               id: s.id,
-              avatarLabel: s.full_name,
               cells: {
                 name: s.full_name,
                 role: s.role,
@@ -80,7 +81,6 @@ export default async function StaffPage() {
               },
             };
           })}
-          searchable="Search staff by name…"
         />
       )}
     </div>

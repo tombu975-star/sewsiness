@@ -66,37 +66,6 @@ export async function TrainerDashboard({ userId }: { userId: string }) {
         <StatCard label="Awaiting Review" value={reviewCount} accent={reviewCount > 0} icon="!" />
       </div>
 
-      {/* Every other page a Trainer can reach (see the "trainer" entries
-          in SIDEBAR/MORE_MENU, src/lib/nav.ts) as one tappable grid — the
-          same "Quick Links" pattern used on the Apprentice dashboard, so
-          getting to Training Sessions/Skills Matrix/Quizzes doesn't
-          depend on the sidebar alone. */}
-      <div className="mb-6">
-        <h2 className="font-display text-lg font-semibold text-ink mb-3">Quick Links</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <a href="/training-plans" className="card card-hover p-4">
-            <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">▤</div>
-            <div className="text-sm font-semibold text-ink">Training Plans</div>
-            <div className="text-[11.5px] text-ink-muted mt-0.5">Tasks assigned to apprentices</div>
-          </a>
-          <a href="/training-sessions" className="card card-hover p-4">
-            <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">◎</div>
-            <div className="text-sm font-semibold text-ink">Training Sessions</div>
-            <div className="text-[11.5px] text-ink-muted mt-0.5">Scheduled classes & attendance</div>
-          </a>
-          <a href="/skills-matrix" className="card card-hover p-4">
-            <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">⚙</div>
-            <div className="text-sm font-semibold text-ink">Skills Matrix</div>
-            <div className="text-[11.5px] text-ink-muted mt-0.5">Competency per apprentice</div>
-          </a>
-          <a href="/portfolios" className="card card-hover p-4">
-            <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">✂</div>
-            <div className="text-sm font-semibold text-ink">Portfolios</div>
-            <div className="text-[11.5px] text-ink-muted mt-0.5">Apprentice work on display</div>
-          </a>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">

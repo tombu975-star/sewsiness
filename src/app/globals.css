@@ -3,61 +3,57 @@
 @tailwind utilities;
 
 :root {
-  /* Sewsiness design system, v2 — refreshed toward a brighter, friendlier
-     indigo/violet brand (was a deep navy+gold "premium marketplace" look)
-     while keeping every token *name* the same, so every screen already
-     consuming these variables picks up the new palette for free — no
-     per-page changes needed. The kente-strip and tape-measure motifs
-     (this app's own signature details, distinct from any reference) stay
-     exactly where they are; they just now weave through violet instead
-     of navy. */
-  --canvas: #f6f5fc;
+  /* Sewsiness design system — deep navy structure, warm gold accent,
+     woven-strip detail. Restyled toward a premium navy/white marketplace
+     look while keeping the same token names, so every screen that
+     already consumes these variables picks up the new palette for free. */
+  --canvas: #f3f5f9;
   --surface: #ffffff;
-  --sunken: #f1effa;
-  --ink: #1e1b3a;
-  --ink-muted: #6b6690;
-  --ink-faint: #a29dc4;
-  --ink-soft: #322d5c;
+  --sunken: #eef2f6;
+  --ink: #111827;
+  --ink-muted: #64748b;
+  --ink-faint: #9aa5b4;
+  --ink-soft: #1e293b;
 
-  --indigo: #5b4fe8;
-  --indigo-soft: #ecebfc;
-  --indigo2: #4438c4;
+  --indigo: #14213d;
+  --indigo-soft: #e7eaf3;
+  --indigo2: #24365f;
 
   --gold: #fbbf24;
   --gold-soft: #fef3c7;
   --gold-ink: #7a5a1e;
 
-  --burgundy: #d6425f;
-  --burgundy-soft: #fbe3e9;
+  --burgundy: #b4433d;
+  --burgundy-soft: #f4dede;
 
-  --success: #16a06a;
-  --success-soft: #dcf7ea;
-  --warning: #c48a1a;
-  --warning-soft: #fdf0d5;
-  --danger: #d6425f;
-  --danger-soft: #fbe3e9;
-  --info: #3b82f6;
-  --info-soft: #e2ecfe;
+  --success: #2f855a;
+  --success-soft: #dcf3e6;
+  --warning: #b5811c;
+  --warning-soft: #fef3c7;
+  --danger: #b4433d;
+  --danger-soft: #f4dede;
+  --info: #2563eb;
+  --info-soft: #dbeafe;
 
-  --border: #e6e2f5;
-  --border-strong: #cec7e8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
 
-  --sidebar: #1c1444;
-  --sidebar-border: #2c2260;
-  --sidebar-ink: #b6ade0;
-  --sidebar-active: #392e8f;
+  --sidebar: #101a30;
+  --sidebar-border: #1e293b;
+  --sidebar-ink: #94a3c0;
+  --sidebar-active: #24365f;
 
-  --radius-lg: 18px;
-  --radius: 0.9rem;
-  --radius-sm: 0.65rem;
+  --radius-lg: 16px;
+  --radius: 0.85rem;
+  --radius-sm: 0.6rem;
 
-  /* Elevation scale — used by .card, buttons, dropdowns. Violet-tinted
+  /* Elevation scale — used by .card, buttons, dropdowns. Navy-tinted
      rather than neutral gray, so depth still reads as part of the brand. */
-  --shadow-xs: 0 1px 2px rgba(67, 56, 150, 0.06);
-  --shadow-sm: 0 1px 2px rgba(67, 56, 150, 0.05), 0 6px 18px -8px rgba(67, 56, 150, 0.16);
-  --shadow-md: 0 2px 6px -1px rgba(67, 56, 150, 0.10), 0 14px 30px -12px rgba(67, 56, 150, 0.22);
-  --shadow-lg: 0 8px 18px -4px rgba(67, 56, 150, 0.14), 0 26px 52px -16px rgba(67, 56, 150, 0.28);
-  --shadow-gold: 0 1px 2px rgba(68, 56, 196, 0.18), 0 8px 20px -8px rgba(68, 56, 196, 0.5);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 16px -8px rgba(15, 23, 42, 0.10);
+  --shadow-md: 0 2px 6px -1px rgba(15, 23, 42, 0.08), 0 12px 28px -12px rgba(15, 23, 42, 0.16);
+  --shadow-lg: 0 8px 16px -4px rgba(15, 23, 42, 0.12), 0 24px 48px -16px rgba(15, 23, 42, 0.22);
+  --shadow-gold: 0 1px 2px rgba(20, 33, 61, 0.15), 0 6px 16px -6px rgba(20, 33, 61, 0.45);
 }
 
 * {
@@ -77,8 +73,8 @@ body {
      actually read from, so the canvas has quiet depth instead of being a
      single flat fill — visible mostly as ambience, never distracting. */
   background-image:
-    radial-gradient(880px circle at 100% 0%, rgba(91, 79, 232, 0.07), transparent 55%),
-    radial-gradient(1000px circle at 0% 100%, rgba(251, 191, 36, 0.05), transparent 55%);
+    radial-gradient(880px circle at 100% 0%, rgba(251, 191, 36, 0.06), transparent 55%),
+    radial-gradient(1000px circle at 0% 100%, rgba(75, 24, 120, 0.05), transparent 55%);
   background-attachment: fixed;
 }
 
@@ -348,7 +344,7 @@ body {
 }
 .idfacts div span {
   font-size: 11px;
-  color: #d6cff5;
+  color: #a8b4d1;
 }
 .qbtn {
   width: 42px;

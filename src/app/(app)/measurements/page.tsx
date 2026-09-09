@@ -26,6 +26,8 @@ export default async function MeasurementsPage() {
       ) : (
         <DataTable
           columns={[{ key: "customer", label: "Customer" }, { key: "label", label: "Set" }, { key: "chest", label: "Chest" }, { key: "waist", label: "Waist" }, { key: "hips", label: "Hips" }, { key: "date", label: "Recorded" }]}
+          searchKeys={["customer", "label"]}
+          searchPlaceholder="Search by customer or set name…"
           rows={rows.map((m) => ({ id: m.id, href: `/customers/${m.customers?.id}`, cells: { customer: m.customers?.full_name ?? "—", label: m.label, chest: m.chest ?? "—", waist: m.waist ?? "—", hips: m.hips ?? "—", date: new Date(m.created_at).toLocaleDateString() } }))}
         />
       )}

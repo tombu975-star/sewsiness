@@ -49,6 +49,8 @@ export default async function AuditLogPage() {
               ? [{ key: "actor", label: "Actor" }, { key: "action", label: "Action" }, { key: "business", label: "Business" }, { key: "entity", label: "Entity" }, { key: "date", label: "Date" }]
               : [{ key: "actor", label: "Actor" }, { key: "action", label: "Action" }, { key: "entity", label: "Entity" }, { key: "date", label: "Date" }]
           }
+          searchKeys={["actor", "action", "entity", "business"]}
+          searchPlaceholder="Search the audit log…"
           rows={rows.map((l) => ({
             id: l.id,
             cells: {

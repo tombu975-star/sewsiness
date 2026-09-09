@@ -37,6 +37,8 @@ export default async function ExpensesPage() {
       ) : (
         <DataTable
           columns={[{ key: "category", label: "Category" }, { key: "amount", label: "Amount" }, { key: "method", label: "Method" }, { key: "date", label: "Date" }]}
+          searchKeys={["category", "method"]}
+          searchPlaceholder="Search expenses…"
           rows={rows.map((e) => ({ id: e.id, cells: { category: e.category, amount: `₵${Number(e.amount).toFixed(2)}`, method: e.method, date: new Date(e.created_at).toLocaleDateString() } }))}
         />
       )}

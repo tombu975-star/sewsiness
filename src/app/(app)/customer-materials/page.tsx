@@ -27,6 +27,8 @@ export default async function CustomerMaterialsPage() {
       ) : (
         <DataTable
           columns={[{ key: "customer", label: "Customer" }, { key: "description", label: "Material" }, { key: "quantity", label: "Quantity" }, { key: "received", label: "Received" }, { key: "status", label: "Status" }]}
+          searchKeys={["customer", "description"]}
+          searchPlaceholder="Search by customer or material…"
           rows={rows.map((m) => ({
             id: m.id,
             href: `/customers/${m.customers?.id}`,

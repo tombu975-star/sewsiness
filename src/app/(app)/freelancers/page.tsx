@@ -56,11 +56,12 @@ export default async function FreelancersPage() {
             { key: "location", label: "Location" },
             { key: "invite", label: "Invite" },
           ]}
+          searchKeys={["name", "skill", "specialisation", "location"]}
+          searchPlaceholder="Search by name, skill, or location…"
           rows={rows.map((f) => {
             const invite = inviteByUser.get(f.id);
             return {
               id: f.id,
-              avatarLabel: f.full_name,
               cells: {
                 name: f.full_name,
                 skill: f.freelancer_profiles?.[0]?.primary_skill ?? "—",
@@ -82,7 +83,6 @@ export default async function FreelancersPage() {
               },
             };
           })}
-          searchable="Search freelancers by name…"
         />
       )}
     </div>

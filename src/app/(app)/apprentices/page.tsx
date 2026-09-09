@@ -56,12 +56,13 @@ export default async function ApprenticesPage() {
             { key: "start", label: "Start Date" },
             { key: "invite", label: "Invite" },
           ]}
+          searchKeys={["name", "specialisation", "trainer"]}
+          searchPlaceholder="Search by name, specialisation, or trainer…"
           rows={rows.map((a) => {
             const invite = inviteByUser.get(a.id);
             return {
               id: a.id,
               href: `/apprentices/${a.id}`,
-              avatarLabel: a.full_name,
               cells: {
                 name: a.full_name,
                 level: a.apprentice_profiles?.[0]?.training_level ?? "—",
@@ -81,7 +82,6 @@ export default async function ApprenticesPage() {
               },
             };
           })}
-          searchable="Search apprentices by name…"
         />
       )}
     </div>

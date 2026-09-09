@@ -27,6 +27,8 @@ export default async function DesignsPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Design" }, { key: "category", label: "Category" }, { key: "price", label: "Price" }, { key: "lead", label: "Lead Time" }]}
+          searchKeys={["name", "category"]}
+          searchPlaceholder="Search designs…"
           rows={rows.map((d) => ({ id: d.id, cells: { name: d.name, category: d.category ?? "—", price: `₵${Number(d.price).toFixed(2)}`, lead: d.lead_time_days ? `${d.lead_time_days} days` : "—" } }))}
         />
       )}

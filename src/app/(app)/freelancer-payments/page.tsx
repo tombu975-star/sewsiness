@@ -41,6 +41,10 @@ export default async function FreelancerPaymentsPage() {
       ) : (
         <DataTable
           columns={[{ key: "title", label: "Job" }, ...(isFreelancer ? [] : [{ key: "freelancer", label: "Freelancer" }]), { key: "amount", label: "Amount" }, { key: "status", label: "Status", isStatus: true }]}
+          searchKeys={["title", "freelancer"]}
+          searchPlaceholder="Search jobs…"
+          filterKey="status"
+          filterOptions={["Offered", "Accepted", "Completed", "Paid", "Declined"]}
           rows={rows.map((r) => ({
             id: r.id,
             cells: { title: r.title, freelancer: r.freelancer?.full_name, amount: `₵${Number(r.amount).toFixed(2)}`, status: r.status },

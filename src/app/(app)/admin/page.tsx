@@ -12,7 +12,7 @@ function healthTone(score: number) {
   return "text-danger";
 }
 
-export default async function PlatformAdminPage({ searchParams }: { searchParams?: { q?: string } }) {
+export default async function PlatformAdminPage() {
   await requirePageRole(["super_admin"]);
   const supabase = createClient();
 
@@ -24,16 +24,12 @@ export default async function PlatformAdminPage({ searchParams }: { searchParams
       .eq("verification_status", "pending")
       .order("verification_submitted_at", { ascending: true }),
   ]);
-  const allBusinesses = (data ?? []) as BusinessDirectoryRow[];
-  const q = searchParams?.q?.trim().toLowerCase() ?? "";
-  const businesses = q
-    ? allBusinesses.filter((b) => b.organization_name.toLowerCase().includes(q) || (b.owner_name ?? "").toLowerCase().includes(q))
-    : allBusinesses;
+  const businesses = (data ?? []) as BusinessDirectoryRow[];
 
-  const totalUsers = allBusinesses.reduce((sum, b) => sum + (b.total_users ?? 0), 0);
-  const needingAttention = allBusinesses.filter((b) => b.health_score < 55 || b.orders_overdue > 0).length;
-  const avgHealth = allBusinesses.length
-    ? Math.round(allBusinesses.reduce((sum, b) => sum + (b.health_score ?? 0), 0) / allBusinesses.length)
+  const totalUsers = businesses.reduce((sum, b) => sum + (b.total_users ?? 0), 0);
+  const needingAttention = businesses.filter((b) => b.health_score < 55 || b.orders_overdue > 0).length;
+  const avgHealth = businesses.length
+    ? Math.round(businesses.reduce((sum, b) => sum + (b.health_score ?? 0), 0) / businesses.length)
     : 0;
 
   return (
@@ -69,25 +65,11 @@ export default async function PlatformAdminPage({ searchParams }: { searchParams
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Businesses" value={allBusinesses.length} />
+        <StatCard label="Businesses" value={businesses.length} />
         <StatCard label="Active Users" value={totalUsers} />
         <StatCard label="Needs Attention" value={needingAttention} accent />
         <StatCard label="Avg. Health Score" value={`${avgHealth}/100`} accent />
       </div>
-
-      <form method="get" className="relative mb-4 max-w-md">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint text-[13px]" aria-hidden="true">
-          ⚲
-        </span>
-        <input
-          type="search"
-          name="q"
-          defaultValue={q}
-          placeholder="Search businesses by name or owner…"
-          className="field-input w-full !pl-9"
-          aria-label="Search businesses"
-        />
-      </form>
 
       {error && (
         <div className="callout mb-4">
@@ -97,7 +79,7 @@ export default async function PlatformAdminPage({ searchParams }: { searchParams
         </div>
       )}
 
-      {!error && allBusinesses.length === 0 ? (
+      {!error && businesses.length === 0 ? (
         <EmptyState
           icon="⌂"
           title="No businesses enrolled yet."
@@ -105,8 +87,6 @@ export default async function PlatformAdminPage({ searchParams }: { searchParams
           actionLabel="Enroll Business"
           actionHref="/admin/new"
         />
-      ) : !error && businesses.length === 0 ? (
-        <div className="card p-10 text-center text-ink-muted text-sm">No businesses match &ldquo;{q}&rdquo;.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {businesses.map((b) => (

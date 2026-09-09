@@ -51,6 +51,8 @@ export default async function PaymentsPage() {
             { key: "type", label: "Type" },
             { key: "date", label: "Date" },
           ]}
+          searchKeys={["customer", "ref", "method"]}
+          searchPlaceholder="Search by customer, reference, or method…"
           rows={rows.map((p) => ({
             id: p.id,
             href: p.order_id ? `/orders/${p.order_id}` : undefined,

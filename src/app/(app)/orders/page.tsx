@@ -47,6 +47,15 @@ export default async function OrdersPage() {
             { key: "balance", label: "Balance" },
             { key: "status", label: "Status", isStatus: true },
           ]}
+          searchKeys={["order", "customer", "garment"]}
+          searchPlaceholder="Search orders, customers, garments…"
+          filterKey="status"
+          // Fixed to the real check constraint (see
+          // 041_order_status_novice_terms.sql) rather than derived from
+          // today's rows, so a tab for e.g. "Cancelled" is still there
+          // (just empty) instead of disappearing the moment there
+          // happen to be zero orders in that state right now.
+          filterOptions={["New", "Confirmed", "In Production", "Ready", "Delivered", "Cancelled"]}
           rows={rows.map((o) => ({
             id: o.id,
             href: `/orders/${o.id}`,
@@ -59,7 +68,6 @@ export default async function OrdersPage() {
               status: o.status,
             },
           }))}
-          searchable="Search orders by number, customer, or garment…"
         />
       )}
     </div>

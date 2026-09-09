@@ -28,6 +28,8 @@ export default async function FabricsPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Fabric" }, { key: "type", label: "Type" }, { key: "color", label: "Color" }, { key: "price", label: "₵ / yard" }, { key: "stock", label: "Stock" }]}
+          searchKeys={["name", "type", "color"]}
+          searchPlaceholder="Search fabrics…"
           rows={rows.map((f) => ({
             id: f.id,
             cells: {

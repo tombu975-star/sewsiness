@@ -27,6 +27,8 @@ export default async function CollectionsPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Collection" }, { key: "season", label: "Season" }]}
+          searchKeys={["name", "season"]}
+          searchPlaceholder="Search collections…"
           rows={rows.map((c) => ({ id: c.id, cells: { name: c.name, season: c.season ?? "—" } }))}
         />
       )}

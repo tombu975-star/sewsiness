@@ -202,7 +202,7 @@ export function AppShell({
                 <div
                   className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-all duration-150 absolute left-full top-0 ml-2 w-52 rounded-lg py-1.5 z-50"
                   style={{
-                    background: "linear-gradient(180deg, var(--sidebar) 0%, #120b30 100%)",
+                    background: "linear-gradient(180deg, var(--sidebar) 0%, #0a1220 100%)",
                     boxShadow: "0 8px 24px -6px rgba(20,8,40,0.45), 0 0 0 1px var(--sidebar-border)",
                   }}
                 >
@@ -272,7 +272,7 @@ export function AppShell({
         className="hidden md:flex md:flex-col flex-shrink-0 text-white relative z-10 transition-[width] duration-300 ease-in-out overflow-visible"
         style={{
           width: isCollapsed ? COLLAPSED_W : EXPANDED_W,
-          background: "linear-gradient(180deg, var(--sidebar) 0%, #120b30 100%)",
+          background: "linear-gradient(180deg, var(--sidebar) 0%, #0a1220 100%)",
           boxShadow: "1px 0 0 var(--sidebar-border), 4px 0 24px -8px rgba(8, 12, 24, 0.45)",
         }}
       >
@@ -385,7 +385,7 @@ export function AppShell({
           style={{
             height: "calc(4rem + env(safe-area-inset-bottom, 0px))",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
-            background: "linear-gradient(180deg, var(--sidebar) 0%, #120b30 100%)",
+            background: "linear-gradient(180deg, var(--sidebar) 0%, #0a1220 100%)",
             boxShadow: "0 -4px 16px -4px rgba(8, 12, 24, 0.45)",
           }}
         >
@@ -448,7 +448,7 @@ function Brand({ orgName, collapsed, onClose }: { orgName: string; collapsed?: b
           <path
             d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
             fill="none"
-            stroke="#4B3FC4"
+            stroke="#14213D"
             strokeWidth="78"
             strokeLinecap="round"
           />

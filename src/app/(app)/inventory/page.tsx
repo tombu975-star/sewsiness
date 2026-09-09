@@ -37,6 +37,10 @@ export default async function InventoryPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Product" }, { key: "category", label: "Category" }, { key: "stock", label: "Stock" }, { key: "status", label: "Status", isStatus: true }]}
+          searchKeys={["name", "category"]}
+          searchPlaceholder="Search products…"
+          filterKey="status"
+          filterOptions={Array.from(new Set(rows.map((p) => p.status).filter(Boolean)))}
           rows={rows.map((p) => ({ id: p.id, href: `/products/${p.id}`, cells: { name: p.name, category: p.category ?? "—", stock: p.stock_qty, status: p.status } }))}
         />
       )}

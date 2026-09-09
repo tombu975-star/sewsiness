@@ -39,6 +39,8 @@ export default async function TrainerConsolePage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Apprentice" }, { key: "level", label: "Level" }, { key: "specialisation", label: "Specialisation" }]}
+          searchKeys={["name", "specialisation"]}
+          searchPlaceholder="Search apprentices…"
           rows={rows.map((a) => ({ id: a.profile_id, href: `/apprentices/${a.profile_id}`, cells: { name: a.profiles?.full_name, level: a.training_level ?? "—", specialisation: a.specialisation ?? "—" } }))}
         />
       )}

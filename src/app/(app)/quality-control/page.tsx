@@ -33,6 +33,10 @@ export default async function QualityControlPage() {
       ) : (
         <DataTable
           columns={[{ key: "order", label: "Order" }, { key: "garment", label: "Garment" }, { key: "result", label: "Result", isStatus: true }, { key: "date", label: "Date" }]}
+          searchKeys={["order", "garment"]}
+          searchPlaceholder="Search by order or garment…"
+          filterKey="result"
+          filterOptions={["Passed", "Failed"]}
           rows={rows.map((c) => ({
             id: c.id,
             href: `/orders/${c.custom_orders?.id}`,

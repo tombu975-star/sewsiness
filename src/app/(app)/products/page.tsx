@@ -46,6 +46,10 @@ export default async function ProductsPage() {
             { key: "stock", label: "Stock" },
             { key: "status", label: "Status", isStatus: true },
           ]}
+          searchKeys={["name", "category"]}
+          searchPlaceholder="Search products…"
+          filterKey="status"
+          filterOptions={Array.from(new Set(rows.map((p) => p.status).filter(Boolean)))}
           rows={rows.map((p) => ({
             id: p.id,
             href: `/products/${p.id}`,
@@ -57,7 +61,6 @@ export default async function ProductsPage() {
               status: p.status,
             },
           }))}
-          searchable="Search fabrics by name or type…"
         />
       )}
     </div>

@@ -34,6 +34,8 @@ export default async function SalesPage() {
       ) : (
         <DataTable
           columns={[{ key: "sale", label: "Sale #" }, { key: "customer", label: "Customer" }, { key: "total", label: "Total" }, { key: "status", label: "Status", isStatus: true }, { key: "date", label: "Date" }]}
+          searchKeys={["sale", "customer"]}
+          searchPlaceholder="Search by sale number or customer…"
           rows={rows.map((s) => ({ id: s.id, cells: { sale: s.sale_number, customer: s.customers?.full_name ?? "Walk-in", total: `₵${Number(s.total).toFixed(2)}`, status: s.status, date: new Date(s.created_at).toLocaleString() } }))}
         />
       )}

@@ -42,6 +42,8 @@ export default async function MadamHubPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Apprentice" }, { key: "level", label: "Level" }, { key: "trainer", label: "Trainer" }, { key: "start", label: "Start Date" }]}
+          searchKeys={["name", "trainer"]}
+          searchPlaceholder="Search by name or trainer…"
           rows={rows.map((a) => ({ id: a.profile_id, cells: { name: a.profiles?.full_name, level: a.training_level ?? "—", trainer: a.trainer?.full_name ?? "Unassigned", start: a.start_date ?? "—" } }))}
         />
       )}

@@ -35,6 +35,8 @@ export default async function ReceivablesPage() {
       ) : (
         <DataTable
           columns={[{ key: "order", label: "Order" }, { key: "customer", label: "Customer" }, { key: "balance", label: "Balance" }, { key: "due", label: "Due" }, { key: "status", label: "Status", isStatus: true }]}
+          searchKeys={["order", "customer"]}
+          searchPlaceholder="Search by order or customer…"
           rows={rows.map((o: any) => ({
             id: o.id,
             href: `/orders/${o.id}`,

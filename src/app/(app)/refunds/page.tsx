@@ -34,6 +34,8 @@ export default async function RefundsPage() {
       ) : (
         <DataTable
           columns={[{ key: "customer", label: "Customer" }, { key: "amount", label: "Amount" }, { key: "method", label: "Method" }, { key: "reason", label: "Reason" }, { key: "date", label: "Date" }]}
+          searchKeys={["customer", "method", "reason"]}
+          searchPlaceholder="Search refunds…"
           rows={rows.map((r) => ({ id: r.id, cells: { customer: r.customers?.full_name ?? "Walk-in", amount: `₵${Math.abs(Number(r.amount)).toFixed(2)}`, method: r.method, reason: r.notes ?? "—", date: new Date(r.created_at).toLocaleDateString() } }))}
         />
       )}

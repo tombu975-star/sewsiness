@@ -27,6 +27,8 @@ export default async function ProductVariantsPage() {
       ) : (
         <DataTable
           columns={[{ key: "product", label: "Product" }, { key: "size", label: "Size" }, { key: "color", label: "Color" }, { key: "stock", label: "Stock" }]}
+          searchKeys={["product", "size", "color"]}
+          searchPlaceholder="Search variants…"
           rows={rows.map((v) => ({ id: v.id, cells: { product: v.products?.name ?? "—", size: v.size ?? "—", color: v.color ?? "—", stock: v.stock_qty } }))}
         />
       )}

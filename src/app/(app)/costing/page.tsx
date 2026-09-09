@@ -57,6 +57,8 @@ export default async function CostingPage() {
       ) : (
         <DataTable
           columns={[{ key: "order", label: "Order" }, { key: "revenue", label: "Revenue" }, { key: "cost", label: "Cost" }, { key: "margin", label: "Margin" }]}
+          searchKeys={["order"]}
+          searchPlaceholder="Search by order number…"
           rows={rows.map((c) => {
             const cost = Number(c.fabric_cost) + Number(c.labor_cost) + Number(c.overhead_cost) + Number(c.other_cost);
             const revenue = Number(c.custom_orders?.total_amount ?? 0);

@@ -28,6 +28,8 @@ export default async function PurchaseOrdersPage() {
       ) : (
         <DataTable
           columns={[{ key: "ref", label: "Reference" }, { key: "supplier", label: "Supplier" }, { key: "total", label: "Total" }, { key: "status", label: "Status" }]}
+          searchKeys={["ref", "supplier"]}
+          searchPlaceholder="Search by reference or supplier…"
           rows={rows.map((p) => ({ id: p.id, cells: { ref: p.reference ?? "—", supplier: p.suppliers?.name ?? "—", total: `₵${Number(p.total).toFixed(2)}`, status: <StatusSelect id={p.id} current={p.status} /> } }))}
         />
       )}
