@@ -14,7 +14,7 @@ import { pauseBusiness, sendAdvisoryNote, approveBusinessVerification, rejectBus
 const STAGE_COLORS: Record<string, string> = {
   Cutting: "#FBBF24",
   Sewing: "#2563EB",
-  Finishing: "#14213D",
+  Finishing: "#0D9488", // teal — was the old stale brand-navy hex, distinct from the other four stage colors
   Pressing: "#B4433D",
   Ready: "#2F855A",
 };

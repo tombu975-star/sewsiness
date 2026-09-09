@@ -81,9 +81,9 @@ export default async function RootPage() {
       <header className="sticky top-1 z-20 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2.5">
           <svg width="28" height="28" viewBox="-270 -10 520 500" aria-hidden="true">
-            <path d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385" fill="none" stroke="#14213D" strokeWidth="78" strokeLinecap="round" />
-            <path d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265" fill="none" stroke="#FBBF24" strokeWidth="28" strokeLinecap="round" />
-            <path d="M-25 205 L145 20" stroke="#FBBF24" strokeWidth="14" strokeLinecap="round" />
+            <path d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385" fill="none" stroke="var(--indigo)" strokeWidth="78" strokeLinecap="round" />
+            <path d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265" fill="none" stroke="var(--indigo2)" strokeWidth="28" strokeLinecap="round" />
+            <path d="M-25 205 L145 20" stroke="var(--indigo2)" strokeWidth="14" strokeLinecap="round" />
           </svg>
           <span className="font-display text-sm font-bold tracking-wide text-ink">SEWSINESS</span>
         </div>
@@ -109,11 +109,11 @@ export default async function RootPage() {
             sizes="(max-width: 1024px) 100vw, 1200px"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F1830]/92 via-[#0F1830]/68 to-[#0F1830]/25" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#2A0E52]/93 via-[#2A0E52]/70 to-[#2A0E52]/25" />
 
           <div className="relative z-10 flex min-h-[470px] items-end">
             <div className="max-w-xl">
-              <div className="eyebrow text-[#f7ebd2]">Business console</div>
+              <div className="eyebrow text-[#DCC9FA]">Business console</div>
               <h1 className="mt-5 font-display text-4xl font-semibold leading-tight text-white sm:text-[3.4rem]">
                 Run your atelier like a house, not a workshop.
               </h1>
@@ -178,7 +178,7 @@ export default async function RootPage() {
               <div key={f.title} className="card p-6">
                 <span
                   className="flex h-11 w-11 items-center justify-center rounded-xl text-gold-ink"
-                  style={{ background: "linear-gradient(145deg, var(--gold-soft), #fde9a8)" }}
+                  style={{ background: "linear-gradient(145deg, var(--gold-soft), #e4d4fd)" }}
                 >
                   {f.icon}
                 </span>

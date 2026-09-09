@@ -448,18 +448,18 @@ function Brand({ orgName, collapsed, onClose }: { orgName: string; collapsed?: b
           <path
             d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
             fill="none"
-            stroke="#14213D"
+            stroke="#FFFFFF"
             strokeWidth="78"
             strokeLinecap="round"
           />
           <path
             d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265"
             fill="none"
-            stroke="#FBBF24"
+            stroke="#C4B5FD"
             strokeWidth="28"
             strokeLinecap="round"
           />
-          <path d="M-25 205 L145 20" stroke="#FBBF24" strokeWidth="14" strokeLinecap="round" />
+          <path d="M-25 205 L145 20" stroke="#C4B5FD" strokeWidth="14" strokeLinecap="round" />
         </svg>
         {!collapsed && (
           <div className="min-w-0">

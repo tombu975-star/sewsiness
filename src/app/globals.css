@@ -3,25 +3,32 @@
 @tailwind utilities;
 
 :root {
-  /* Sewsiness design system — deep navy structure, warm gold accent,
-     woven-strip detail. Restyled toward a premium navy/white marketplace
-     look while keeping the same token names, so every screen that
-     already consumes these variables picks up the new palette for free. */
-  --canvas: #f3f5f9;
+  /* Sewsiness design system — deep violet structure with a lighter
+     violet/lavender accent, matching the reference mockup's palette
+     (splash gradient #3B1370→#5B21B6→#7C3AED, light accent #C4B5FD).
+     Same token names as before, so every screen that already consumes
+     these variables picks up the new palette for free — this is the
+     one file that reskins the whole app in a single, coherent pass
+     rather than 100+ individually hand-recolored pages. Status colors
+     (success/warning/danger/info below) are deliberately left alone:
+     tying "danger" to the brand hue would hurt usability the moment
+     brand color ever changes again, and no premium design system does
+     that. */
+  --canvas: #f5f3fb;
   --surface: #ffffff;
-  --sunken: #eef2f6;
-  --ink: #111827;
-  --ink-muted: #64748b;
-  --ink-faint: #9aa5b4;
-  --ink-soft: #1e293b;
+  --sunken: #efeafa;
+  --ink: #1e1240;
+  --ink-muted: #6b5f8c;
+  --ink-faint: #a599c2;
+  --ink-soft: #2f1f5c;
 
-  --indigo: #14213d;
-  --indigo-soft: #e7eaf3;
-  --indigo2: #24365f;
+  --indigo: #5b21b6;
+  --indigo-soft: #ede9fe;
+  --indigo2: #7c3aed;
 
-  --gold: #fbbf24;
-  --gold-soft: #fef3c7;
-  --gold-ink: #7a5a1e;
+  --gold: #a78bfa;
+  --gold-soft: #f3eeff;
+  --gold-ink: #5b21b6;
 
   --burgundy: #b4433d;
   --burgundy-soft: #f4dede;
@@ -35,25 +42,25 @@
   --info: #2563eb;
   --info-soft: #dbeafe;
 
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border: #e4defa;
+  --border-strong: #cabdec;
 
-  --sidebar: #101a30;
-  --sidebar-border: #1e293b;
-  --sidebar-ink: #94a3c0;
-  --sidebar-active: #24365f;
+  --sidebar: #2e1065;
+  --sidebar-border: #4c1d95;
+  --sidebar-ink: #b9a6e0;
+  --sidebar-active: #5b21b6;
 
   --radius-lg: 16px;
   --radius: 0.85rem;
   --radius-sm: 0.6rem;
 
-  /* Elevation scale — used by .card, buttons, dropdowns. Navy-tinted
+  /* Elevation scale — used by .card, buttons, dropdowns. Violet-tinted
      rather than neutral gray, so depth still reads as part of the brand. */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 16px -8px rgba(15, 23, 42, 0.10);
-  --shadow-md: 0 2px 6px -1px rgba(15, 23, 42, 0.08), 0 12px 28px -12px rgba(15, 23, 42, 0.16);
-  --shadow-lg: 0 8px 16px -4px rgba(15, 23, 42, 0.12), 0 24px 48px -16px rgba(15, 23, 42, 0.22);
-  --shadow-gold: 0 1px 2px rgba(20, 33, 61, 0.15), 0 6px 16px -6px rgba(20, 33, 61, 0.45);
+  --shadow-xs: 0 1px 2px rgba(76, 29, 149, 0.06);
+  --shadow-sm: 0 1px 2px rgba(76, 29, 149, 0.05), 0 6px 16px -8px rgba(76, 29, 149, 0.14);
+  --shadow-md: 0 2px 6px -1px rgba(76, 29, 149, 0.10), 0 12px 28px -12px rgba(76, 29, 149, 0.20);
+  --shadow-lg: 0 8px 16px -4px rgba(76, 29, 149, 0.14), 0 24px 48px -16px rgba(76, 29, 149, 0.28);
+  --shadow-gold: 0 1px 2px rgba(91, 33, 182, 0.18), 0 6px 16px -6px rgba(91, 33, 182, 0.45);
 }
 
 * {
@@ -73,8 +80,8 @@ body {
      actually read from, so the canvas has quiet depth instead of being a
      single flat fill — visible mostly as ambience, never distracting. */
   background-image:
-    radial-gradient(880px circle at 100% 0%, rgba(251, 191, 36, 0.06), transparent 55%),
-    radial-gradient(1000px circle at 0% 100%, rgba(75, 24, 120, 0.05), transparent 55%);
+    radial-gradient(880px circle at 100% 0%, rgba(124, 58, 237, 0.07), transparent 55%),
+    radial-gradient(1000px circle at 0% 100%, rgba(91, 33, 182, 0.06), transparent 55%);
   background-attachment: fixed;
 }
 
@@ -323,7 +330,7 @@ body {
   height: 64px;
   border-radius: 50%;
   background: var(--gold);
-  color: #3a2400;
+  color: var(--gold-ink);
   font-weight: 700;
   font-size: 22px;
   display: flex;
@@ -344,7 +351,7 @@ body {
 }
 .idfacts div span {
   font-size: 11px;
-  color: #a8b4d1;
+  color: #c9b8ec;
 }
 .qbtn {
   width: 42px;
