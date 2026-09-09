@@ -73,7 +73,7 @@ function CoverDots({ count, index }: { count: number; index: number }) {
           className="h-1.5 rounded-full transition-all duration-500"
           style={{
             width: i === index ? 18 : 6,
-            background: i === index ? "var(--gold)" : "rgba(255,255,255,.35)",
+            background: i === index ? "#C4B5FD" : "rgba(255,255,255,.35)",
           }}
         />
       ))}
@@ -87,18 +87,18 @@ function DefaultMark({ size = 40 }: { size?: number }) {
       <path
         d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
         fill="none"
-        stroke="#14213D"
+        stroke="#FFFFFF"
         strokeWidth="78"
         strokeLinecap="round"
       />
       <path
         d="M-155 250 C-78 105, 80 82, 150 155 C195 202, 165 245, 92 265"
         fill="none"
-        stroke="#FBBF24"
+        stroke="#C4B5FD"
         strokeWidth="28"
         strokeLinecap="round"
       />
-      <path d="M-25 205 L145 20" stroke="#FBBF24" strokeWidth="14" strokeLinecap="round" />
+      <path d="M-25 205 L145 20" stroke="#C4B5FD" strokeWidth="14" strokeLinecap="round" />
     </svg>
   );
 }
@@ -157,7 +157,7 @@ export function AuthCover({
     return (
       <div
         className="relative min-h-screen flex flex-col bg-canvas overflow-hidden lg:justify-center"
-        style={!hasImages ? { background: "linear-gradient(160deg, var(--indigo), var(--indigo2))" } : undefined}
+        style={!hasImages ? { background: "linear-gradient(165deg, #3B1370 0%, #5B21B6 55%, #7C3AED 100%)" } : undefined}
       >
         {hasImages ? (
           <RotatingImages
@@ -167,8 +167,8 @@ export function AuthCover({
           />
         ) : (
           <>
-            <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full pointer-events-none" style={{ background: "rgba(251,191,36,.16)" }} />
-            <div className="absolute -bottom-24 -left-10 w-64 h-64 rounded-full pointer-events-none" style={{ background: "rgba(251,191,36,.10)" }} />
+            <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full pointer-events-none bg-white/10" />
+            <div className="absolute -bottom-24 -left-10 w-64 h-64 rounded-full pointer-events-none bg-[#A78BFA]/25" />
           </>
         )}
 

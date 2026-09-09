@@ -181,11 +181,14 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
       <form
         onSubmit={handleSubmit}
         className="card p-6 space-y-3.5"
-        style={{ boxShadow: "var(--shadow-lg)", borderRadius: "20px" }}
+        style={{ boxShadow: "0 20px 45px rgba(76,29,149,0.16)", borderRadius: "22px" }}
       >
         <div className="text-center mb-1.5">
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl text-white text-lg" style={{ background: "linear-gradient(160deg, #5B21B6, #7C3AED)" }}>
+            ✂
+          </div>
           <div className="font-display font-bold text-xl text-ink">Welcome back</div>
-          <div className="text-xs text-ink-muted mt-0.5">Sign in to your workspace</div>
+          <div className="text-xs text-ink-muted mt-0.5">Log in to continue your journey</div>
         </div>
         {notice === "password-changed" && (
           <div className="text-xs text-success bg-success-soft border border-success/20 rounded-sm px-3 py-2">
@@ -204,26 +207,30 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
         )}
         <div>
           <label className="block text-xs font-semibold text-ink-muted mb-1.5">Email or phone number</label>
-          <input
-            type="text"
-            required
-            autoComplete="username"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
-            placeholder="Enter your email or phone number"
-          />
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-faint text-sm pointer-events-none">✉</span>
+            <input
+              type="text"
+              required
+              autoComplete="username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              className="w-full rounded-sm border border-border bg-surface pl-9 pr-3 py-2.5 text-sm text-ink outline-none focus:border-[#7C3AED]"
+              placeholder="Enter your email or phone number"
+            />
+          </div>
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-muted mb-1.5">Password</label>
           <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-faint text-sm pointer-events-none">🔒</span>
             <input
               type={showPassword ? "text" : "password"}
               required
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 pr-10 text-sm text-ink outline-none focus:border-gold"
+              className="w-full rounded-sm border border-border bg-surface pl-9 pr-10 py-2.5 text-sm text-ink outline-none focus:border-[#7C3AED]"
               placeholder="Enter your password"
             />
             <button
@@ -243,7 +250,8 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="w-3.5 h-3.5 rounded-sm border-border accent-gold"
+              className="w-3.5 h-3.5 rounded-sm border-border"
+              style={{ accentColor: "#7C3AED" }}
             />
             Remember me
           </label>
@@ -252,7 +260,7 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
           <Link href="/forgot-account" className="text-xs font-semibold text-ink-muted hover:text-ink">
             Forgot account number?
           </Link>
-          <Link href="/forgot-password" className="text-xs font-semibold text-indigo hover:underline">
+          <Link href="/forgot-password" className="text-xs font-semibold hover:underline" style={{ color: "#6D28D9" }}>
             Forgot password?
           </Link>
         </div>
@@ -264,14 +272,15 @@ export function LoginForm({ platform }: { platform?: PlatformSettings }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:brightness-110 disabled:opacity-60"
+          className="w-full rounded-sm text-white font-semibold text-sm py-2.5 hover:brightness-110 disabled:opacity-60 transition"
+          style={{ background: "linear-gradient(135deg, #6D28D9, #7C3AED)" }}
         >
           {loading ? "Signing in…" : "Log in"}
         </button>
         <p className="text-[11px] text-ink-faint text-center leading-relaxed pt-0.5">
           Everyone signs in here — Super Admin, Owner, Manager, Staff, Trainer, Apprentice and
           Freelancer. Staff-level accounts are invited by their business; new businesses{" "}
-          <Link href="/signup" className="text-indigo font-semibold hover:underline">
+          <Link href="/signup" className="font-semibold hover:underline" style={{ color: "#6D28D9" }}>
             create an account here
           </Link>
           .
