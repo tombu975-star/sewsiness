@@ -45,6 +45,26 @@ export async function assignTask(formData: FormData) {
   revalidatePath("/training-plans");
 }
 
+export async function updateTaskStatus(taskId: string, status: string) {
+  const { user, profile } = await requireRoleRegistryFeature(["apprentice"], "apprentices");
+  const allowedStatuses = ["Assigned", "In Progress", "Needs Changes"];
+  if (!taskId || !allowedStatuses.includes(status)) throw new Error("Invalid task status.");
+
+  const admin = createAdminClient();
+  const { data: task } = await admin
+    .from("training_tasks")
+    .select("id, apprentice_id, organization_id, status")
+    .eq("id", taskId)
+    .single();
+  if (!task || task.apprentice_id !== user.id || task.organization_id !== profile.organization_id) throw new Error("Task not found.");
+  if (["Submitted", "Approved"].includes(task.status)) throw new Error("This task can no longer be updated.");
+
+  const { error } = await admin.from("training_tasks").update({ status }).eq("id", taskId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/training-plans");
+  revalidatePath("/dashboard");
+}
+
 export async function submitTask(formData: FormData) {
   const { user, profile } = await requireRoleRegistryFeature(["apprentice"], "apprentices");
   const taskId = String(formData.get("task_id") ?? "");
