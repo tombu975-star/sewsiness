@@ -69,6 +69,27 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
           <p>
             Certificate No. {status.certificateNumber ?? "—"}{status.structured?.grade ? ` · ${status.structured.grade}` : ""}{status.structured?.finalScore != null ? ` · ${Number(status.structured.finalScore).toFixed(1)}%` : ""} — you can download it any time from the button
             above.
+            {(portfolio ?? []).length > 0 && (
+              <>
+                {" "}
+                You can also{" "}
+                <a href="/portfolios/export" className="font-semibold underline">
+                  export your portfolio as a printable book (PDF)
+                </a>
+                .
+              </>
+            )}
+          </p>
+        </div>
+      )}
+
+      {!completed && status.failedEnrollment && (
+        <div className="rounded-lg bg-warning-soft px-4 py-3 text-sm text-warning mb-6">
+          <div className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">Not yet certified</div>
+          <p>
+            {status.failedEnrollment.programName ?? "This program"} is complete, but the final score
+            {status.failedEnrollment.finalScore != null ? ` (${Number(status.failedEnrollment.finalScore).toFixed(1)}%)` : ""} didn't reach the pass mark, so a
+            certificate wasn't issued. Speak to your trainer about next steps.
           </p>
         </div>
       )}

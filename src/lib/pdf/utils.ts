@@ -5,17 +5,17 @@ import { rgb } from "pdf-lib";
 // only takes 0–1 floats, so these are that same palette pre-converted,
 // not a separate "PDF theme" someone could let drift out of sync.
 export const COLORS = {
-  indigo: rgb(75 / 255, 24 / 255, 120 / 255), // --indigo
-  indigo2: rgb(95 / 255, 46 / 255, 150 / 255), // --indigo2
+  indigo: rgb(20 / 255, 33 / 255, 61 / 255), // --indigo
+  indigo2: rgb(36 / 255, 54 / 255, 95 / 255), // --indigo2
   gold: rgb(251 / 255, 191 / 255, 36 / 255), // --gold
   // --gold-ink — the darker bronze CSS reserves for text that needs to
   // read as "gold" while staying legible; the raw --gold hex is a pale
   // yellow that loses contrast at headline size on white paper.
   goldInk: rgb(122 / 255, 90 / 255, 30 / 255),
-  purple: rgb(168 / 255, 85 / 255, 247 / 255), // kente-strip's 2nd band
-  ink: rgb(30 / 255, 27 / 255, 75 / 255), // --ink
-  inkMuted: rgb(120 / 255, 111 / 255, 151 / 255), // --ink-muted
-  surfaceSunken: rgb(0.93, 0.91, 0.97), // --sunken, approximated
+  teal: rgb(13 / 255, 148 / 255, 136 / 255), // kente-strip's 2nd band
+  ink: rgb(17 / 255, 24 / 255, 39 / 255), // --ink
+  inkMuted: rgb(100 / 255, 116 / 255, 139 / 255), // --ink-muted
+  surfaceSunken: rgb(238 / 255, 242 / 255, 246 / 255), // --sunken
 };
 
 export function formatDate(iso: string): string {
@@ -91,7 +91,7 @@ export function drawWrappedText(
 export function drawKenteStrip(page: PDFPage, x: number, y: number, w: number, h: number) {
   const pattern = [
     { color: COLORS.gold, w: 18 },
-    { color: COLORS.purple, w: 8 },
+    { color: COLORS.teal, w: 8 },
     { color: COLORS.indigo, w: 14 },
     { color: COLORS.ink, w: 8 },
   ];

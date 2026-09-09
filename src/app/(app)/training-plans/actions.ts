@@ -181,3 +181,61 @@ async function completeIfAllTasksApproved(admin: ReturnType<typeof createAdminCl
     entity_id: apprenticeId,
   });
 }
+
+// An enrollment can reach status="completed" with every task approved
+// but no certificate — completeIfAllTasksApproved() above always marks
+// the enrollment completed once tasks clear, but only issues a
+// certificate if the final score meets the program's pass_score. Until
+// now there was no way back from that state: the apprentice's page
+// showed "Completed" with no working download, and nothing let a
+// trainer send them back to redo work. This reopens the SAME enrollment
+// for a retake — it does not touch training_tasks, so staff decide
+// separately (assign new/updated tasks, ask for a resubmission, etc.)
+// what "retake" actually looks like for that program.
+export async function reopenEnrollmentForRetake(formData: FormData) {
+  const { profile, user } = await requireRoleRegistryFeature(["owner", "manager", "trainer"], "apprentices");
+  const admin = createAdminClient();
+
+  const enrollment_id = String(formData.get("enrollment_id") ?? "");
+  if (!enrollment_id) throw new Error("Missing enrollment.");
+
+  const { data: enrollment } = await admin
+    .from("program_enrollments")
+    .select("id, apprentice_id, organization_id, status")
+    .eq("id", enrollment_id)
+    .single();
+  if (!enrollment || enrollment.organization_id !== profile.organization_id) throw new Error("Enrollment not found.");
+  if (enrollment.status !== "completed") throw new Error("Only a completed enrollment can be reopened for a retake.");
+
+  // Refuse if a valid certificate already exists for this enrollment —
+  // reopening would let someone who genuinely passed get sent back to
+  // redo work they already completed successfully. Revoking a
+  // certificate is a separate, more deliberate action than this button.
+  const { data: existingCertificate } = await admin
+    .from("certificates")
+    .select("id")
+    .eq("enrollment_id", enrollment_id)
+    .is("revoked_at", null)
+    .maybeSingle();
+  if (existingCertificate) {
+    throw new Error("This enrollment already has an issued certificate — it can't be reopened this way. Revoke the certificate first if that's really what you want.");
+  }
+
+  await admin
+    .from("program_enrollments")
+    .update({ status: "active", completed_at: null, final_score: null })
+    .eq("id", enrollment_id);
+
+  await admin.from("audit_logs").insert({
+    organization_id: profile.organization_id,
+    actor_id: user.id,
+    action: "enrollment_reopened_for_retake",
+    entity: "program_enrollments",
+    entity_id: enrollment_id,
+  });
+
+  revalidatePath(`/apprentices/${enrollment.apprentice_id}`);
+  revalidatePath("/training-plans");
+  revalidatePath("/training-compliance");
+  revalidatePath("/dashboard");
+}

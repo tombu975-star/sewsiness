@@ -39,13 +39,27 @@ export interface ApprenticeCertificateStatus {
     programName: string | null;
     programType: string | null;
   } | null;
+  // A program_enrollments row can reach status="completed" without a
+  // certificate ever being issued — completeIfAllTasksApproved() in
+  // training-plans/actions.ts always marks the enrollment completed
+  // once every task is approved, but only inserts a certificates row
+  // if the final score clears the program's pass_score. Present only
+  // when that's exactly the state this apprentice is stuck in: every
+  // task approved, enrollment completed, no passing certificate — so
+  // a "Reopen for retake" action has something concrete to act on.
+  failedEnrollment: {
+    enrollmentId: string;
+    finalScore: number | null;
+    passScore: number | null;
+    programName: string | null;
+  } | null;
 }
 
 export async function getApprenticeCertificateStatus(
   supabase: ReturnType<typeof createClient>,
   apprenticeId: string
 ): Promise<ApprenticeCertificateStatus> {
-  const [{ data: ap }, { data: cert }] = await Promise.all([
+  const [{ data: ap }, { data: cert }, { data: completedEnrollments }] = await Promise.all([
     supabase
       .from("apprentice_profiles")
       .select("training_level, specialisation, training_goals, start_date, completed_at, certificate_number, trainer:trainer_id(full_name)")
@@ -58,9 +72,30 @@ export async function getApprenticeCertificateStatus(
       .is("revoked_at", null)
       .order("issued_at", { ascending: false })
       .maybeSingle(),
+    supabase
+      .from("program_enrollments")
+      .select("id, final_score, program:program_id(name, pass_score)")
+      .eq("apprentice_id", apprenticeId)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false }),
   ]);
 
   const program = (cert as any)?.program ?? null;
+
+  // Only surface the most recent completed-but-uncertified enrollment.
+  // If the apprentice has any issued certificate at all (cert, from
+  // the query above) they're not in a "failed" state — that governs
+  // even if an older completed enrollment without one also exists.
+  const mostRecentCompleted = (completedEnrollments ?? [])[0] as any;
+  const failedEnrollment =
+    !cert && mostRecentCompleted
+      ? {
+          enrollmentId: mostRecentCompleted.id,
+          finalScore: mostRecentCompleted.final_score ?? null,
+          passScore: mostRecentCompleted.program?.pass_score ?? null,
+          programName: mostRecentCompleted.program?.name ?? null,
+        }
+      : null;
 
   return {
     ready: Boolean(cert || ap?.completed_at),
@@ -82,5 +117,6 @@ export async function getApprenticeCertificateStatus(
           programType: program?.program_type ?? null,
         }
       : null,
+    failedEnrollment,
   };
 }

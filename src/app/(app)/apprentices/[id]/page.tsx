@@ -3,6 +3,7 @@ import { PageHead } from "@/components/PageHead";
 import { EmptyState } from "@/components/EmptyState";
 import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 import { getApprenticeCertificateStatus } from "@/lib/apprentice-certificate";
+import { reopenEnrollmentForRetake } from "../../training-plans/actions";
 
 export default async function ApprenticeDetailPage({ params }: { params: { id: string } }) {
   const { profile } = await requirePageRegistryFeature(["owner", "manager", "trainer"], "apprentices");
@@ -93,6 +94,37 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
               >
                 Download Certificate
               </a>
+              {rows.length > 0 && (
+                <a
+                  href={`/portfolios/export?apprentice_id=${params.id}`}
+                  className="ml-2 inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 border border-border-strong text-ink hover:bg-sunken transition-all duration-150 active:scale-[0.98]"
+                >
+                  Export Portfolio Book
+                </a>
+              )}
+              </a>
+            </div>
+          ) : status.failedEnrollment ? (
+            <div>
+              <p className="text-sm text-warning mb-1">⚠ Training completed — not yet certified</p>
+              <p className="text-xs text-ink-muted mb-4">
+                {status.failedEnrollment.programName ?? "This program"} finished with a final score of{" "}
+                <strong>{status.failedEnrollment.finalScore != null ? `${Number(status.failedEnrollment.finalScore).toFixed(1)}%` : "—"}</strong>
+                {status.failedEnrollment.passScore != null ? ` (pass mark: ${status.failedEnrollment.passScore}%)` : ""} — below the pass mark, so no
+                certificate was issued.
+              </p>
+              <form action={reopenEnrollmentForRetake}>
+                <input type="hidden" name="enrollment_id" value={status.failedEnrollment.enrollmentId} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold px-4 py-2.5 bg-indigo text-white hover:brightness-110 border border-indigo transition-all duration-150 active:scale-[0.98]"
+                >
+                  Reopen for Retake
+                </button>
+              </form>
+              <p className="mt-2 text-xs text-ink-faint">
+                This reopens the enrollment so the trainer can assign further work. It doesn't change any task's existing score.
+              </p>
             </div>
           ) : (
             <div>

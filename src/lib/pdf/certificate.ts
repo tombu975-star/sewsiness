@@ -219,7 +219,7 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
     const qrSize = 48;
     const qrDataUrl = await QRCode.toDataURL(input.verificationUrl, {
       margin: 0,
-      color: { dark: "#1E1B4B", light: "#00000000" },
+      color: { dark: "#111827", light: "#00000000" },
     });
     const qrPng = await doc.embedPng(qrDataUrl);
     const qrX = width - inner - 24 - qrSize;
