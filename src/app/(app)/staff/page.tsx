@@ -54,6 +54,7 @@ export default async function StaffPage() {
             const invite = inviteByUser.get(s.id);
             return {
               id: s.id,
+              avatarLabel: s.full_name,
               cells: {
                 name: s.full_name,
                 role: s.role,
@@ -79,6 +80,7 @@ export default async function StaffPage() {
               },
             };
           })}
+          searchable="Search staff by name…"
         />
       )}
     </div>

@@ -27,7 +27,8 @@ export default async function SuppliersPage() {
       ) : (
         <DataTable
           columns={[{ key: "name", label: "Supplier" }, { key: "phone", label: "Phone" }, { key: "email", label: "Email" }]}
-          rows={rows.map((s) => ({ id: s.id, cells: { name: s.name, phone: s.phone ?? "—", email: s.email ?? "—" } }))}
+          rows={rows.map((s) => ({ id: s.id, avatarLabel: s.name, cells: { name: s.name, phone: s.phone ?? "—", email: s.email ?? "—" } }))}
+          searchable="Search suppliers by name…"
         />
       )}
     </div>

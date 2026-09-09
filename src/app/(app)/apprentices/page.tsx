@@ -61,6 +61,7 @@ export default async function ApprenticesPage() {
             return {
               id: a.id,
               href: `/apprentices/${a.id}`,
+              avatarLabel: a.full_name,
               cells: {
                 name: a.full_name,
                 level: a.apprentice_profiles?.[0]?.training_level ?? "—",
@@ -80,6 +81,7 @@ export default async function ApprenticesPage() {
               },
             };
           })}
+          searchable="Search apprentices by name…"
         />
       )}
     </div>

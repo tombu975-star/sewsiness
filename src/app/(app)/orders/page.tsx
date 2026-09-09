@@ -59,6 +59,7 @@ export default async function OrdersPage() {
               status: o.status,
             },
           }))}
+          searchable="Search orders by number, customer, or garment…"
         />
       )}
     </div>

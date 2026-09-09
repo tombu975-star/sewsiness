@@ -61,6 +61,24 @@ export async function FreelancerDashboard({ userId }: { userId: string }) {
         <StatCard label="Paid Out" value={`₵${paid.toFixed(2)}`} icon="◈" />
       </div>
 
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <a href="/freelancer-work-requests" className="card card-hover p-4">
+          <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">◔</div>
+          <div className="text-sm font-semibold text-ink">Available Jobs</div>
+          <div className="text-[11.5px] text-ink-muted mt-0.5">Browse open work requests</div>
+        </a>
+        <a href="/freelancer-payments" className="card card-hover p-4">
+          <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">◈</div>
+          <div className="text-sm font-semibold text-ink">Payments</div>
+          <div className="text-[11.5px] text-ink-muted mt-0.5">Your payment ledger</div>
+        </a>
+        <a href="/account" className="card card-hover p-4">
+          <div className="w-9 h-9 rounded-full bg-indigo-soft text-indigo flex items-center justify-center text-[15px] mb-2">☺</div>
+          <div className="text-sm font-semibold text-ink">My Account</div>
+          <div className="text-[11.5px] text-ink-muted mt-0.5">Profile, photo & password</div>
+        </a>
+      </div>
+
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-display text-lg font-semibold text-ink">My Jobs</h2>
         <a href="/freelancer-payments" className="text-sm font-semibold text-indigo inline-flex items-center gap-1 hover:gap-1.5 transition-all">

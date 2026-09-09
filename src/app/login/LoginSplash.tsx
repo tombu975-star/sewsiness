@@ -21,7 +21,7 @@ function DefaultMark() {
       <path
         d="M-160 250 C-80 80, 95 55, 170 150 C215 208, 180 270, 90 292 C-20 320,-85 365,-52 420 C-25 465, 80 458, 160 385"
         fill="none"
-        stroke="#14213D"
+        stroke="#4B3FC4"
         strokeWidth="78"
         strokeLinecap="round"
       />

@@ -52,6 +52,7 @@ export default async function CustomersPage() {
           rows={rows.map((c) => ({
             id: c.id,
             href: `/customers/${c.id}`,
+            avatarLabel: c.full_name,
             cells: {
               name: c.full_name,
               phone: c.phone ?? "—",
@@ -59,6 +60,7 @@ export default async function CustomersPage() {
               status: c.status,
             },
           }))}
+          searchable="Search clients by name or phone…"
         />
       )}
     </div>

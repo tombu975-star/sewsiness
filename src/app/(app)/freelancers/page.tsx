@@ -60,6 +60,7 @@ export default async function FreelancersPage() {
             const invite = inviteByUser.get(f.id);
             return {
               id: f.id,
+              avatarLabel: f.full_name,
               cells: {
                 name: f.full_name,
                 skill: f.freelancer_profiles?.[0]?.primary_skill ?? "—",
@@ -81,6 +82,7 @@ export default async function FreelancersPage() {
               },
             };
           })}
+          searchable="Search freelancers by name…"
         />
       )}
     </div>

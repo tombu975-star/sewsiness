@@ -6,10 +6,10 @@ import { requirePageRole } from "@/lib/auth/require-role";
 const STAGES = ["Cutting", "Sewing", "Finishing", "Pressing", "Ready"];
 const STAGE_COLORS: Record<string, string> = {
   Cutting: "#FBBF24",
-  Sewing: "#2563EB",
-  Finishing: "#14213D",
-  Pressing: "#B4433D",
-  Ready: "#2F855A",
+  Sewing: "#3B82F6",
+  Finishing: "#4B3FC4",
+  Pressing: "#D6425F",
+  Ready: "#16A06A",
 };
 
 function initials(name: string) {

@@ -57,6 +57,7 @@ export default async function ProductsPage() {
               status: p.status,
             },
           }))}
+          searchable="Search fabrics by name or type…"
         />
       )}
     </div>
