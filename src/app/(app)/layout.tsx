@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq("id", user.id)
     .single();
 
-  const { data: org } = profile
+  const { data: org } = profile?.organization_id
     ? await supabase.from("organizations").select("name").eq("id", profile.organization_id).single()
     : { data: null };
 
@@ -50,11 +50,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       : org?.name ?? "Sewiness";
   const branchName = isPlatformAccount ? null : branch?.name;
 
-  // Super Admin/System Admin's own nav (SUPER_ADMIN_SIDEBAR / SYSTEM_ADMIN_SIDEBAR
-  // in nav.ts) has no `featureKey`s at all — platform-oversight pages are never
-  // switchable — so this lookup is only ever meaningful for business roles, but
-  // it's cheap and harmless to fetch regardless.
-  const disabledFeatureKeys = await getDisabledFeatureKeys();
+  // Platform navigation has no feature-gated entries, so avoid an unnecessary
+  // feature flag query for accounts that are not tied to a business.
+  const disabledFeatureKeys = isPlatformAccount ? new Set<string>() : await getDisabledFeatureKeys();
 
   return (
     <AppShell
