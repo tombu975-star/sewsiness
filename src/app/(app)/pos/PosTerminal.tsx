@@ -16,6 +16,22 @@ interface Customer {
   full_name: string;
 }
 
+// Cycled across product tiles purely for visual variety — same five-tone
+// gradient system used everywhere else (StatCard, dashboard quick
+// actions), so the POS grid feels colorful without inventing new colors.
+const TONES = [
+  { grad: "var(--grad-brand)", glow: "var(--glow-brand)" },
+  { grad: "var(--grad-teal)", glow: "var(--glow-teal)" },
+  { grad: "var(--grad-rose)", glow: "var(--glow-rose)" },
+  { grad: "var(--grad-amber)", glow: "var(--glow-amber)" },
+  { grad: "var(--grad-blue)", glow: "var(--glow-blue)" },
+];
+function toneFor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return TONES[hash % TONES.length];
+}
+
 export function PosTerminal({ products, customers }: { products: Product[]; customers: Customer[] }) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [customerId, setCustomerId] = useState<string>("");
@@ -23,6 +39,9 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
   const [query, setQuery] = useState("");
   const [isPending, startTransition] = useTransition();
   const [receipt, setReceipt] = useState<{ saleNumber: string; total: number } | null>(null);
+  // Product id that was just tapped, for a brief "added" flash on its
+  // tile — pure visual feedback, cleared after the animation finishes.
+  const [justAdded, setJustAdded] = useState<string | null>(null);
   const router = useRouter();
 
   const filtered = useMemo(
@@ -42,6 +61,7 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
   );
 
   const total = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+  const itemCount = lines.reduce((s, l) => s + l.quantity, 0);
 
   function addToCart(product: Product) {
     setCart((c) => {
@@ -49,6 +69,8 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
       if (current >= product.stock_qty) return c;
       return { ...c, [product.id]: current + 1 };
     });
+    setJustAdded(product.id);
+    window.setTimeout(() => setJustAdded((id) => (id === product.id ? null : id)), 420);
   }
 
   function setQty(id: string, qty: number) {
@@ -67,14 +89,20 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
 
   if (receipt) {
     return (
-      <div className="card p-8 max-w-md mx-auto text-center">
-        <div className="w-12 h-12 rounded-full bg-success-soft text-success flex items-center justify-center text-2xl mx-auto mb-3">✓</div>
+      <div className="card p-8 max-w-md mx-auto text-center animate-fade-up">
+        <div
+          className="w-16 h-16 rounded-full text-white flex items-center justify-center text-3xl mx-auto mb-4"
+          style={{ backgroundImage: "var(--grad-teal)", boxShadow: "var(--glow-teal)" }}
+        >
+          ✓
+        </div>
         <div className="font-display text-xl font-semibold text-ink mb-1">Sale Completed</div>
-        <div className="text-sm text-ink-muted mb-4">{receipt.saleNumber}</div>
-        <div className="text-3xl font-display font-semibold text-indigo mb-6">₵{receipt.total.toFixed(2)}</div>
+        <div className="text-sm text-ink-muted mb-4 font-mono">{receipt.saleNumber}</div>
+        <div className="text-3xl font-display font-semibold text-gradient-brand mb-6">₵{receipt.total.toFixed(2)}</div>
         <button
           onClick={() => setReceipt(null)}
-          className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:opacity-90"
+          className="btn-shine w-full rounded-full text-white font-semibold text-sm py-2.5 transition-all active:scale-[0.98]"
+          style={{ backgroundImage: "var(--grad-brand)", boxShadow: "var(--glow-brand)" }}
         >
           New Sale
         </button>
@@ -85,26 +113,52 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search products…"
-          className="w-full mb-4 rounded-sm border border-border bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-gold"
-        />
+        <div className="relative mb-4">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint text-sm pointer-events-none">⌕</span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search products…"
+            className="w-full pl-9 pr-3 rounded-full border border-border bg-surface py-2.5 text-sm text-ink outline-none focus:border-indigo2 transition-colors"
+          />
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {filtered.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => addToCart(p)}
-              disabled={(cart[p.id] ?? 0) >= p.stock_qty}
-              className="card p-3.5 text-left hover:border-gold transition-colors disabled:opacity-40"
-            >
-              <div className="text-sm font-semibold text-ink line-clamp-2">{p.name}</div>
-              <div className="text-xs text-ink-muted mt-1">{p.category ?? "—"}</div>
-              <div className="text-sm font-bold text-indigo mt-2">₵{Number(p.selling_price).toFixed(2)}</div>
-              <div className="text-[11px] text-ink-faint mt-0.5">{p.stock_qty} in stock</div>
-            </button>
-          ))}
+          {filtered.map((p) => {
+            const tone = toneFor(p.id);
+            const outOfRoom = (cart[p.id] ?? 0) >= p.stock_qty;
+            const lowStock = p.stock_qty > 0 && p.stock_qty <= 3;
+            return (
+              <button
+                key={p.id}
+                onClick={() => addToCart(p)}
+                disabled={outOfRoom}
+                className={`card card-hover card-glow p-3.5 text-left transition-all disabled:opacity-40 disabled:hover:translate-y-0 active:scale-[0.97] ${
+                  justAdded === p.id ? "ring-2 ring-offset-1" : ""
+                }`}
+                style={justAdded === p.id ? ({ "--tw-ring-color": "var(--indigo2)" } as React.CSSProperties) : undefined}
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                    style={{ backgroundImage: tone.grad, boxShadow: tone.glow }}
+                  >
+                    {p.name.charAt(0).toUpperCase()}
+                  </div>
+                  {p.stock_qty === 0 ? (
+                    <span className="badge bg-danger-soft text-danger flex-shrink-0">Out</span>
+                  ) : lowStock ? (
+                    <span className="badge bg-warning-soft text-warning flex-shrink-0">
+                      <span className="w-[5px] h-[5px] rounded-full mr-1 flex-shrink-0 animate-pulse-dot" style={{ background: "var(--warning)", color: "var(--warning)" }} />
+                      {p.stock_qty} left
+                    </span>
+                  ) : null}
+                </div>
+                <div className="text-sm font-semibold text-ink line-clamp-2">{p.name}</div>
+                <div className="text-xs text-ink-muted mt-1">{p.category ?? "—"}</div>
+                <div className="text-sm font-bold text-gradient-brand mt-2">₵{Number(p.selling_price).toFixed(2)}</div>
+              </button>
+            );
+          })}
           {filtered.length === 0 && (
             <div className="col-span-full card p-10 text-center text-sm text-ink-muted">No products match your search.</div>
           )}
@@ -112,12 +166,22 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
       </div>
 
       <div>
-        <div className="card p-4 sticky top-4">
-          <div className="font-display font-semibold text-ink mb-3">Cart</div>
+        <div className="card card-glow p-4 sticky top-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-display font-semibold text-ink">Cart</div>
+            {itemCount > 0 && (
+              <span
+                className="text-[11px] font-bold text-white rounded-full px-2 py-0.5"
+                style={{ backgroundImage: "var(--grad-brand)" }}
+              >
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+              </span>
+            )}
+          </div>
           <div className="space-y-2.5 max-h-72 overflow-y-auto scrollbar-thin mb-4">
             {lines.length === 0 && <div className="text-sm text-ink-muted py-6 text-center">No items yet.</div>}
             {lines.map((l) => (
-              <div key={l.product_id} className="flex items-center justify-between gap-2 text-sm">
+              <div key={l.product_id} className="flex items-center justify-between gap-2 text-sm animate-fade-up">
                 <div className="min-w-0">
                   <div className="font-medium text-ink truncate">{l.name}</div>
                   <div className="text-xs text-ink-muted">₵{l.unit_price.toFixed(2)} each</div>
@@ -125,14 +189,17 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={() => setQty(l.product_id, l.quantity - 1)}
-                    className="w-6 h-6 rounded-sm border border-border-strong text-ink text-xs font-bold"
+                    aria-label={`Decrease ${l.name} quantity`}
+                    className="w-6 h-6 rounded-full border border-border-strong text-ink text-xs font-bold hover:bg-sunken transition-colors active:scale-90"
                   >
                     −
                   </button>
-                  <span className="w-5 text-center text-xs font-semibold">{l.quantity}</span>
+                  <span className="w-5 text-center text-xs font-semibold font-mono">{l.quantity}</span>
                   <button
                     onClick={() => setQty(l.product_id, l.quantity + 1)}
-                    className="w-6 h-6 rounded-sm border border-border-strong text-ink text-xs font-bold"
+                    aria-label={`Increase ${l.name} quantity`}
+                    className="w-6 h-6 rounded-full text-white text-xs font-bold transition-transform active:scale-90"
+                    style={{ backgroundImage: "var(--grad-brand)" }}
                   >
                     +
                   </button>
@@ -146,7 +213,7 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
             <select
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
-              className="w-full rounded-sm border border-border bg-surface px-2.5 py-2 text-sm outline-none focus:border-gold"
+              className="w-full rounded-lg border border-border bg-surface px-2.5 py-2 text-sm outline-none focus:border-indigo2 transition-colors"
             >
               <option value="">Walk-in customer</option>
               {customers.map((c) => (
@@ -164,9 +231,11 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
                 <button
                   key={m}
                   onClick={() => setMethod(m)}
-                  className={`text-xs font-semibold rounded-sm px-2 py-1.5 border transition-colors ${
-                    method === m ? "bg-sidebar-active text-white border-sidebar-active" : "border-border text-ink-muted"
+                  aria-pressed={method === m}
+                  className={`text-xs font-semibold rounded-full px-2 py-1.5 border transition-all ${
+                    method === m ? "text-white border-transparent scale-[1.02]" : "border-border text-ink-muted hover:border-border-strong"
                   }`}
+                  style={method === m ? { backgroundImage: "var(--grad-brand)", boxShadow: "var(--glow-brand)" } : undefined}
                 >
                   {m}
                 </button>
@@ -176,13 +245,14 @@ export function PosTerminal({ products, customers }: { products: Product[]; cust
 
           <div className="flex items-center justify-between text-sm font-semibold mb-4">
             <span className="text-ink-muted">Total</span>
-            <span className="text-xl font-display text-indigo">₵{total.toFixed(2)}</span>
+            <span className="text-xl font-display text-gradient-brand">₵{total.toFixed(2)}</span>
           </div>
 
           <button
             onClick={checkout}
             disabled={lines.length === 0 || isPending}
-            className="w-full rounded-sm bg-indigo text-white font-semibold text-sm py-2.5 hover:opacity-90 disabled:opacity-50"
+            className="btn-shine w-full rounded-full text-white font-semibold text-sm py-2.5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+            style={{ backgroundImage: "var(--grad-brand)", boxShadow: "var(--glow-brand)" }}
           >
             {isPending ? "Processing…" : "Complete Sale"}
           </button>

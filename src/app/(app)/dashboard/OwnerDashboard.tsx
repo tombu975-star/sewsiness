@@ -120,13 +120,23 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { href: "/orders/new", icon: "+", label: "New Order", hint: "Create an order" },
-            { href: "/customers/new", icon: "👤", label: "Customer", hint: "Add a customer" },
-            { href: "/measurements/new", icon: "📏", label: "Measurements", hint: "Take measurements" },
-            { href: "/payments", icon: "₵", label: "Payment", hint: "Record or view payments" },
-          ].map((action) => (
-            <a key={action.href} href={action.href} className="card p-4 hover:-translate-y-0.5 hover:border-gold/60 transition-all active:scale-[0.99]">
-              <div className="w-10 h-10 rounded-xl bg-indigo-soft text-indigo2 flex items-center justify-center text-lg font-bold mb-3">{action.icon}</div>
+            { href: "/orders/new", icon: "+", label: "New Order", hint: "Create an order", grad: "var(--grad-brand)" },
+            { href: "/customers/new", icon: "👤", label: "Customer", hint: "Add a customer", grad: "var(--grad-teal)" },
+            { href: "/measurements/new", icon: "📏", label: "Measurements", hint: "Take measurements", grad: "var(--grad-rose)" },
+            { href: "/payments", icon: "₵", label: "Payment", hint: "Record or view payments", grad: "var(--grad-amber)" },
+          ].map((action, i) => (
+            <a
+              key={action.href}
+              href={action.href}
+              className="card card-glow p-4 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-[0.99] animate-fade-up"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl text-white flex items-center justify-center text-lg font-bold mb-3"
+                style={{ backgroundImage: action.grad }}
+              >
+                {action.icon}
+              </div>
               <div className="font-semibold text-sm text-ink">{action.label}</div>
               <div className="text-xs text-ink-muted mt-0.5">{action.hint}</div>
             </a>
@@ -135,11 +145,11 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <StatCard label="Customers" value={customerCount ?? 0} icon="☺" />
-        <StatCard label="Active Orders" value={orderCount ?? 0} icon="✂" />
-        <StatCard label="Revenue Today" value={`₵${revenueToday.toFixed(2)}`} accent icon="◈" />
-        <StatCard label="Outstanding Balance" value={`₵${totalOutstanding.toFixed(2)}`} accent icon="◉" />
-        <StatCard label="Apprentices" value={apprenticeCount ?? 0} icon="◎" />
+        <StatCard label="Customers" value={customerCount ?? 0} icon="☺" tone="blue" index={0} />
+        <StatCard label="Active Orders" value={orderCount ?? 0} icon="✂" tone="teal" index={1} />
+        <StatCard label="Revenue Today" value={`₵${revenueToday.toFixed(2)}`} accent icon="◈" tone="brand" index={2} />
+        <StatCard label="Outstanding Balance" value={`₵${totalOutstanding.toFixed(2)}`} accent icon="◉" tone="rose" index={3} />
+        <StatCard label="Apprentices" value={apprenticeCount ?? 0} icon="◎" tone="amber" index={4} />
       </div>
 
       <OrderStatusGlance newOrders={statusCounts.newOrders} inProduction={statusCounts.inProduction} delivered={statusCounts.delivered} />
@@ -182,17 +192,23 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
               View all <span aria-hidden="true">→</span>
             </a>
           </div>
-          <div className="card divide-y divide-border">
+          <div className="card divide-y divide-border overflow-hidden">
             {(recentPayments ?? []).length === 0 && (
               <div className="p-6 text-center text-sm text-ink-muted">No payments recorded yet.</div>
             )}
             {(recentPayments ?? []).map((p: any) => (
-              <div key={p.id} className="p-3.5 flex items-center justify-between text-sm">
-                <div>
-                  <div className="font-medium text-ink">{p.type}</div>
+              <div key={p.id} className="p-3.5 flex items-center gap-3 text-sm hover:bg-sunken/50 transition-colors">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                  style={{ backgroundImage: "var(--grad-teal)" }}
+                >
+                  ₵
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-ink truncate">{p.type}</div>
                   <div className="text-xs text-ink-muted">{p.method}</div>
                 </div>
-                <div className="font-mono font-semibold text-ink">₵{Number(p.amount).toFixed(2)}</div>
+                <div className="font-mono font-semibold text-ink flex-shrink-0">₵{Number(p.amount).toFixed(2)}</div>
               </div>
             ))}
           </div>
@@ -200,17 +216,17 @@ export async function OwnerDashboard({ userId, role }: { userId: string; role: R
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <a href="/training-plans" className="card card-hover p-4">
+        <a href="/training-plans" className="card card-hover card-glow p-4">
           <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Training health</div>
-          <div className="mt-2 font-display text-2xl font-semibold text-ink">{approvedTraining} / {trainingRows.length}</div>
+          <div className="mt-2 font-display text-2xl font-semibold text-gradient-brand">{approvedTraining} / {trainingRows.length}</div>
           <p className="mt-1 text-xs text-ink-muted">Tasks approved across your apprentice programme</p>
         </a>
-        <a href="/training-plans" className="card card-hover p-4">
+        <a href="/training-plans" className="card card-hover card-glow p-4">
           <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Needs review</div>
           <div className={`mt-2 font-display text-2xl font-semibold ${submittedTraining ? "text-warning" : "text-success"}`}>{submittedTraining}</div>
           <p className="mt-1 text-xs text-ink-muted">Apprentice submissions waiting for marking</p>
         </a>
-        <a href="/apprentices" className="card card-hover p-4">
+        <a href="/apprentices" className="card card-hover card-glow p-4">
           <div className="text-xs font-semibold uppercase tracking-wide text-ink-muted">People operations</div>
           <div className="mt-2 font-display text-lg font-semibold text-ink">Review your team</div>
           <p className="mt-1 text-xs text-ink-muted">Open apprentices, trainers, and workforce records</p>

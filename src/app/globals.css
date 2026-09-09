@@ -61,6 +61,23 @@
   --shadow-md: 0 2px 6px -1px rgba(76, 29, 149, 0.10), 0 12px 28px -12px rgba(76, 29, 149, 0.20);
   --shadow-lg: 0 8px 16px -4px rgba(76, 29, 149, 0.14), 0 24px 48px -16px rgba(76, 29, 149, 0.28);
   --shadow-gold: 0 1px 2px rgba(91, 33, 182, 0.18), 0 6px 16px -6px rgba(91, 33, 182, 0.45);
+
+  /* ---------- premium accent gradients ----------
+     A small, curated palette of brand-coherent gradients used for CTAs,
+     stat icon chips, active-nav states and decorative glows. Every hue
+     here is drawn from (or harmonizes with) the existing violet system —
+     this adds color and motion without turning the app into a rainbow. */
+  --grad-brand: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #a78bfa 100%);
+  --grad-brand-deep: linear-gradient(135deg, #4c1d95 0%, #6d28d9 60%, #8b5cf6 100%);
+  --grad-teal: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  --grad-rose: linear-gradient(135deg, #db2777 0%, #f472b6 100%);
+  --grad-amber: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);
+  --grad-blue: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+  --glow-brand: 0 8px 20px -6px rgba(124, 58, 237, 0.55);
+  --glow-teal: 0 8px 20px -6px rgba(13, 148, 136, 0.5);
+  --glow-rose: 0 8px 20px -6px rgba(219, 39, 119, 0.5);
+  --glow-amber: 0 8px 20px -6px rgba(180, 83, 9, 0.5);
+  --glow-blue: 0 8px 20px -6px rgba(29, 78, 216, 0.5);
 }
 
 * {
@@ -116,7 +133,31 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xs);
-  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+  transition: box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Gradient top-hairline that fades in on hover — a small "premium" tell
+   used by cards that want more presence than .card-hover's plain lift
+   (dashboard stat tiles, featured cards). Opt-in via .card-glow. */
+.card-glow {
+  position: relative;
+  overflow: hidden;
+}
+.card-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--grad-brand);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transform-origin: left;
+  transition: opacity 260ms ease, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-glow:hover::before,
+.card-glow:focus-within::before {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .field-label {
@@ -158,7 +199,85 @@ body {
 .card-hover:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+/* ---------- shine sweep — a diagonal light pass on hover, used by
+   primary CTAs and featured cards for a subtle "premium" glint rather
+   than a flat brightness jump. Pure CSS, no JS, respects reduced motion. ---------- */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left 550ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+.btn-shine:hover::after {
+  left: 130%;
+}
+
+/* ---------- gradient text ---------- */
+.text-gradient-brand {
+  background: var(--grad-brand-deep);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- entrance animation — used for dashboard stat rows/cards so
+   the page feels alive on load without being distracting on repeat
+   navigations (short, subtle, and respects reduced-motion below). ---------- */
+@keyframes fadeUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fadeUpIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---------- soft pulse — for "needs attention" dots (Pending, Overdue,
+   Low Stock, ...) so urgency reads at a glance, not just via color. ---------- */
+@keyframes softPulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  70% { box-shadow: 0 0 0 5px transparent; opacity: 0.55; }
+}
+.animate-pulse-dot {
+  animation: softPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-empty-float {
+  animation: emptyFloat 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-pulse-dot,
+  .animate-empty-float,
+  .btn-shine::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 .badge {
@@ -214,11 +333,13 @@ body {
   position: relative;
 }
 .tape .tape-fill {
-  height: 2px;
-  background: var(--gold);
+  height: 3px;
+  background: var(--grad-brand);
+  border-radius: 999px;
   position: absolute;
   left: 0;
-  top: 0;
+  top: -0.5px;
+  transition: width 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tape .tape-stops {
   display: flex;
@@ -245,9 +366,14 @@ body {
   border-color: var(--gold);
 }
 .tape-stop.now .dot {
-  background: var(--indigo);
-  border-color: var(--indigo);
+  background: var(--indigo2);
+  border-color: var(--indigo2);
   box-shadow: 0 0 0 4px var(--gold-soft);
+  animation: tapeNowPulse 1.8s ease-in-out infinite;
+}
+@keyframes tapeNowPulse {
+  0%, 100% { box-shadow: 0 0 0 4px var(--gold-soft); }
+  50% { box-shadow: 0 0 0 7px var(--indigo-soft); }
 }
 .tape-stop .lbl {
   font-size: 11.5px;
@@ -319,11 +445,21 @@ body {
 
 /* ---------- identity card + tile grid (customer/staff profile pattern) ---------- */
 .idcard {
-  background: linear-gradient(135deg, var(--indigo), var(--indigo2));
+  background: var(--grad-brand-deep);
   border-radius: var(--radius-lg);
   padding: 26px 22px;
   color: #fff;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--glow-brand);
+}
+.idcard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(420px circle at 15% -10%, rgba(255, 255, 255, 0.18), transparent 60%);
+  pointer-events: none;
 }
 .idavatar {
   width: 64px;

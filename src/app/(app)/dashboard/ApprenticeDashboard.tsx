@@ -99,8 +99,8 @@ export async function ApprenticeDashboard({ userId }: { userId: string }) {
           <div className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1.5">My Trainer</div>
           <div className="font-display text-lg font-semibold text-ink">{status.trainerName ?? "Not yet assigned"}</div>
         </div>
-        <StatCard label="Training Level" value={status.trainingLevel ?? "—"} icon="◎" />
-        <StatCard label="Tasks Done" value={`${doneCount} / ${taskRows.length}`} accent icon="✓" />
+        <StatCard label="Training Level" value={status.trainingLevel ?? "—"} icon="◎" tone="blue" index={0} />
+        <StatCard label="Tasks Done" value={`${doneCount} / ${taskRows.length}`} accent icon="✓" tone="teal" index={1} />
       </div>
 
       {(status.specialisation || status.trainingGoals) && (

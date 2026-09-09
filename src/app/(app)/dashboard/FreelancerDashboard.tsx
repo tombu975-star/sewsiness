@@ -55,10 +55,10 @@ export async function FreelancerDashboard({ userId }: { userId: string }) {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="New Offers" value={offered.length} icon="◔" />
-        <StatCard label="In Progress" value={active.length} icon="✂" />
-        <StatCard label="Owed (Completed)" value={`₵${owed.toFixed(2)}`} accent icon="◉" />
-        <StatCard label="Paid Out" value={`₵${paid.toFixed(2)}`} icon="◈" />
+        <StatCard label="New Offers" value={offered.length} icon="◔" tone="amber" index={0} />
+        <StatCard label="In Progress" value={active.length} icon="✂" tone="blue" index={1} />
+        <StatCard label="Owed (Completed)" value={`₵${owed.toFixed(2)}`} accent icon="◉" tone="rose" index={2} />
+        <StatCard label="Paid Out" value={`₵${paid.toFixed(2)}`} icon="◈" tone="teal" index={3} />
       </div>
 
       <div className="flex items-center justify-between mb-3">

@@ -222,13 +222,20 @@ export function DataTable({
                 onKeyDown={(e) => handleRowKeyDown(e, row.href)}
                 tabIndex={row.href ? 0 : undefined}
                 aria-label={row.href ? `Open ${String(row.cells[primaryKey ?? ""] ?? "record")}` : undefined}
-                className={row.href ? "group hover:bg-sunken/50 focus-visible:bg-sunken/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo2 cursor-pointer transition-colors" : ""}
+                className={row.href ? "group relative hover:bg-sunken/50 focus-visible:bg-sunken/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo2 cursor-pointer transition-colors" : "relative"}
               >
-                {columns.map((c) => (
+                {columns.map((c, ci) => (
                   <td
                     key={c.key}
-                    className="px-4 py-3.5 border-b border-border last:border-b-0 align-top whitespace-nowrap group-hover:border-border-strong transition-colors"
+                    className="px-4 py-3.5 border-b border-border last:border-b-0 align-top whitespace-nowrap group-hover:border-border-strong transition-colors relative"
                   >
+                    {ci === 0 && row.href && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0 top-0 bottom-0 w-[3px] scale-y-0 group-hover:scale-y-100 transition-transform duration-200 origin-center"
+                        style={{ backgroundImage: "var(--grad-brand)" }}
+                      />
+                    )}
                     {c.isStatus && typeof row.cells[c.key] === "string" ? (
                       <StatusBadge value={row.cells[c.key] as string} />
                     ) : (

@@ -14,10 +14,10 @@ export function EmptyState({
   actionHref?: string;
 }) {
   return (
-    <div className="card p-12 flex flex-col items-center text-center gap-3" style={{ borderStyle: "dashed" }}>
+    <div className="card p-12 flex flex-col items-center text-center gap-3 animate-fade-up" style={{ borderStyle: "dashed" }}>
       <div
-        className="w-12 h-12 rounded-full text-gold-ink flex items-center justify-center text-xl"
-        style={{ background: "linear-gradient(145deg, var(--gold-soft), #fde9a8)", boxShadow: "var(--shadow-xs)" }}
+        className="w-14 h-14 rounded-full text-white flex items-center justify-center text-2xl motion-safe:animate-empty-float"
+        style={{ backgroundImage: "var(--grad-brand)", boxShadow: "var(--glow-brand)" }}
       >
         {icon}
       </div>
@@ -26,8 +26,8 @@ export function EmptyState({
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className="mt-2 inline-flex items-center rounded-lg bg-indigo text-white text-sm font-semibold px-4 py-2.5 hover:brightness-110 transition-all active:scale-[0.98]"
-          style={{ boxShadow: "var(--shadow-gold)" }}
+          className="btn-shine mt-2 inline-flex items-center rounded-full text-white text-sm font-semibold px-5 py-2.5 hover:brightness-110 transition-all active:scale-[0.97]"
+          style={{ backgroundImage: "var(--grad-brand)", boxShadow: "var(--glow-brand)" }}
         >
           {actionLabel}
         </Link>

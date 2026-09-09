@@ -184,11 +184,12 @@ export function AppShell({
                     key={c.href}
                     href={c.href}
                     onClick={onNavigate}
-                    className={`flex items-center justify-between pl-9 pr-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-all duration-150 ${
+                    className={`flex items-center justify-between pl-9 pr-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-all duration-200 ${
                       pathname === c.href
-                        ? "bg-sidebar-active text-white shadow-[inset_3px_0_0_var(--gold),0_1px_3px_rgba(0,0,0,0.15)]"
+                        ? "text-white shadow-[inset_3px_0_0_var(--gold),0_2px_10px_-2px_rgba(124,58,237,0.5)]"
                         : "text-sidebar-ink hover:bg-white/[0.06] hover:text-white hover:translate-x-0.5"
                     }`}
+                    style={pathname === c.href ? { backgroundImage: "var(--grad-brand-deep)" } : undefined}
                   >
                     <span>{c.label}</span>
                     {c.isNew && <NewTag />}
@@ -214,9 +215,10 @@ export function AppShell({
                       key={c.href}
                       href={c.href}
                       onClick={onNavigate}
-                      className={`flex items-center justify-between mx-1.5 px-2.5 py-1.5 rounded-md text-[12.5px] font-medium ${
-                        pathname === c.href ? "bg-sidebar-active text-white" : "text-sidebar-ink hover:bg-white/[0.08] hover:text-white"
+                      className={`flex items-center justify-between mx-1.5 px-2.5 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
+                        pathname === c.href ? "text-white" : "text-sidebar-ink hover:bg-white/[0.08] hover:text-white"
                       }`}
+                      style={pathname === c.href ? { backgroundImage: "var(--grad-brand-deep)" } : undefined}
                     >
                       <span>{c.label}</span>
                       {c.isNew && <NewTag />}
@@ -233,13 +235,14 @@ export function AppShell({
             <Link
               href={item.href!}
               onClick={onNavigate}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-150 ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-200 ${
                 rail ? "justify-center" : ""
               } ${
                 active
-                  ? "bg-sidebar-active text-white shadow-[inset_3px_0_0_var(--gold),0_1px_3px_rgba(0,0,0,0.15)]"
+                  ? "text-white shadow-[inset_3px_0_0_var(--gold),0_2px_10px_-2px_rgba(124,58,237,0.55)]"
                   : "text-sidebar-ink hover:bg-white/[0.06] hover:text-white hover:translate-x-0.5"
               }`}
+              style={active ? { backgroundImage: "var(--grad-brand-deep)" } : undefined}
             >
               <span className="w-4 text-center text-[14px] flex-shrink-0">{item.icon}</span>
               {!rail && (
@@ -399,8 +402,13 @@ export function AppShell({
                   isActive ? "text-white" : "text-sidebar-ink"
                 }`}
               >
-                {isActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-white/70 transition-all" />}
-                <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isActive ? "text-white scale-110" : ""}`}>{b.icon}</span>
+                {isActive && (
+                  <span
+                    className="absolute top-0 h-[3px] w-8 rounded-full transition-all"
+                    style={{ backgroundImage: "var(--grad-brand)" }}
+                  />
+                )}
+                <span aria-hidden="true" className={`text-lg leading-none transition-transform duration-200 ${isActive ? "text-white scale-110" : ""}`}>{b.icon}</span>
                 <span className="truncate max-w-full px-1">{b.label}{b.href === "/notifications" && unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ""}</span>
               </Link>
             );
@@ -412,8 +420,13 @@ export function AppShell({
             }`}
             aria-label="Open menu"
           >
-            {isMoreActive && <span className="absolute top-0 h-[3px] w-8 rounded-full bg-white/70 transition-all" />}
-            <span aria-hidden="true" className={`text-lg leading-none transition-transform ${isMoreActive ? "text-white scale-110" : ""}`}>☰</span>
+            {isMoreActive && (
+              <span
+                className="absolute top-0 h-[3px] w-8 rounded-full transition-all"
+                style={{ backgroundImage: "var(--grad-brand)" }}
+              />
+            )}
+            <span aria-hidden="true" className={`text-lg leading-none transition-transform duration-200 ${isMoreActive ? "text-white scale-110" : ""}`}>☰</span>
             <span>More</span>
           </button>
         </nav>

@@ -41,6 +41,14 @@ const CATEGORY_ICON: Record<string, React.ReactNode> = {
   ),
 };
 
+const CATEGORY_TONES = [
+  { grad: "var(--grad-brand)", glow: "var(--glow-brand)" },
+  { grad: "var(--grad-teal)", glow: "var(--glow-teal)" },
+  { grad: "var(--grad-rose)", glow: "var(--glow-rose)" },
+  { grad: "var(--grad-amber)", glow: "var(--glow-amber)" },
+  { grad: "var(--grad-blue)", glow: "var(--glow-blue)" },
+];
+
 export default async function ShopHomePage() {
   const [featured, tailors, shopper] = await Promise.all([fetchFeaturedDesign(), fetchTailors(), getShopCustomer()]);
   const firstName = shopper?.customer.full_name?.split(" ")[0];
@@ -56,7 +64,7 @@ export default async function ShopHomePage() {
           <Link
             href="/shop/account"
             aria-label="Your account"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted hover:text-indigo2 hover:bg-indigo-soft transition-colors active:scale-95"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="12" cy="8" r="3.2" />
@@ -66,7 +74,7 @@ export default async function ShopHomePage() {
           <Link
             href="/shop/orders"
             aria-label="Notifications"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-ink-muted hover:text-indigo2 hover:bg-indigo-soft transition-colors active:scale-95"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" strokeLinejoin="round" />
@@ -76,7 +84,7 @@ export default async function ShopHomePage() {
         </div>
       </div>
 
-      <label className="mt-5 flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink-muted">
+      <label className="mt-5 flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink-muted transition-colors focus-within:border-indigo2 focus-within:shadow-[0_0_0_3px_var(--indigo-soft)]">
         <svg viewBox="0 0 24 24" className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" strokeLinecap="round" />
@@ -97,9 +105,14 @@ export default async function ShopHomePage() {
 
       <Link
         href="/shop/customize/custom-shirt-01"
-        className="mt-3 block overflow-hidden rounded-2xl bg-indigo p-5 text-white"
+        className="mt-3 block overflow-hidden rounded-2xl p-5 text-white relative animate-fade-up"
+        style={{ backgroundImage: "var(--grad-brand-deep)", boxShadow: "var(--glow-brand)" }}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(360px circle at 90% -20%, rgba(255,255,255,0.22), transparent 60%)" }}
+        />
+        <div className="relative flex items-start justify-between gap-3">
           <p className="max-w-[160px] font-display text-[15px] font-semibold leading-snug">{featured.title}</p>
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/15">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="white" strokeWidth="2">
@@ -110,7 +123,7 @@ export default async function ShopHomePage() {
             </svg>
           </span>
         </div>
-        <div className="mt-4 flex items-center gap-3 text-xs">
+        <div className="relative mt-4 flex items-center gap-3 text-xs">
           <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-1">
             <svg viewBox="0 0 24 24" className="h-3 w-3" fill="#fbbf24" stroke="none">
               <path d="M12 2.5 15 9l7 1-5.2 4.9L18 22l-6-3.5L6 22l1.2-7.1L2 10l7-1 3-6.5Z" />
@@ -123,25 +136,35 @@ export default async function ShopHomePage() {
 
       <div className="mt-3 flex items-center justify-center gap-1.5">
         {[0, 1, 2, 3, 4].map((i) => (
-          <span key={i} className={`h-1.5 rounded-full ${i === 0 ? "w-4 bg-indigo" : "w-1.5 bg-border-strong"}`} />
+          <span
+            key={i}
+            className="h-1.5 rounded-full transition-all"
+            style={i === 0 ? { width: "16px", backgroundImage: "var(--grad-brand)" } : { width: "6px", background: "var(--border-strong)" }}
+          />
         ))}
       </div>
 
       <div className="mt-6 grid grid-cols-5 gap-2 sm:gap-4">
-        {CATEGORIES.map((c) => (
-          <Link
-            key={c.id}
-            href={`/shop/explore?category=${c.id}`}
-            className="flex flex-col items-center gap-1.5 text-center"
-          >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-soft text-indigo">
-              <svg viewBox="0 0 24 24" className="h-5 w-5">
-                {CATEGORY_ICON[c.icon]}
-              </svg>
-            </span>
-            <span className="text-[11px] text-ink-muted">{c.label}</span>
-          </Link>
-        ))}
+        {CATEGORIES.map((c, i) => {
+          const tone = CATEGORY_TONES[i % CATEGORY_TONES.length];
+          return (
+            <Link
+              key={c.id}
+              href={`/shop/explore?category=${c.id}`}
+              className="flex flex-col items-center gap-1.5 text-center group"
+            >
+              <span
+                className="flex h-12 w-12 items-center justify-center rounded-full text-white transition-transform duration-200 group-hover:scale-110 group-active:scale-95"
+                style={{ backgroundImage: tone.grad, boxShadow: tone.glow }}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5">
+                  {CATEGORY_ICON[c.icon]}
+                </svg>
+              </span>
+              <span className="text-[11px] text-ink-muted">{c.label}</span>
+            </Link>
+          );
+        })}
       </div>
 
       <div className="mt-7 flex items-center justify-between">
@@ -152,11 +175,11 @@ export default async function ShopHomePage() {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {tailors.slice(0, 3).map((t) => (
-          <div key={t.id} className="rounded-2xl border border-border bg-surface p-4 text-center">
+        {tailors.slice(0, 3).map((t, i) => (
+          <div key={t.id} className="card card-hover card-glow rounded-2xl p-4 text-center animate-fade-up" style={{ animationDelay: `${i * 70}ms` }}>
             <span
-              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full text-lg font-semibold text-white"
-              style={{ background: t.avatarHex }}
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full text-lg font-semibold text-white ring-4 ring-offset-2 ring-offset-surface"
+              style={{ background: t.avatarHex, boxShadow: "var(--shadow-sm)", "--tw-ring-color": `${t.avatarHex}33` } as React.CSSProperties}
             >
               {t.initials}
             </span>
@@ -169,7 +192,8 @@ export default async function ShopHomePage() {
             </p>
             <Link
               href={`/shop/explore?tailor=${t.id}`}
-              className="mt-3 block rounded-full bg-indigo-soft py-1.5 text-xs font-semibold text-indigo"
+              className="btn-shine mt-3 block rounded-full py-1.5 text-xs font-semibold text-white transition-transform active:scale-95"
+              style={{ backgroundImage: "var(--grad-brand)" }}
             >
               Find Your Tailor
             </Link>

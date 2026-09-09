@@ -75,9 +75,9 @@ export async function StaffDashboard({ userId }: { userId: string }) {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-        <StatCard label="Active Orders" value={(orders ?? []).length} icon="✂" />
-        <StatCard label="Due Today" value={dueTodayCount} accent icon="◔" />
-        <StatCard label="Low / Out of Stock" value={(lowStock ?? []).length} icon="⚠" />
+        <StatCard label="Active Orders" value={(orders ?? []).length} icon="✂" tone="blue" index={0} />
+        <StatCard label="Due Today" value={dueTodayCount} accent icon="◔" tone="amber" index={1} />
+        <StatCard label="Low / Out of Stock" value={(lowStock ?? []).length} icon="⚠" tone="rose" index={2} />
       </div>
 
       <OrderStatusGlance newOrders={statusCounts.newOrders} inProduction={statusCounts.inProduction} delivered={statusCounts.delivered} />

@@ -1,16 +1,28 @@
 import Link from "next/link";
 
 const VARIANTS: Record<string, string> = {
-  primary: "bg-indigo text-white hover:brightness-110 border border-indigo",
+  primary: "text-white border border-transparent hover:brightness-110",
+  accent: "text-white border border-transparent hover:brightness-110",
   outline: "border border-border-strong text-ink bg-surface hover:bg-sunken hover:border-ink-faint",
   ghost: "text-ink-muted hover:text-ink hover:bg-sunken",
 };
 
+const BACKGROUNDS: Record<string, string> = {
+  primary: "var(--grad-brand)",
+  accent: "var(--grad-amber)",
+};
+
 const SHADOWS: Record<string, string> = {
-  primary: "var(--shadow-gold)",
+  primary: "var(--glow-brand)",
+  accent: "var(--glow-amber)",
   outline: "var(--shadow-xs)",
   ghost: "none",
 };
+
+// Gradient variants get the diagonal shine sweep on hover (see .btn-shine
+// in globals.css); flat variants (outline/ghost) skip it since a shine
+// pass only reads as "premium" against a saturated fill.
+const SHINE_VARIANTS = new Set(["primary", "accent"]);
 
 export function Button({
   children,
@@ -23,7 +35,7 @@ export function Button({
   ariaLabel,
 }: {
   children: React.ReactNode;
-  variant?: "primary" | "outline" | "ghost";
+  variant?: "primary" | "accent" | "outline" | "ghost";
   href?: string;
   onClick?: () => void;
   type?: "button" | "submit";
@@ -35,8 +47,12 @@ export function Button({
   // (or the raw icon glyph) instead of what the button actually does.
   ariaLabel?: string;
 }) {
-  const cls = `inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANTS[variant]} ${className}`;
-  const style = { boxShadow: SHADOWS[variant] };
+  const shine = SHINE_VARIANTS.has(variant) ? "btn-shine" : "";
+  const cls = `inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold px-4 py-2.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo2 focus-visible:ring-offset-2 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANTS[variant]} ${shine} ${className}`;
+  const style = {
+    boxShadow: SHADOWS[variant],
+    ...(BACKGROUNDS[variant] ? { backgroundImage: BACKGROUNDS[variant] } : {}),
+  };
   if (href) {
     return (
       <Link href={href} className={cls} style={style} aria-label={ariaLabel}>

@@ -8,19 +8,19 @@ export function OrderStatusGlance({
   delivered: number;
 }) {
   const items = [
-    { label: "New", value: newOrders, icon: "◔", bg: "bg-gold-soft", text: "text-gold-ink", ring: "var(--gold-soft)" },
-    { label: "In Production", value: inProduction, icon: "✂", bg: "bg-info-soft", text: "text-info", ring: "var(--info-soft)" },
-    { label: "Delivered", value: delivered, icon: "✓", bg: "bg-success-soft", text: "text-success", ring: "var(--success-soft)" },
+    { label: "New", value: newOrders, icon: "◔", grad: "var(--grad-amber)", glow: "var(--glow-amber)" },
+    { label: "In Production", value: inProduction, icon: "✂", grad: "var(--grad-blue)", glow: "var(--glow-blue)" },
+    { label: "Delivered", value: delivered, icon: "✓", grad: "var(--grad-teal)", glow: "var(--glow-teal)" },
   ];
   return (
     <div className="card p-5 mb-6" style={{ boxShadow: "var(--shadow-sm)" }}>
       <h3 className="font-display text-[15px] font-semibold text-ink mb-4">Order status at a glance</h3>
       <div className="grid grid-cols-3 gap-3 text-center">
         {items.map((it) => (
-          <div key={it.label}>
+          <div key={it.label} className="group cursor-default">
             <div
-              className={`w-11 h-11 rounded-full ${it.bg} ${it.text} flex items-center justify-center mx-auto mb-2 text-lg`}
-              style={{ boxShadow: `0 0 0 4px ${it.ring}, var(--shadow-xs)` }}
+              className="w-11 h-11 rounded-full text-white flex items-center justify-center mx-auto mb-2 text-lg transition-transform duration-200 group-hover:scale-110"
+              style={{ backgroundImage: it.grad, boxShadow: it.glow }}
             >
               {it.icon}
             </div>

@@ -24,11 +24,28 @@ const TONES: Record<string, { cls: string; dot: string }> = {
   Draft: { cls: "bg-sunken text-ink-muted", dot: "var(--ink-faint)" },
 };
 
+// Statuses that mean "something is waiting on you" get a soft pulse on
+// their dot, so urgency reads at a glance rather than relying on color
+// alone (which also helps colorblind users, unlike color-only signaling).
+const URGENT = new Set([
+  "Pending",
+  "Low Stock",
+  "Review",
+  "Offered",
+  "Overdue",
+  "Out of Stock",
+  "Needs Alteration",
+]);
+
 export function StatusBadge({ value }: { value: string }) {
   const tone = TONES[value] ?? { cls: "bg-sunken text-ink-muted", dot: "var(--ink-faint)" };
+  const urgent = URGENT.has(value);
   return (
     <span className={`badge ${tone.cls}`}>
-      <span className="w-[5px] h-[5px] rounded-full mr-1.5 flex-shrink-0" style={{ background: tone.dot }} />
+      <span
+        className={`w-[5px] h-[5px] rounded-full mr-1.5 flex-shrink-0 ${urgent ? "animate-pulse-dot" : ""}`}
+        style={{ background: tone.dot, color: tone.dot }}
+      />
       {value}
     </span>
   );
