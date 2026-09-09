@@ -82,6 +82,66 @@ export async function inviteApprentice(_prevState: ActionState, formData: FormDa
   redirect("/apprentices");
 }
 
+// Lets Owner/Manager (re)assign an apprentice to a trainer after the
+// invite has already been sent — previously trainer_id could only ever
+// be set once, at invite time (see inviteApprentice above), with no way
+// to change it if the trainer left, was overloaded, or was picked wrong
+// initially. Trainer is deliberately excluded from `allowed`: a trainer
+// reassigning apprentices between trainers (including away from
+// themselves) is a staffing decision, not a training one.
+export async function assignApprenticeTrainer(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const { profile, user } = await requireRoleRegistryFeature(["owner", "manager"], "apprentices");
+    const admin = createAdminClient();
+
+    const apprenticeId = String(formData.get("apprentice_id") ?? "");
+    const trainerId = formData.get("trainer_id") ? String(formData.get("trainer_id")) : null;
+    if (!apprenticeId) return { error: "Missing apprentice." };
+
+    const { data: ap, error: fetchErr } = await admin
+      .from("apprentice_profiles")
+      .select("organization_id, trainer_id")
+      .eq("profile_id", apprenticeId)
+      .single();
+    if (fetchErr || !ap) return { error: "Apprentice not found." };
+    if (ap.organization_id !== profile.organization_id) return { error: "You don't have permission to do that." };
+
+    if (trainerId) {
+      const { data: trainer } = await admin
+        .from("profiles")
+        .select("id, organization_id, role")
+        .eq("id", trainerId)
+        .single();
+      if (!trainer || trainer.organization_id !== profile.organization_id || !["trainer", "owner", "manager"].includes(trainer.role)) {
+        return { error: "That trainer isn't available in this business." };
+      }
+    }
+
+    if (trainerId === ap.trainer_id) return {};
+
+    const { error: updateErr } = await admin
+      .from("apprentice_profiles")
+      .update({ trainer_id: trainerId })
+      .eq("profile_id", apprenticeId);
+    if (updateErr) return { error: toSafeErrorMessage(updateErr, "Couldn't update the trainer assignment. Please try again.") };
+
+    await admin.from("audit_logs").insert({
+      organization_id: profile.organization_id,
+      actor_id: user.id,
+      action: "apprentice_trainer_assigned",
+      entity: "apprentice_profiles",
+      entity_id: apprenticeId,
+    });
+  } catch (err) {
+    if (isFrameworkSignal(err)) throw err;
+    return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };
+  }
+
+  revalidatePath(`/apprentices/${String(formData.get("apprentice_id"))}`);
+  revalidatePath("/apprentices");
+  return {};
+}
+
 export type MarkCompleteResult = { error: string } | { ok: true };
 
 // See 041_apprentice_training_completion.sql's header for why this goes

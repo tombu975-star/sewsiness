@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { requirePageRegistryFeature } from "@/lib/auth/require-role";
 import { getApprenticeCertificateStatus } from "@/lib/apprentice-certificate";
 import { reopenEnrollmentForRetake } from "../../training-plans/actions";
+import { AssignTrainerForm } from "./AssignTrainerForm";
 
 export default async function ApprenticeDetailPage({ params }: { params: { id: string } }) {
   const { profile } = await requirePageRegistryFeature(["owner", "manager", "trainer"], "apprentices");
@@ -29,6 +30,23 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
   // could never see or open a certificate that had, in fact, already
   // been issued.
   const status = await getApprenticeCertificateStatus(supabase, params.id);
+
+  const canAssignTrainer = profile.role === "owner" || profile.role === "manager";
+  let trainers: { id: string; full_name: string }[] = [];
+  let currentTrainerId: string | null = null;
+  if (canAssignTrainer) {
+    const [{ data: trainerRows }, { data: apprenticeProfile }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("organization_id", profile.organization_id)
+        .in("role", ["trainer", "owner", "manager"])
+        .order("full_name"),
+      supabase.from("apprentice_profiles").select("trainer_id").eq("profile_id", params.id).single(),
+    ]);
+    trainers = trainerRows ?? [];
+    currentTrainerId = apprenticeProfile?.trainer_id ?? null;
+  }
 
   const { data: portfolio } = await supabase
     .from("portfolio_items")
@@ -60,7 +78,13 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
           <h3 className="font-display text-[15px] font-semibold text-ink mb-3">Training Record</h3>
           <dl className="grid grid-cols-2 gap-y-3 text-sm">
             <dt className="text-ink-muted">Trainer</dt>
-            <dd className="text-ink text-right">{status.trainerName ?? "Not assigned"}</dd>
+            {canAssignTrainer ? (
+              <dd className="text-right">
+                <AssignTrainerForm apprenticeId={params.id} currentTrainerId={currentTrainerId} trainers={trainers} />
+              </dd>
+            ) : (
+              <dd className="text-ink text-right">{status.trainerName ?? "Not assigned"}</dd>
+            )}
             <dt className="text-ink-muted">Training Level</dt>
             <dd className="text-ink text-right">{status.trainingLevel ?? "—"}</dd>
             <dt className="text-ink-muted">Specialisation</dt>
