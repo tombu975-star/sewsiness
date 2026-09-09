@@ -102,7 +102,6 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
                   Export Portfolio Book
                 </a>
               )}
-              </a>
             </div>
           ) : status.failedEnrollment ? (
             <div>
