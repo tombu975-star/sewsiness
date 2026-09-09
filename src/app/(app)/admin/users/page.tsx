@@ -69,24 +69,38 @@ export default async function PlatformUsersPage({
         crumb="Platform Admin"
       />
 
-      <form className="flex flex-wrap items-center gap-2 mb-4" method="get">
-        <input
-          type="text"
-          name="q"
-          defaultValue={q}
-          placeholder="Search by name…"
-          className="px-3 py-2 rounded-lg border border-border-strong text-sm bg-surface w-56"
-        />
-        <select name="role" defaultValue={roleFilter ?? "all"} className="px-3 py-2 rounded-lg border border-border-strong text-sm bg-surface">
+      <form className="flex flex-col sm:flex-row sm:items-center gap-2.5 mb-4" method="get">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin -mx-0.5 px-0.5">
           {ROLE_FILTERS.map((r) => (
-            <option key={r} value={r}>
+            <a
+              key={r}
+              href={`/admin/users?role=${r === "all" ? "" : r}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${
+                (roleFilter || "all") === r
+                  ? "bg-indigo text-white border-indigo"
+                  : "bg-surface text-ink-muted border-border-strong hover:bg-sunken"
+              }`}
+            >
               {r === "all" ? "All roles" : ROLE_LABEL[r]}
-            </option>
+            </a>
           ))}
-        </select>
-        <button type="submit" className="px-3 py-2 rounded-lg border border-border-strong text-sm bg-surface hover:bg-sunken">
-          Filter
-        </button>
+        </div>
+        <div className="relative sm:ml-auto sm:w-64">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm pointer-events-none">⌕</span>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q}
+            placeholder="Search by name…"
+            aria-label="Search by name"
+            className="w-full pl-8 pr-3 py-2 rounded-lg border border-border-strong text-sm bg-surface focus:border-gold"
+          />
+        </div>
+        {/* Preserves the role filter when the search form submits — the
+            pill links above already carry it in their href, but this
+            covers the case where someone types a search term and hits
+            Enter without re-clicking a pill. */}
+        {roleFilter && <input type="hidden" name="role" value={roleFilter} />}
       </form>
 
       {error && (

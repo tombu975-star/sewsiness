@@ -109,7 +109,24 @@ export default async function ApprenticeDetailPage({ params }: { params: { id: s
       </div>
 
       <div className="card mb-6 divide-y divide-border">
-        <div className="p-4 font-display text-[15px] font-semibold text-ink">Training Tasks</div>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-display text-[15px] font-semibold text-ink">Training Tasks</div>
+            {taskRows.length > 0 && (
+              <div className="text-xs font-semibold text-ink-muted">
+                {approvedTasks} / {taskRows.length} approved
+              </div>
+            )}
+          </div>
+          {taskRows.length > 0 && (
+            <div className="h-1.5 rounded-full bg-sunken overflow-hidden" role="progressbar" aria-valuenow={approvedTasks} aria-valuemin={0} aria-valuemax={taskRows.length} aria-label="Training tasks approved">
+              <div
+                className="h-full rounded-full bg-gold transition-all"
+                style={{ width: `${taskRows.length ? Math.round((approvedTasks / taskRows.length) * 100) : 0}%` }}
+              />
+            </div>
+          )}
+        </div>
         {taskRows.length === 0 ? (
           <div className="p-4 text-sm text-ink-muted">No tasks assigned yet.</div>
         ) : taskRows.map((task) => (

@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHead } from "@/components/PageHead";
 import { StatCard } from "@/components/StatCard";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/Button";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Tabs } from "@/components/Tabs";
@@ -79,10 +78,6 @@ export default async function OrderDetailPage({ params, searchParams }: { params
         <StatCard label="Paid" value={`₵${Number(order.amount_paid).toFixed(2)}`} />
         <StatCard label="Balance" value={`₵${balance.toFixed(2)}`} accent />
         <StatCard label="Payment" value={<PaymentStatusBadge total={Number(order.total_amount)} paid={Number(order.amount_paid)} />} />
-      </div>
-
-      <div className="mb-5">
-        <StatusBadge value={order.status} />
       </div>
 
       <Tabs
@@ -183,8 +178,4 @@ function Row({ label, value }: { label: string; value: string | null | undefined
       <span className="text-ink font-medium">{value ?? "—"}</span>
     </div>
   );
-}
-
-function Placeholder({ label }: { label: string }) {
-  return <div className="card p-10 text-center text-sm text-ink-muted">{label} will appear here once that module is wired up.</div>;
 }

@@ -13,7 +13,7 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
+export default async function CustomerDetailPage({ params, searchParams }: { params: { id: string }; searchParams: { tab?: string } }) {
   const supabase = createClient();
   const { data: customer } = await supabase
     .from("customers")
@@ -94,13 +94,18 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         </div>
       </div>
 
+      {/* Real jumps into the tabs below (Tabs matches on defaultLabel,
+          case-insensitively) — these used to be plain, unlinked <div>s
+          styled to look exactly like tappable cards but doing nothing
+          on click or tap, which is worse than not having them at all. */}
       <div className="grid grid-cols-3 gap-2.5 mb-6">
-        <div className="tile"><span className="tic">✂</span>Orders</div>
-        <div className="tile"><span className="tic">📐</span>Measurements</div>
-        <div className="tile"><span className="tic">◉</span>Payments</div>
+        <a href="?tab=orders" className="tile block"><span className="tic">✂</span>Orders</a>
+        <a href="?tab=measurements" className="tile block"><span className="tic">📐</span>Measurements</a>
+        <a href="?tab=payments" className="tile block"><span className="tic">◉</span>Payments</a>
       </div>
 
       <Tabs
+        defaultLabel={searchParams.tab}
         tabs={[
           {
             label: "Overview",
@@ -217,14 +222,6 @@ function Row({ label, value }: { label: string; value: string | null }) {
     <div className="flex justify-between border-b border-border/70 pb-2">
       <span className="text-ink-muted">{label}</span>
       <span className="text-ink font-medium">{value ?? "—"}</span>
-    </div>
-  );
-}
-
-function PlaceholderTab({ label }: { label: string }) {
-  return (
-    <div className="card p-10 text-center text-sm text-ink-muted">
-      {label[0].toUpperCase() + label.slice(1)} for this customer will appear here once that module is wired up.
     </div>
   );
 }

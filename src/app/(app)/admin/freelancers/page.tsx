@@ -7,12 +7,17 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { verifyFreelancer, unverifyFreelancer } from "../freelancers-actions";
 import { suspendUser, reactivateUser } from "../users-actions";
 
-export default async function PlatformFreelancersPage() {
+export default async function PlatformFreelancersPage({ searchParams }: { searchParams: { q?: string } }) {
   await requirePageRole(["super_admin"]);
   const supabase = createClient();
+  const q = searchParams.q?.trim() ?? "";
 
   // RLS ("super admin can read all profiles / freelancer profiles / work
-  // requests") is what makes these cross-tenant selects possible.
+  // requests") is what makes these cross-tenant selects possible. Fetched
+  // unfiltered — the stat cards below need the true platform-wide counts
+  // regardless of what's typed in the search box, so search only narrows
+  // which rows the table shows (computed separately as `displayRows`
+  // further down), not what the stats are calculated from.
   const [{ data: freelancers }, { data: requests }] = await Promise.all([
     supabase
       .from("profiles")
@@ -25,6 +30,7 @@ export default async function PlatformFreelancersPage() {
   ]);
 
   const rows = (freelancers ?? []) as any[];
+  const displayRows = q ? rows.filter((r) => (r.full_name ?? "").toLowerCase().includes(q.toLowerCase())) : rows;
   const requestRows = (requests ?? []) as any[];
 
   const businessesUsingFreelancers = new Set(rows.map((r) => r.organization?.name).filter(Boolean)).size;
@@ -62,8 +68,24 @@ export default async function PlatformFreelancersPage() {
         </div>
       )}
 
+      {rows.length > 0 && (
+        <form method="get" className="relative sm:w-64 mb-4">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm pointer-events-none">⌕</span>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q}
+            placeholder="Search by name…"
+            aria-label="Search by name"
+            className="w-full pl-8 pr-3 py-2 rounded-lg border border-border-strong text-sm bg-surface focus:border-gold"
+          />
+        </form>
+      )}
+
       {rows.length === 0 ? (
         <EmptyState icon="\u2692" title="No freelancers on the platform yet." description="This fills in once businesses bring freelancers onto their workforce." />
+      ) : displayRows.length === 0 ? (
+        <div className="card p-10 text-center text-ink-muted text-sm">No freelancers match &quot;{q}&quot;.</div>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
@@ -78,7 +100,7 @@ export default async function PlatformFreelancersPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((f) => {
+              {displayRows.map((f) => {
                 const verified = !!f.freelancer_profiles?.verified_at;
                 return (
                   <tr key={f.id} className="border-t border-border">
